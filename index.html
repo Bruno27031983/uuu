@@ -506,6 +506,7 @@
         option.textContent = year;
         yearSelect.appendChild(option);
       }
+      yearSelect.value = currentYear; // Nastavenie predvoleného roku
     }
     populateYearSelect();
 
@@ -628,10 +629,12 @@
         loginForm.style.display = 'none';
         userInfo.style.display = 'block';
         userEmail.textContent = currentUser.email;
+        createTable(); // Vytvoriť tabuľku po prihlásení
         loadFromFirestore();
       } else {
         loginForm.style.display = 'block';
         userInfo.style.display = 'none';
+        createTable(); // Vytvoriť tabuľku aj pre neprihláseného používateľa
         if (!isOnline()) {
           showErrorNotification('Ste offline. Prihláste sa, keď budete online.');
         }
@@ -720,13 +723,25 @@
 
     // -------------------- Načítanie z Firestore a localStorage --------------------
     async function loadFromFirestore() {
-      if (!currentUser) return;
+      if (!currentUser) {
+        console.log('Žiadny prihlásený používateľ, načítavam iba z localStorage');
+      }
+
       try {
         const localKey = `workData-${currentYear}-${currentMonth}`;
         const localData = localStorage.getItem(localKey);
 
         if (localData) {
-          const storedData = JSON.parse(localData);
+          console.log('Načítavam údaje z localStorage');
+          let storedData;
+          try {
+            storedData = JSON.parse(localData);
+          } catch (error) {
+            console.error('Chyba pri parsovaní localStorage:', error);
+            showErrorNotification('Chyba pri načítavaní dát z localStorage');
+            return;
+          }
+
           monthData[currentYear] = monthData[currentYear] || {};
           monthData[currentYear][currentMonth] = storedData.data;
 
@@ -758,7 +773,8 @@
             }
           });
           calculateTotal();
-        } else if (isOnline()) {
+        } else if (isOnline() && currentUser) {
+          console.log('Načítavam údaje z Firestore');
           const userRef = doc(db, 'users', currentUser.uid);
           const docRef = doc(userRef, 'workDays', `${currentYear}-${currentMonth}`);
           const docSnap = await getDoc(docRef);
@@ -796,7 +812,11 @@
               }
             });
             calculateTotal();
+          } else {
+            console.log('Žiadne údaje v Firestore, tabuľka zostáva prázdna');
           }
+        } else {
+          console.log('Žiadne údaje v localStorage a offline režim, tabuľka zostáva prázdna');
         }
       } catch (error) {
         console.error('Chyba pri načítavaní:', error);
@@ -812,11 +832,14 @@
     }
 
     function createTable() {
+      console.log('Vytváram tabuľku pre mesiac:', currentMonth, 'rok:', currentYear);
       workDays.innerHTML = '';
       const currentDay = new Date().getDate();
       const currentMonthIndex = new Date().getMonth();
       const currentYearValue = new Date().getFullYear();
       const daysInMonth = getDaysInMonth(currentMonth);
+
+      console.log('Počet dní v mesiaci:', daysInMonth);
 
       for (let i = 1; i <= daysInMonth; i++) {
         const row = document.createElement('tr');
@@ -837,6 +860,7 @@
         `;
         workDays.appendChild(row);
       }
+      console.log('Tabuľka vytvorená, načítavam údaje...');
       loadFromFirestore();
     }
 
@@ -865,7 +889,7 @@
         data: [],
         hourlyWage: hourlyWage,
         taxRate: taxRate,
-REPLACED employeeName: employeeName,
+        employeeName: employeeName,
         decimalPlaces: decimalPlaces,
         lastUpdated: new Date().toISOString()
       };
@@ -1326,9 +1350,6 @@ REPLACED employeeName: employeeName,
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
       updateUI();
-      if (user) {
-        createTable();
-      }
     });
 
     createTable();
