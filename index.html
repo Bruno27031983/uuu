@@ -553,8 +553,9 @@
         notification.classList.remove('show');
       }, 3000);
     }
-    function showSaveNotification() {
+    function showSaveNotification(message = 'Dáta boli úspešne uložené') {
       const notification = document.getElementById('saveNotification');
+      notification.textContent = message;
       notification.classList.add('show');
       setTimeout(() => {
         notification.classList.remove('show');
@@ -684,6 +685,7 @@
         }
 
         // Vždy uložiť do localStorage
+        console.log('Ukladám dáta do localStorage:', saveData);
         localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
 
         if (isOnline()) {
@@ -732,7 +734,7 @@
         const localData = localStorage.getItem(localKey);
 
         if (localData) {
-          console.log('Načítavam údaje z localStorage');
+          console.log('Načítavam údaje z localStorage:', localData);
           let storedData;
           try {
             storedData = JSON.parse(localData);
@@ -742,6 +744,7 @@
             return;
           }
 
+          // Uistime sa, že monthData je inicializované
           monthData[currentYear] = monthData[currentYear] || {};
           monthData[currentYear][currentMonth] = storedData.data;
 
@@ -755,6 +758,7 @@
           employeeNameInput.value = employeeName;
           decimalPlacesSelect.value = decimalPlaces;
 
+          // Aktualizácia tabuľky s načítanými dátami
           storedData.data.forEach((day, index) => {
             const i = index + 1;
             const startElement = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
@@ -770,6 +774,8 @@
               grossElement.value = day.gross || '0.00';
               netElement.value = day.net || '0.00';
               calculateRow(i);
+            } else {
+              console.warn(`Elementy pre deň ${i} neboli nájdené`);
             }
           });
           calculateTotal();
@@ -903,6 +909,7 @@
         saveData.data.push({ start, end, breakTime, gross, net });
       }
 
+      console.log('Ukladám dáta do localStorage pri aktualizácii:', saveData);
       localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
       debouncedSaveToFirestore();
     }
@@ -1156,6 +1163,7 @@
 
             employeeName = employeeNameRow[0].replace('Meno pracovníka: ', '').trim();
             employeeNameInput.value = employeeName;
+            localStorage.setItem('employeeName', JSON.stringify(employeeName));
 
             const headers = jsonData[2];
             const expectedHeaders = ['Deň', 'Príchod', 'Odchod', 'Prestávka', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)'];
@@ -1197,6 +1205,19 @@
               monthData[currentYear][currentMonth][day - 1] = { start, end, breakTime, gross, net };
             }
 
+            // Uloženie dát do localStorage po obnovení zálohy
+            const saveData = {
+              data: monthData[currentYear][currentMonth],
+              hourlyWage: hourlyWage,
+              taxRate: taxRate,
+              employeeName: employeeName,
+              decimalPlaces: decimalPlaces,
+              lastUpdated: new Date().toISOString()
+            };
+            console.log('Ukladám obnovené dáta do localStorage:', saveData);
+            localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
+
+            // Aktualizácia tabuľky
             createTable();
             calculateTotal();
             debouncedSaveToFirestore();
