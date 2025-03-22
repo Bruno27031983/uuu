@@ -444,9 +444,9 @@
     <div class="btn-container">
       <button class="btn reset-btn" onclick="resetAll()">Resetovať všetko</button>
       <button class="btn export-btn" onclick="exportToPDF()">Exportovať do PDF</button>
-      <button class="btn export-btn" onclick="exportToExcel()">Exportovať do Excelu</button>
+      <button class="btn export-btn" onclick="createBackup()">Vytvoriť zálohu</button>
       <button class="btn export-btn" onclick="sendPDF()">Odoslať PDF</button>
-      <button class="btn export-btn" onclick="importFromExcel()">Importovať z Excelu</button>
+      <button class="btn export-btn" onclick="restoreBackup()">Obnoviť zálohu</button>
     </div>
   </div>
 
@@ -1055,7 +1055,7 @@
       `;
     }
 
-    // -------------------- Export do PDF, Excel, zdieľanie PDF --------------------
+    // -------------------- Export do PDF, vytvorenie zálohy, obnovenie zálohy, zdieľanie PDF --------------------
     function getMonthName(month) {
       const monthNames = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún",
         "Júl", "August", "September", "Október", "November", "December"];
@@ -1099,7 +1099,7 @@
       doc.save(`brunos-calculator-report-${getMonthName(currentMonth)}-${currentYear}.pdf`);
     }
 
-    window.exportToExcel = function() {
+    window.createBackup = function() {
       const data = [
         [`Meno pracovníka: ${employeeName}`],
         [],
@@ -1120,8 +1120,95 @@
 
       const ws = XLSX.utils.aoa_to_sheet(data);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Výkaz práce");
-      XLSX.writeFile(wb, `brunos-calculator-report-${getMonthName(currentMonth)}-${currentYear}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Záloha práce");
+      XLSX.writeFile(wb, `brunos-calculator-backup-${getMonthName(currentMonth)}-${currentYear}.xlsx`);
+      showSaveNotification('Záloha bola úspešne vytvorená');
+    }
+
+    window.restoreBackup = function() {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.xlsx, .xls';
+      fileInput.onchange = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            if (jsonData.length < 4) {
+              showErrorNotification('Záloha neobsahuje dostatok údajov.');
+              return;
+            }
+
+            const employeeNameRow = jsonData[0];
+            if (!employeeNameRow[0].startsWith('Meno pracovníka:')) {
+              showErrorNotification('Záloha má nesprávnu štruktúru alebo chýba meno pracovníka.');
+              return;
+            }
+
+            employeeName = employeeNameRow[0].replace('Meno pracovníka: ', '').trim();
+            employeeNameInput.value = employeeName;
+
+            const headers = jsonData[2];
+            const expectedHeaders = ['Deň', 'Príchod', 'Odchod', 'Prestávka', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)'];
+            const isValid = expectedHeaders.every((header, index) => header === jsonData[2][index]);
+            if (!isValid) {
+              showErrorNotification('Záloha má nesprávnu štruktúru hlavičiek.');
+              return;
+            }
+
+            if (!monthData[currentYear]) {
+              monthData[currentYear] = {};
+            }
+            const daysInMonth = getDaysInMonth(currentMonth);
+            monthData[currentYear][currentMonth] = Array.from({ length: daysInMonth }, () => ({
+              start: '',
+              end: '',
+              breakTime: '',
+              gross: '0.00',
+              net: '0.00'
+            }));
+
+            for (let i = 3; i < jsonData.length; i++) {
+              const row = jsonData[i];
+              if (row.length < 7) continue;
+
+              const dayInfo = row[0];
+              const dayMatch = dayInfo.match(/(?:Deň )?(\d+) \((.+)\)/);
+              if (!dayMatch) continue;
+
+              const day = parseInt(dayMatch[1]);
+              if (isNaN(day) || day < 1 || day > daysInMonth) continue;
+
+              const start = row[1] || '';
+              const end = row[2] || '';
+              const breakTime = row[3] || '';
+              const gross = parseFloat(row[5]) ? parseFloat(row[5]).toFixed(decimalPlaces) : '0.00';
+              const net = parseFloat(row[6]) ? parseFloat(row[6]).toFixed(decimalPlaces) : '0.00';
+
+              monthData[currentYear][currentMonth][day - 1] = { start, end, breakTime, gross, net };
+            }
+
+            createTable();
+            calculateTotal();
+            debouncedSaveToFirestore();
+            showSaveNotification('Záloha bola úspešne obnovená');
+          } catch (error) {
+            console.error('Chyba pri obnovení zálohy:', error);
+            showErrorNotification('Chyba pri obnovení zálohy: ' + error.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      };
+      fileInput.click();
     }
 
     window.sendPDF = function() {
@@ -1179,92 +1266,6 @@
       } else {
         showErrorNotification('Funkcia zdieľania súborov nie je podporovaná vo vašom prehliadači.');
       }
-    }
-
-    window.importFromExcel = function() {
-      const fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.accept = '.xlsx, .xls';
-      fileInput.onchange = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          try {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-            if (jsonData.length < 4) {
-              showErrorNotification('Excel súbor neobsahuje dostatok údajov.');
-              return;
-            }
-
-            const employeeNameRow = jsonData[0];
-            if (!employeeNameRow[0].startsWith('Meno pracovníka:')) {
-              showErrorNotification('Excel súbor má nesprávnu štruktúru alebo chýba meno pracovníka.');
-              return;
-            }
-
-            employeeName = employeeNameRow[0].replace('Meno pracovníka: ', '').trim();
-            employeeNameInput.value = employeeName;
-
-            const headers = jsonData[2];
-            const expectedHeaders = ['Deň', 'Príchod', 'Odchod', 'Prestávka', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)'];
-            const isValid = expectedHeaders.every((header, index) => header === jsonData[2][index]);
-            if (!isValid) {
-              showErrorNotification('Excel súbor má nesprávnu štruktúru hlavičiek.');
-              return;
-            }
-
-            if (!monthData[currentYear]) {
-              monthData[currentYear] = {};
-            }
-            const daysInMonth = getDaysInMonth(currentMonth);
-            monthData[currentYear][currentMonth] = Array.from({ length: daysInMonth }, () => ({
-              start: '',
-              end: '',
-              breakTime: '',
-              gross: '0.00',
-              net: '0.00'
-            }));
-
-            for (let i = 3; i < jsonData.length; i++) {
-              const row = jsonData[i];
-              if (row.length < 7) continue;
-
-              const dayInfo = row[0];
-              const dayMatch = dayInfo.match(/(?:Deň )?(\d+) \((.+)\)/);
-              if (!dayMatch) continue;
-
-              const day = parseInt(dayMatch[1]);
-              if (isNaN(day) || day < 1 || day > daysInMonth) continue;
-
-              const start = row[1] || '';
-              const end = row[2] || '';
-              const breakTime = row[3] || '';
-              const gross = parseFloat(row[5]) ? parseFloat(row[5]).toFixed(decimalPlaces) : '0.00';
-              const net = parseFloat(row[6]) ? parseFloat(row[6]).toFixed(decimalPlaces) : '0.00';
-
-              monthData[currentYear][currentMonth][day - 1] = { start, end, breakTime, gross, net };
-            }
-
-            createTable();
-            calculateTotal();
-            debouncedSaveToFirestore();
-            showSaveNotification();
-          } catch (error) {
-            console.error('Chyba pri importe dát:', error);
-            showErrorNotification('Chyba pri importe dát z Excelu: ' + error.message);
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      };
-      fileInput.click();
     }
 
     // -------------------- Tmavý režim --------------------
