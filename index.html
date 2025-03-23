@@ -1057,7 +1057,7 @@
       `;
     }
 
-    // -------------------- EXPORT DO PDF (upravené pre diakritiku) --------------------
+    // -------------------- EXPORT DO PDF (upravené pre diakritiku v tabuľke) --------------------
     function getMonthName(month) {
       const monthNames = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
       return monthNames[month];
@@ -1095,7 +1095,10 @@
       doc.autoTable({
         head: [['Deň', 'Príchod', 'Odchod', 'Prestávka', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
         body: tableData,
-        startY: 30
+        startY: 30,
+        // Tu je kľúčové nastavenie fontu pre text v tabuľke
+        styles: { font: 'Roboto' },
+        headStyles: { font: 'Roboto' },
       });
 
       const totalY = doc.lastAutoTable.finalY + 10;
@@ -1137,7 +1140,10 @@
       doc.autoTable({
         head: [['Deň', 'Príchod', 'Odchod', 'Prestávka', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
         body: tableData,
-        startY: 30
+        startY: 30,
+        // Nastavenie fontu aj pre tabuľku
+        styles: { font: 'Roboto' },
+        headStyles: { font: 'Roboto' },
       });
 
       const totalY = doc.lastAutoTable.finalY + 10;
