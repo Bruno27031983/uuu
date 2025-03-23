@@ -13,13 +13,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
-  <!-- Pridanie fontu Roboto pre UI (s podporou diakritiky) -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap&subset=latin-ext" rel="stylesheet">
-
   <style>
     /* Základné štýly - bez zmien */
     body {
-      font-family: 'Roboto', Arial, sans-serif;
+      font-family: Arial, sans-serif;
       line-height: 1.6;
       margin: 0;
       padding: 10px;
@@ -32,7 +29,7 @@
       background: white;
       padding: 15px;
       border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       position: relative;
     }
     h1 {
@@ -140,11 +137,11 @@
       background-color: #388e3c;
     }
     .backup-btn {
-      background-color: #8a2be2;
-      padding: 15px 20px;
+      background-color: #8a2be2; /* Fialová farba */
+      padding: 15px 20px; /* Zvýšená výška (padding vertikálne), dĺžka (padding horizontálne) zostáva rovnaká */
     }
     .backup-btn:hover {
-      background-color: #6a1bb2;
+      background-color: #6a1bb2; /* Tmavšia fialová pri hoveri */
     }
     .highlight {
       background-color: #ffcc00;
@@ -227,6 +224,9 @@
     .backup-btn.dark-mode {
       background-color: #6a1bb2;
     }
+    #totalSalary.dark-mode {
+      background-color: #2c3e50;
+    }
     .current-day.dark-mode {
       background-color: #4a0e8f;
       color: #fff;
@@ -291,7 +291,7 @@
         margin: 5px 0;
       }
       .backup-btn {
-        padding: 15px 16px;
+        padding: 15px 16px; /* Zachovanie výšky aj pri menšom rozlíšení */
       }
       #totalSalary {
         font-size: 16px;
@@ -315,7 +315,7 @@
         padding: 6px 12px;
       }
       .backup-btn {
-        padding: 15px 12px;
+        padding: 15px 12px; /* Zachovanie výšky aj pri menšom rozlíšení */
       }
       .settings label {
         font-size: 0.9em;
@@ -372,7 +372,7 @@
 <body>
   <div class="container">
     <!-- Autentifikačné UI -->
-    <div id="auth-container" style="text-align: center; margin: 20px;">
+    <div id="auth-container" style="text-align: center; margin-bottom: 20px;">
       <div id="login-form" style="display: none;">
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Heslo">
@@ -474,19 +474,24 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
     import { getFirestore, collection, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
 
     // ---------------------- KONFIGURÁCIA Firebase --------------------
     const firebaseConfig = {
-       apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
-  authDomain: "uuuuu-f7ef9.firebaseapp.com",
-  projectId: "uuuuu-f7ef9",
-  storageBucket: "uuuuu-f7ef9.firebasestorage.app",
-  messagingSenderId: "456105865458",
-  appId: "1:456105865458:web:101f0a4dcb455f174b606b",
+      apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
+      authDomain: "uuuuu-f7ef9.firebaseapp.com",
+      projectId: "uuuuu-f7ef9",
+      storageBucket: "uuuuu-f7ef9.firebasestorage.app",
+      messagingSenderId: "456105865458",
+      appId: "1:456105865458:web:101f0a4dcb455f174b606b",
     };
 
     // Inicializácia Firebase
     const app = initializeApp(firebaseConfig);
+    const appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'),
+      isTokenAutoRefreshEnabled: true
+    });
     const auth = getAuth(app);
     const db = getFirestore(app);
 
@@ -544,7 +549,6 @@
       console.log('Zariadenie je offline');
       showStatusNotification('Offline', 'red');
     });
-
     function showStatusNotification(message, color) {
       const notification = document.createElement('div');
       notification.textContent = message;
@@ -561,7 +565,6 @@
         notification.remove();
       }, 3000);
     }
-
     function showErrorNotification(message) {
       const notification = document.getElementById('errorNotification');
       notification.textContent = message;
@@ -570,7 +573,6 @@
         notification.classList.remove('show');
       }, 3000);
     }
-
     function showSaveNotification(message = 'Dáta boli úspešne uložené') {
       const notification = document.getElementById('saveNotification');
       notification.textContent = message;
@@ -628,7 +630,7 @@
 
     async function createUserCollection() {
       if (currentUser) {
-        const userRef = doc(db, '{-#', currentUser.uid);
+        const userRef = doc(db, 'users', currentUser.uid);
         await setDoc(userRef, {
           email: currentUser.email,
           createdAt: new Date()
@@ -648,12 +650,12 @@
         loginForm.style.display = 'none';
         userInfo.style.display = 'block';
         userEmail.textContent = currentUser.email;
-        createTable();
+        createTable(); // Vytvoriť tabuľku po prihlásení
         loadFromFirestore();
       } else {
         loginForm.style.display = 'block';
         userInfo.style.display = 'none';
-        createTable();
+        createTable(); // Vytvoriť tabuľku aj pre neprihláseného používateľa
         if (!isOnline()) {
           showErrorNotification('Ste offline. Prihláste sa, keď budete online.');
         }
@@ -663,7 +665,7 @@
     // -------------------- Ukladanie do Firestore a localStorage s debounce --------------------
     function debounce(func, wait) {
       let timeout;
-      return function (...args) {
+      return function executedFunction(...args) {
         const later = () => {
           clearTimeout(timeout);
           func(...args);
@@ -713,6 +715,7 @@
         } else {
           console.log('Offline: Ukladám dáta do localStorage pre synchronizáciu');
           localStorage.setItem(`pendingSync-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
+          showSaveNotification();
         }
       } catch (error) {
         console.error('Chyba pri ukladaní:', error);
@@ -764,6 +767,7 @@
           // Uistime sa, že monthData je inicializované
           monthData[currentYear] = monthData[currentYear] || {};
           monthData[currentYear][currentMonth] = storedData.data;
+
           hourlyWage = storedData.hourlyWage || parseFloat(hourlyWageInput.value);
           taxRate = storedData.taxRate || parseFloat(taxRateInput.value) / 100;
           employeeName = storedData.employeeName || '';
@@ -868,6 +872,7 @@
         if (i === currentDay && currentMonth === currentMonthIndex && currentYear === currentYearValue) {
           row.classList.add('current-day');
         }
+
         const dayName = getDayName(currentYear, currentMonth, i);
         row.innerHTML = `
           <td>Deň ${i} (${dayName})</td>
@@ -889,7 +894,6 @@
       formatAndMoveNext(input, nextId);
       calculateAndUpdateTotals();
     }
-
     window.handleBreakInput = function(day) {
       calculateRow(day);
       const nextDay = day + 1;
@@ -898,7 +902,6 @@
       }
       calculateAndUpdateTotals();
     }
-
     window.handleGrossInput = function(day) {
       updateNetSalary(day);
       calculateAndUpdateTotals();
@@ -918,11 +921,11 @@
       };
 
       for (let i = 1; i <= getDaysInMonth(currentMonth); i++) {
-        const start = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value || '';
-        const end = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value || '';
-        const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value || '';
-        const gross = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`)?.value || '0.00';
-        const net = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`)?.value || '0.00';
+        const start = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`).value || '';
+        const end = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`).value || '';
+        const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`).value || '';
+        const gross = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`).value || '0.00';
+        const net = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`).value || '0.00';
         saveData.data.push({ start, end, breakTime, gross, net });
       }
 
@@ -946,12 +949,13 @@
         if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
           moveNext(input, nextId);
         } else {
-          showErrorNotification("Neplatný čas. Prosím, zadajte čas vo formáte HH:MM (00:00-23:59).");
+          showErrorNotification("Neplatný čas. Prosím, zadajte čas vo formáte HH:MM (napr. 06:30).");
+          input.value = '';
         }
       }
     }
 
-    function moveNext(input, nextId) {
+    function moveNext(currentElement, nextId) {
       const nextElement = document.getElementById(nextId);
       if (nextElement) {
         nextElement.focus();
@@ -959,9 +963,9 @@
     }
 
     function calculateRow(day) {
-      const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`)?.value;
-      const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`)?.value;
-      const breakTime = parseFloat(document.getElementById(`break-${currentYear}-${currentMonth}-${day}`)?.value) || 0;
+      const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`).value;
+      const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`).value;
+      const breakTime = parseFloat(document.getElementById(`break-${currentYear}-${currentMonth}-${day}`).value) || 0;
 
       if (startTime && endTime) {
         const [startHours, startMinutes] = startTime.split(':').map(Number);
@@ -1073,11 +1077,6 @@
     window.exportToPDF = function() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-
-      // Načítanie fontu Roboto z URL pre podporu diakritiky
-      doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
-      doc.setFont('Roboto');
-
       doc.setFontSize(18);
       doc.text(`Bruno's Calculator - Výkaz práce (${getMonthName(currentMonth)} ${currentYear})`, 14, 20);
 
@@ -1102,10 +1101,7 @@
       doc.autoTable({
         head: [['Deň', 'Príchod', 'Odchod', 'Prestávka', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
         body: tableData,
-        startY: 30,
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, font: 'Roboto' },
-        styles: { font: 'Roboto' },
-        alternateRowStyles: { fillColor: [245, 245, 245] }
+        startY: 30
       });
 
       const totalY = doc.lastAutoTable.finalY + 10;
@@ -1244,11 +1240,6 @@
     window.sendPDF = function() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
-
-      // Načítanie fontu Roboto z URL pre podporu diakritiky
-      doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
-      doc.setFont('Roboto');
-
       doc.setFontSize(18);
       doc.text(`Bruno's Calculator - Výkaz práce (${getMonthName(currentMonth)} ${currentYear})`, 14, 20);
 
@@ -1273,10 +1264,7 @@
       doc.autoTable({
         head: [['Deň', 'Príchod', 'Odchod', 'Prestávka', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
         body: tableData,
-        startY: 30,
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, font: 'Roboto' },
-        styles: { font: 'Roboto' },
-        alternateRowStyles: { fillColor: [245, 245, 245] }
+        startY: 30
       });
 
       const totalY = doc.lastAutoTable.finalY + 10;
