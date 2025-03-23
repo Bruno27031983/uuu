@@ -1220,6 +1220,46 @@
 
     createTable();
     calculateTotal();
+
+    // -------------------- FUNKCIE PRE ZÁLOHU A OBNOVU --------------------
+    window.createBackup = function() {
+      const key = `workData-${currentYear}-${currentMonth}`;
+      const data = localStorage.getItem(key);
+      if (data) {
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup-${currentYear}-${currentMonth}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showSaveNotification('Záloha bola úspešne vytvorená.');
+      } else {
+        showErrorNotification('Nie sú dostupné žiadne dáta na zálohu.');
+      }
+    };
+
+    window.restoreBackup = function() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = function(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = JSON.parse(e.target.result);
+            localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(data));
+            createTable(); // Obnoví tabuľku s dátami zo zálohy
+            showSaveNotification('Záloha bola úspešne obnovená.');
+          } catch (error) {
+            showErrorNotification('Chyba pri načítavaní zálohy: ' + error.message);
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    };
   </script>
 </body>
 </html>
