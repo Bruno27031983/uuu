@@ -839,7 +839,7 @@
             console.log('Žiadne údaje v Firestore, tabuľka zostáva prázdna');
           }
         } else {
-          console.log('Žiadne údaje v localStorage a ste offline, tabuľka zostáva prázdna');
+          console.log('Žiadne údaje v localStorage a offline režim, tabuľka zostáva prázdna');
         }
       } catch (error) {
         console.error('Chyba pri načítavaní:', error);
@@ -1221,11 +1221,6 @@
     createTable();
     calculateTotal();
 
-    // Pridaná volacia funkcia pre automatické načítanie dát po načítaní stránky
-    window.addEventListener('load', () => {
-      loadFromFirestore();
-    });
-
     // -------------------- FUNKCIE PRE ZÁLOHU A OBNOVU DO EXCELU --------------------
     window.createBackup = function() {
       const key = `workData-${currentYear}-${currentMonth}`;
@@ -1323,27 +1318,6 @@
         reader.readAsArrayBuffer(file);
       };
       input.click();
-    };
-
-    // -------------------- PRIDANÉ FUNKCIE --------------------
-    window.toggleDarkMode = function() {
-      document.body.classList.toggle('dark-mode');
-      const container = document.querySelector('.container');
-      if (container) {
-        container.classList.toggle('dark-mode');
-      }
-      const table = document.querySelector('table');
-      if (table) {
-        table.classList.toggle('dark-mode');
-      }
-      document.querySelectorAll('th').forEach(el => el.classList.toggle('dark-mode'));
-      document.querySelectorAll('td').forEach(el => el.classList.toggle('dark-mode'));
-      document.querySelectorAll('input').forEach(el => el.classList.toggle('dark-mode'));
-      document.querySelectorAll('.btn').forEach(el => el.classList.toggle('dark-mode'));
-      if (totalSalaryDiv) {
-        totalSalaryDiv.classList.toggle('dark-mode');
-      }
-      document.querySelectorAll('.current-day').forEach(el => el.classList.toggle('dark-mode'));
     };
   </script>
 
