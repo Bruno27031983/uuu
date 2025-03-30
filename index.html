@@ -189,49 +189,52 @@
       background-color: #9932cc;
       color: white;
     }
+    /* Opravený tmavý režim: selektory sa teraz vzťahujú na prvky v rámci body.dark-mode */
     body.dark-mode {
       background-color: #333;
       color: #f4f4f4;
     }
-    .container.dark-mode {
+    body.dark-mode .container {
       background-color: #444;
       color: #f4f4f4;
     }
-    table.dark-mode {
+    body.dark-mode table {
       background-color: #555;
       color: #f4f4f4;
     }
-    th.dark-mode {
+    body.dark-mode th {
       background-color: #666;
     }
-    td.dark-mode {
+    body.dark-mode td {
       background-color: #444;
       color: #f4f4f4;
     }
-    input[type="tel"].dark-mode, input[type="number"].dark-mode, input[type="text"].dark-mode {
+    body.dark-mode input[type="tel"],
+    body.dark-mode input[type="number"],
+    body.dark-mode input[type="text"] {
       background-color: #666;
       color: white;
     }
-    .btn.dark-mode {
+    body.dark-mode .btn {
       color: #333;
     }
-    .reset-btn.dark-mode {
+    body.dark-mode .reset-btn {
       background-color: #d32f2f;
     }
-    .export-btn.dark-mode {
+    body.dark-mode .export-btn {
       background-color: #388e3c;
     }
-    .backup-btn.dark-mode {
+    body.dark-mode .backup-btn {
       background-color: #6a1bb2;
     }
-    #totalSalary.dark-mode {
+    body.dark-mode #totalSalary {
       background-color: #2c3e50;
     }
-    .current-day.dark-mode {
+    body.dark-mode .current-day {
       background-color: #4a0e8f;
       color: #fff;
     }
-    .current-day.dark-mode input {
+    body.dark-mode .current-day input {
       background-color: #5c1db3;
       color: #fff;
     }
@@ -470,6 +473,17 @@
 
   <!-- Hlavný JavaScript kód + Firebase -->
   <script type="module">
+    // Načítanie preferencie tmavého režimu z localStorage
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+
+    // Funkcia pre prepínanie tmavého režimu
+    window.toggleDarkMode = function() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    }
+
     // ----------------------- IMPORTY Firebase -----------------------
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
