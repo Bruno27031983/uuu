@@ -465,8 +465,8 @@
       <button class="btn export-btn" onclick="sendPDF()">Odoslať PDF</button>
       <button class="btn export-btn" onclick="restoreBackup()">Obnoviť zálohu</button>
       <button class="btn backup-btn" onclick="createBackup()">Vytvoriť zálohu</button>
-      <!-- PRIDANÉ TLAČIDLO -->
-      <button class="btn export-btn">Načítať z cloudu</button>
+      <!-- UPRAVENÉ TLAČIDLO -->
+      <button class="btn export-btn" onclick="loadFromFirestore()">Načítanie z Firebase</button>
     </div>
   </div>
 
@@ -759,110 +759,132 @@
     }
 
     // -------------------- Načítanie z Firestore a localStorage --------------------
-    async function loadFromFirestore() {
-      if (!currentUser) {
-        console.log('Žiadny prihlásený používateľ, načítavam iba z localStorage');
-      }
-
-      try {
-        const localKey = `workData-${currentYear}-${currentMonth}`;
-        const localData = localStorage.getItem(localKey);
-
-        if (localData) {
-          console.log('Načítavam údaje z localStorage:', localData);
-          let storedData;
-          try {
-            storedData = JSON.parse(localData);
-          } catch (error) {
-            console.error('Chyba pri parsovaní localStorage:', error);
-            showErrorNotification('Chyba pri načítavaní dát z localStorage');
-            return;
-          }
-
-          monthData[currentYear] = monthData[currentYear] || {};
-          monthData[currentYear][currentMonth] = storedData.data;
-
-          hourlyWage = storedData.hourlyWage || parseFloat(hourlyWageInput.value);
-          taxRate = storedData.taxRate || parseFloat(taxRateInput.value) / 100;
-          employeeName = storedData.employeeName || '';
-          decimalPlaces = storedData.decimalPlaces || 1;
-
-          hourlyWageInput.value = hourlyWage;
-          taxRateInput.value = (taxRate * 100).toFixed(1);
-          employeeNameInput.value = employeeName;
-          decimalPlacesSelect.value = decimalPlaces;
-
-          storedData.data.forEach((day, index) => {
-            const i = index + 1;
-            const startElement = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
-            const endElement = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`);
-            const breakElement = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`);
-            // Nepoužívame uložené gross/net, prepočítame ich
-            // const grossElement = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`);
-            // const netElement = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`);
-
-            if (startElement && endElement && breakElement /* && grossElement && netElement*/) {
-              startElement.value = day.start || '';
-              endElement.value = day.end || '';
-              breakElement.value = day.breakTime || '';
-              // grossElement.value = day.gross || '0.00'; // Nepoužívame
-              // netElement.value = day.net || '0.00'; // Nepoužívame
-              calculateRow(i); // Prepočíta a nastaví gross/net a čas
-            } else {
-              console.warn(`Elementy pre deň ${i} neboli nájdené`);
-            }
-          });
-          calculateTotal(); // Prepočíta celkové súčty na základe aktuálnych hodnôt
-        } else if (isOnline() && currentUser) {
-          console.log('Načítavam údaje z Firestore');
-          const userRef = doc(db, 'users', currentUser.uid);
-          const docRef = doc(userRef, 'workDays', `${currentYear}-${currentMonth}`);
-          const docSnap = await getDoc(docRef);
-
-          if (docSnap.exists()) {
-            const storedData = docSnap.data();
-            monthData[currentYear] = monthData[currentYear] || {};
-            monthData[currentYear][currentMonth] = storedData.data;
-
-            hourlyWage = storedData.hourlyWage || parseFloat(hourlyWageInput.value);
-            taxRate = storedData.taxRate || parseFloat(taxRateInput.value) / 100;
-            employeeName = storedData.employeeName || '';
-            decimalPlaces = storedData.decimalPlaces || 1;
-
-            hourlyWageInput.value = hourlyWage;
-            taxRateInput.value = (taxRate * 100).toFixed(1);
-            employeeNameInput.value = employeeName;
-            decimalPlacesSelect.value = decimalPlaces;
-
-            storedData.data.forEach((day, index) => {
-              const i = index + 1;
-              const startElement = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
-              const endElement = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`);
-              const breakElement = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`);
-              // const grossElement = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`);
-              // const netElement = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`);
-
-              if (startElement && endElement && breakElement /* && grossElement && netElement*/) {
-                startElement.value = day.start || '';
-                endElement.value = day.end || '';
-                breakElement.value = day.breakTime || '';
-                // grossElement.value = day.gross || '0.00'; // Nepoužívame
-                // netElement.value = day.net || '0.00'; // Nepoužívame
-                calculateRow(i); // Prepočíta a nastaví gross/net a čas
-              }
-            });
-            calculateTotal(); // Prepočíta celkové súčty
-          } else {
-            console.log('Žiadne údaje v Firestore, tabuľka zostáva prázdna');
-          }
-        } else {
-          console.log('Žiadne údaje v localStorage a offline režim, tabuľka zostáva prázdna');
+    // Urobíme funkciu globálne dostupnou pre tlačidlo
+    window.loadFromFirestore = async function() {
+        if (!currentUser) {
+          showErrorNotification('Pre načítanie z cloudu sa musíte prihlásiť.');
+          console.log('Žiadny prihlásený používateľ, načítavam iba z localStorage');
+          // Môžeme sa rozhodnúť načítať aspoň z localStorage, ak existuje
+          // loadFromLocalStorageOnly(); // Voliteľná funkcia
+          return; // Ukončíme, ak nie je prihlásený
         }
-      } catch (error) {
-        console.error('Chyba pri načítavaní:', error);
-        showErrorNotification('Chyba pri načítavaní dát: ' + error.message);
-      }
+
+        // Explicitne načítavame z Firestore (cloud)
+        if (isOnline() && currentUser) {
+            console.log('Načítavam údaje z Firestore (manuálne vyžiadané)');
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                const docRef = doc(userRef, 'workDays', `${currentYear}-${currentMonth}`);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const storedData = docSnap.data();
+
+                    // Uložíme dáta z Firestore aj do localStorage pre offline prístup
+                    console.log('Ukladám dáta z Firestore do localStorage:', storedData);
+                    localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(storedData));
+
+                    // Spracujeme načítané dáta a aktualizujeme UI
+                    monthData[currentYear] = monthData[currentYear] || {};
+                    monthData[currentYear][currentMonth] = storedData.data;
+
+                    hourlyWage = storedData.hourlyWage || parseFloat(hourlyWageInput.value);
+                    taxRate = storedData.taxRate || parseFloat(taxRateInput.value) / 100;
+                    employeeName = storedData.employeeName || '';
+                    decimalPlaces = storedData.decimalPlaces || 1;
+
+                    hourlyWageInput.value = hourlyWage;
+                    taxRateInput.value = (taxRate * 100).toFixed(1);
+                    employeeNameInput.value = employeeName;
+                    decimalPlacesSelect.value = decimalPlaces;
+
+                    storedData.data.forEach((day, index) => {
+                        const i = index + 1;
+                        const startElement = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
+                        const endElement = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`);
+                        const breakElement = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`);
+
+                        if (startElement && endElement && breakElement) {
+                            startElement.value = day.start || '';
+                            endElement.value = day.end || '';
+                            breakElement.value = day.breakTime || '';
+                            calculateRow(i); // Prepočíta a nastaví gross/net a čas
+                        }
+                    });
+                    calculateTotal(); // Prepočíta celkové súčty
+                    showSaveNotification('Dáta boli úspešne načítané z Firebase.');
+                } else {
+                    console.log('Žiadne údaje v Firestore pre tento mesiac.');
+                    showErrorNotification('Pre tento mesiac neboli v cloude nájdené žiadne dáta.');
+                    // Možno chceme vymazať localStorage, ak v cloude nič nie je?
+                    // localStorage.removeItem(`workData-${currentYear}-${currentMonth}`);
+                    // createTable(); // Zobrazí prázdnu tabuľku
+                }
+            } catch (error) {
+                console.error('Chyba pri načítavaní z Firestore:', error);
+                showErrorNotification('Chyba pri načítavaní dát z Firebase: ' + error.message);
+            }
+        } else if (!isOnline()) {
+            showErrorNotification('Ste offline. Pre načítanie z cloudu je potrebné pripojenie na internet.');
+        }
     }
+
+    // Funkcia, ktorá načíta LEN z localStorage (pôvodné správanie, keď nebol používateľ)
+    function loadFromLocalStorageOnly() {
+        try {
+            const localKey = `workData-${currentYear}-${currentMonth}`;
+            const localData = localStorage.getItem(localKey);
+
+            if (localData) {
+                console.log('Načítavam údaje z localStorage (offline alebo neprihlásený):', localData);
+                let storedData;
+                try {
+                    storedData = JSON.parse(localData);
+                } catch (error) {
+                    console.error('Chyba pri parsovaní localStorage:', error);
+                    showErrorNotification('Chyba pri načítavaní dát z localStorage');
+                    return;
+                }
+
+                monthData[currentYear] = monthData[currentYear] || {};
+                monthData[currentYear][currentMonth] = storedData.data;
+
+                hourlyWage = storedData.hourlyWage || parseFloat(hourlyWageInput.value);
+                taxRate = storedData.taxRate || parseFloat(taxRateInput.value) / 100;
+                employeeName = storedData.employeeName || '';
+                decimalPlaces = storedData.decimalPlaces || 1;
+
+                hourlyWageInput.value = hourlyWage;
+                taxRateInput.value = (taxRate * 100).toFixed(1);
+                employeeNameInput.value = employeeName;
+                decimalPlacesSelect.value = decimalPlaces;
+
+                storedData.data.forEach((day, index) => {
+                    const i = index + 1;
+                    const startElement = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
+                    const endElement = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`);
+                    const breakElement = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`);
+
+                    if (startElement && endElement && breakElement) {
+                        startElement.value = day.start || '';
+                        endElement.value = day.end || '';
+                        breakElement.value = day.breakTime || '';
+                        calculateRow(i);
+                    } else {
+                        console.warn(`Elementy pre deň ${i} neboli nájdené`);
+                    }
+                });
+                calculateTotal();
+            } else {
+                console.log('Žiadne údaje v localStorage');
+                // Tabuľka zostane prázdna (po createTable)
+            }
+        } catch (error) {
+            console.error('Chyba pri načítavaní z localStorage:', error);
+            showErrorNotification('Chyba pri načítavaní dát z lokálneho úložiska: ' + error.message);
+        }
+    }
+
 
     // -------------------- Tvorba tabuľky a výpočty --------------------
     function getDayName(year, month, day) {
@@ -901,7 +923,14 @@
         workDays.appendChild(row);
       }
       console.log('Tabuľka vytvorená, načítavam údaje...');
-      loadFromFirestore();
+      // Po vytvorení tabuľky už NEVOLÁME loadFromFirestore automaticky,
+      // ale len loadFromLocalStorageOnly, ak nie je prihlásený
+      if (!currentUser) {
+        loadFromLocalStorageOnly();
+      } else {
+        // Ak je prihlásený, loadFromFirestore sa zavolá v updateUI po overení stavu
+      }
+      // calculateTotal() sa zavolá na konci načítavacích funkcií
     }
 
     window.handleInput = function(input, nextId) {
@@ -1368,11 +1397,23 @@
     window.changeMonth = function() {
       currentMonth = parseInt(monthSelect.value);
       createTable(); // Vytvorí novú tabuľku a načíta/prepočíta dáta
+      // Po zmene mesiaca je dobré načítať dáta pre nový mesiac
+      if(currentUser) {
+          loadFromFirestore(); // Skúsi načítať z cloudu pre nový mesiac
+      } else {
+          loadFromLocalStorageOnly(); // Načíta z localStorage pre nový mesiac
+      }
     }
 
     window.changeYear = function() {
       currentYear = parseInt(yearSelect.value);
       createTable(); // Vytvorí novú tabuľku a načíta/prepočíta dáta
+       // Po zmene roku je dobré načítať dáta pre nový rok/mesiac
+      if(currentUser) {
+          loadFromFirestore(); // Skúsi načítať z cloudu pre nový rok/mesiac
+      } else {
+          loadFromLocalStorageOnly(); // Načíta z localStorage pre nový rok/mesiac
+      }
     }
 
     function getDaysInMonth(month) {
@@ -1383,12 +1424,11 @@
     // -------------------- INIT --------------------
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
-      updateUI(); // Táto funkcia zavolá createTable a loadFromFirestore
+      updateUI(); // Táto funkcia zavolá createTable a načíta dáta (buď z FS alebo LS)
     });
 
-    // Počiatočné vytvorenie tabuľky (ak nie je user, zavolá sa v updateUI)
-    // createTable(); // Už sa volá v updateUI
-    // calculateTotal(); // Už sa volá na konci createTable/loadFromFirestore
+    // Počiatočné vytvorenie tabuľky sa deje v updateUI
+    // calculateTotal() sa volá na konci načítavacích funkcií
 
     // -------------------- FUNKCIE PRE ZÁLOHU A OBNOVU DO EXCELU --------------------
     window.createBackup = function() {
@@ -1512,8 +1552,16 @@
             localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(backupData));
 
             // Obnovíme tabuľku a prepočítame všetko na základe nových dát
+            // Najprv zavoláme createTable na vyčistenie a štruktúru
             createTable();
+            // Potom explicitne zavoláme funkciu, ktorá načíta z localStorage (kam sme práve uložili)
+            loadFromLocalStorageOnly();
             showSaveNotification('Záloha bola úspešne obnovená.');
+             // Voliteľne: Ak je užívateľ prihlásený, môžeme obnovené dáta hneď synchronizovať s Firestore
+            if (currentUser && isOnline()) {
+              saveToFirestore(); // Pošle obnovené dáta do cloudu
+            }
+
           } catch (error) {
             console.error('Chyba pri načítavaní zálohy:', error);
             showErrorNotification('Chyba pri načítavaní zálohy: ' + error.message);
