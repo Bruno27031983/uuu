@@ -1,7 +1,7 @@
 {
-  "name": "Bruno's Calculator",
+  "name": "Bruno's Calculator - Výkaz Práce",
   "short_name": "BrunoCalc",
-  "description": "Aplikácia na výpočet odpracovaných hodín a mzdy",
+  "description": "Aplikácia na sledovanie pracovných hodín a výpočet mzdy.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f4f4",
@@ -10,12 +10,14 @@
     {
       "src": "./icons/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
