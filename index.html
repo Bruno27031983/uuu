@@ -1,3 +1,474 @@
+  <!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bruno's Calculator</title>
+
+  <!-- Odkaz na manifest (RELATÍVNA cesta) -->
+  <link rel="manifest" href="./manifest.json" />
+
+  <!-- Knižnice pre export do PDF a Excelu -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+  <style>
+    /* Základné štýly - bez zmien */
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 10px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.5em;
+      background: linear-gradient(90deg, #ff0000, #00ff00, #0000ff, #ffff00, #ff00ff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: gradientText 5s ease-in-out infinite, textShadowPulse 2s ease-in-out infinite;
+      margin-bottom: 10px;
+    }
+    h2 {
+      text-align: center;
+      color: #555;
+      margin-top: -10px;
+      font-size: 1.2em;
+    }
+    .settings {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .settings > div {
+      flex: 1 1 200px;
+      margin: 5px;
+    }
+    .settings label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      min-width: 800px;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ddd;
+      text-align: left;
+      font-size: 0.9em;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    th:nth-child(6), td:nth-child(6),
+    th:nth-child(7), td:nth-child(7) {
+      width: 25%;
+    }
+    th:nth-child(1), td:nth-child(1),
+    th:nth-child(2), td:nth-child(2),
+    th:nth-child(3), td:nth-child(3),
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5),
+    th:nth-child(8), td:nth-child(8) {
+      width: 8.33%;
+    }
+    input[type="tel"], input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 5px;
+      box-sizing: border-box;
+      background-color: #ffffd0;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+    .result {
+      font-weight: bold;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .btn-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .btn {
+      flex: 1 1 150px;
+      padding: 10px 20px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+      transition: background-color 0.3s ease;
+    }
+    .reset-btn {
+      background-color: #f44336;
+    }
+    .reset-btn:hover {
+      background-color: #d32f2f;
+    }
+    .export-btn {
+      background-color: #4CAF50;
+    }
+    .export-btn:hover {
+      background-color: #388e3c;
+    }
+    .backup-btn {
+      background-color: #8a2be2;
+      padding: 15px 20px;
+    }
+    .backup-btn:hover {
+      background-color: #6a1bb2;
+    }
+    .highlight {
+      background-color: #ffcc00;
+      color: #333;
+      font-weight: bold;
+      border: 2px solid #ffcc00;
+    }
+    #totalSalary {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e6f3ff;
+      border-radius: 5px;
+    }
+    #dataSizeContainer {
+      margin-top: 10px;
+      text-align: center;
+    }
+    #dataSizeText {
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #555;
+    }
+    #dataSizeBar {
+      width: 80%;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    #dataSizeFill {
+      height: 100%;
+      width: 0%;
+      background-color: #4CAF50;
+      transition: width 0.3s ease;
+    }
+    .current-day {
+      background-color: #8a2be2;
+      color: white;
+    }
+    .current-day input {
+      background-color: #9932cc;
+      color: white;
+    }
+    body.dark-mode {
+      background-color: #333;
+      color: #f4f4f4;
+    }
+    .container.dark-mode {
+      background-color: #444;
+      color: #f4f4f4;
+    }
+    table.dark-mode {
+      background-color: #555;
+      color: #f4f4f4;
+    }
+    th.dark-mode {
+      background-color: #666;
+    }
+    td.dark-mode {
+      background-color: #444;
+      color: #f4f4f4;
+    }
+    input[type="tel"].dark-mode, input[type="number"].dark-mode, input[type="text"].dark-mode {
+      background-color: #666;
+      color: white;
+    }
+    .btn.dark-mode {
+      color: #333;
+    }
+    .reset-btn.dark-mode {
+      background-color: #d32f2f;
+    }
+    .export-btn.dark-mode {
+      background-color: #388e3c;
+    }
+    .backup-btn.dark-mode {
+      background-color: #6a1bb2;
+    }
+    #totalSalary.dark-mode {
+      background-color: #2c3e50;
+    }
+    .current-day.dark-mode {
+      background-color: #4a0e8f;
+      color: #fff;
+    }
+    .current-day.dark-mode input {
+      background-color: #5c1db3;
+      color: #fff;
+    }
+    @keyframes gradientText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes textShadowPulse {
+      0%, 100% {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+                     0 0 20px rgba(255, 255, 255, 0.3),
+                     0 0 30px rgba(255, 255, 255, 0.2);
+      }
+      50% {
+        text-shadow: 0 0 20px rgba(255, 255, 255, 1),
+                     0 0 30px rgba(255, 255, 255, 0.9),
+                     0 0 40px rgba(255, 255, 255, 0.7);
+      }
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+      .container {
+        padding: 10px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+      h2 {
+        font-size: 1em;
+      }
+      .settings {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .settings > div {
+        flex: 1 1 auto;
+        margin: 10px 0;
+      }
+      table {
+        min-width: 800px;
+      }
+      th, td {
+        padding: 6px;
+        font-size: 0.8em;
+      }
+      .btn-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn {
+        flex: 1 1 auto;
+        font-size: 14px;
+        padding: 8px 16px;
+        margin: 5px 0;
+      }
+      .backup-btn {
+        padding: 15px 16px;
+      }
+      #totalSalary {
+        font-size: 16px;
+      }
+      #dataSizeContainer {
+        font-size: 12px;
+      }
+      .table-container {
+        overflow-x: auto;
+      }
+    }
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5em;
+      }
+      th, td {
+        font-size: 0.7em;
+      }
+      .btn {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+      .backup-btn {
+        padding: 15px 12px;
+      }
+      .settings label {
+        font-size: 0.9em;
+      }
+      input[type="tel"], input[type="number"], input[type="text"] {
+        font-size: 12px;
+      }
+      table {
+        min-width: 800px;
+      }
+    }
+    #saveNotification, #errorNotification {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 14px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    #saveNotification.show, #errorNotification.show {
+      display: block;
+      opacity: 1;
+    }
+    #saveNotification {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #errorNotification {
+      background-color: #f44336;
+      color: white;
+    }
+    #login-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #login-form input[type="email"],
+    #login-form input[type="password"] {
+      width: 200px;
+      margin: 5px auto;
+      display: block;
+    }
+    #login-form .btn {
+      width: 120px;
+      margin: 5px 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Autentifikačné UI -->
+    <div id="auth-container" style="text-align: center; margin-bottom: 20px;">
+      <div id="login-form" style="display: none;">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Heslo">
+        <button class="btn export-btn" onclick="login()">Prihlásiť sa</button>
+        <button class="btn export-btn" onclick="register()">Registrovať</button>
+      </div>
+      <div id="user-info" style="display: none;">
+        <span id="user-email"></span>
+        <button class="btn reset-btn" onclick="logout()">Odhlásiť sa</button>
+      </div>
+    </div>
+
+    <h1 id="mainTitle">Bruno's Calculator</h1>
+    <h2></h2>
+
+    <!-- Nastavenia -->
+    <div class="settings">
+      <div>
+        <label for="employeeNameInput">Meno pracovníka: </label>
+        <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka" oninput="updateEmployeeName()">
+      </div>
+      <div>
+        <label for="hourlyWageInput">Hodinová mzda (€): </label>
+        <input type="number" id="hourlyWageInput" value="10" min="0" step="0.1" oninput="updateSettings()">
+      </div>
+      <div>
+        <label for="taxRateInput">Daňové percento (%): </label>
+        <input type="number" id="taxRateInput" value="2" min="0" step="0.1" oninput="updateSettings()">
+      </div>
+      <div>
+        <label for="monthSelect">Mesiac: </label>
+        <select id="monthSelect" onchange="changeMonth()">
+          <option value="0">Január</option>
+          <option value="1">Február</option>
+          <option value="2">Marec</option>
+          <option value="3">Apríl</option>
+          <option value="4">Máj</option>
+          <option value="5">Jún</option>
+          <option value="6">Júl</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">Október</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
+        </select>
+      </div>
+      <div>
+        <label for="yearSelect">Rok: </label>
+        <select id="yearSelect" onchange="changeYear()">
+          <!-- Dynamicky generované roky -->
+        </select>
+      </div>
+      <div>
+        <label for="decimalPlacesSelect">Počet desatinných miest: </label>
+        <select id="decimalPlacesSelect" onchange="changeDecimalPlaces()">
+          <option value="1">1</option>
+          <option value="2">2</option>
+        </select>
+      </div>
+      <button onclick="toggleDarkMode()" class="btn highlight">Prepínať tmavý režim</button>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Deň</th>
+            <th>Príchod</th>
+            <th>Odchod</th>
+            <th>Prestávka</th>
+            <th>Odpracované</th>
+            <th>Hrubá Mzda (€)</th>
+            <th>Čistá Mzda (€)</th>
+            <th>Akcia</th>
+          </tr>
+        </thead>
+        <tbody id="workDays">
+          <!-- Riadky budú generované cez JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <div id="totalSalary"></div>
+
+    <div class="btn-container">
+      <button class="btn export-btn" onclick="exportToPDF()">Exportovať do PDF</button>
+      <button class="btn export-btn" onclick="sendPDF()">Odoslať PDF</button>
+      <button class="btn export-btn" onclick="restoreBackup()">Obnoviť zálohu</button>
+      <button class="btn backup-btn" onclick="createBackup()">Vytvoriť zálohu</button>
+    </div>
+  </div>
+
+  <div id="saveNotification">Dáta boli úspešne uložené</div>
+  <div id="errorNotification"></div>
+
+  <!-- Hlavný JavaScript kód + Firebase -->
   <script type="module">
     // ----------------------- IMPORTY Firebase -----------------------
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
