@@ -256,79 +256,29 @@
       }
     }
     @media (max-width: 768px) {
-      body {
-        padding: 5px;
-      }
-      .container {
-        padding: 10px;
-      }
-      h1 {
-        font-size: 1.8em;
-      }
-      h2 {
-        font-size: 1em;
-      }
-      .settings {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .settings > div {
-        flex: 1 1 auto;
-        margin: 10px 0;
-      }
-      table {
-        min-width: 800px;
-      }
-      th, td {
-        padding: 6px;
-        font-size: 0.8em;
-      }
-      .btn-container {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .btn {
-        flex: 1 1 auto;
-        font-size: 14px;
-        padding: 8px 16px;
-        margin: 5px 0;
-      }
-      .backup-btn {
-        padding: 15px 16px;
-      }
-      #totalSalary {
-        font-size: 16px;
-      }
-      #dataSizeContainer {
-        font-size: 12px;
-      }
-      .table-container {
-        overflow-x: auto;
-      }
+      body { padding: 5px; }
+      .container { padding: 10px; }
+      h1 { font-size: 1.8em; }
+      h2 { font-size: 1em; }
+      .settings { flex-direction: column; align-items: stretch; }
+      .settings > div { flex: 1 1 auto; margin: 10px 0; }
+      table { min-width: 800px; }
+      th, td { padding: 6px; font-size: 0.8em; }
+      .btn-container { flex-direction: column; align-items: stretch; }
+      .btn { flex: 1 1 auto; font-size: 14px; padding: 8px 16px; margin: 5px 0; }
+      .backup-btn { padding: 15px 16px; }
+      #totalSalary { font-size: 16px; }
+      #dataSizeContainer { font-size: 12px; }
+      .table-container { overflow-x: auto; }
     }
     @media (max-width: 480px) {
-      h1 {
-        font-size: 1.5em;
-      }
-      th, td {
-        font-size: 0.7em;
-      }
-      .btn {
-        font-size: 12px;
-        padding: 6px 12px;
-      }
-      .backup-btn {
-        padding: 15px 12px;
-      }
-      .settings label {
-        font-size: 0.9em;
-      }
-      input[type="tel"], input[type="number"], input[type="text"] {
-        font-size: 12px;
-      }
-      table {
-        min-width: 800px;
-      }
+      h1 { font-size: 1.5em; }
+      th, td { font-size: 0.7em; }
+      .btn { font-size: 12px; padding: 6px 12px; }
+      .backup-btn { padding: 15px 12px; }
+      .settings label { font-size: 0.9em; }
+      input[type="tel"], input[type="number"], input[type="text"] { font-size: 12px; }
+      table { min-width: 800px; }
     }
     #saveNotification, #errorNotification {
       display: none;
@@ -347,29 +297,14 @@
       display: block;
       opacity: 1;
     }
-    #saveNotification {
-      background-color: #4CAF50;
-      color: white;
-    }
-    #errorNotification {
-      background-color: #f44336;
-      color: white;
-    }
-    #login-form {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    #saveNotification { background-color: #4CAF50; color: white; }
+    #errorNotification { background-color: #f44336; color: white; }
+    #login-form { display: flex; flex-direction: column; align-items: center; }
     #login-form input[type="email"],
     #login-form input[type="password"] {
-      width: 200px;
-      margin: 5px auto;
-      display: block;
+      width: 200px; margin: 5px auto; display: block;
     }
-    #login-form .btn {
-      width: 120px;
-      margin: 5px 2px;
-    }
+    #login-form .btn { width: 120px; margin: 5px 2px; }
   </style>
 </head>
 <body>
@@ -913,7 +848,28 @@
       calculateAndUpdateTotals();
     }
 
-    // NOVÉ: Funkcia, ktorá vypočíta rozdiel v sekundách, vrátane odpočítania prestávky
+    // Pôvodná verzia formatAndMoveNext – bez trim()
+    function formatAndMoveNext(input, nextId) {
+      let value = input.value.replace(/[^\d:]/g, '');
+      if (value.length === 4 && !value.includes(':')) {
+        value = value.slice(0, 2) + ':' + value.slice(2);
+      }
+      input.value = value;
+
+      if (value.length === 5) {
+        const [hours, minutes] = value.split(':').map(Number);
+        if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
+          const day = parseInt(input.id.split('-')[3]);
+          calculateRow(day);
+          moveNext(input, nextId);
+        } else {
+          showErrorNotification("Neplatný čas. Prosím, zadajte čas vo formáte HH:MM (napr. 06:30).");
+          input.value = '';
+        }
+      }
+    }
+
+    // Funkcia, ktorá vypočíta rozdiel v sekundách, vrátane odpočítania prestávky
     function getDiffInSeconds(day) {
       const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`).value;
       const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`).value;
@@ -955,7 +911,8 @@
     function updateNetSalary(day) {
       const grossSalary = parseFloat(document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`).value) || 0;
       const netSalary = grossSalary * (1 - taxRate);
-      document.getElementById(`net-${currentYear}-${currentMonth}-${day}`).value = isFinite(netSalary) ? netSalary.toFixed(decimalPlaces) : '0.00';
+      document.getElementById(`net-${currentYear}-${currentMonth}-${day}`).value = 
+          isFinite(netSalary) ? netSalary.toFixed(decimalPlaces) : '0.00';
     }
 
     window.resetRow = function(day) {
@@ -991,47 +948,6 @@
       console.log('Ukladám dáta do localStorage pri aktualizácii:', saveData);
       localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
       debouncedSaveToFirestore();
-    }
-
-    // Upravená funkcia calculateTotal, ktorá sčíta rozdiely v sekundách
-    function calculateTotal() {
-      let totalSec = 0;
-      let totalGrossSalary = 0;
-      let totalNetSalary = 0;
-      let daysWithEntries = 0;
-
-      const daysInMonth = getDaysInMonth(currentMonth);
-      for (let day = 1; day <= daysInMonth; day++) {
-        const diffSec = getDiffInSeconds(day);
-        if (diffSec > 0) {
-          totalSec += diffSec;
-          const diffHours = diffSec / 3600;
-          const grossSalary = diffHours * hourlyWage;
-          totalGrossSalary += grossSalary;
-          const netSalary = grossSalary * (1 - taxRate);
-          totalNetSalary += netSalary;
-          daysWithEntries++;
-        }
-      }
-
-      const totalHours = Math.floor(totalSec / 3600);
-      const totalMinutes = Math.floor((totalSec % 3600) / 60);
-      const totalDecimalHours = (totalSec / 3600).toFixed(decimalPlaces);
-
-      let averageNetSalary = daysWithEntries > 0 ? (totalNetSalary / daysWithEntries).toFixed(decimalPlaces) : 0;
-      let averageSec = daysWithEntries > 0 ? totalSec / daysWithEntries : 0;
-      const averageHours = Math.floor(averageSec / 3600);
-      const averageMinutes = Math.floor((averageSec % 3600) / 60);
-      const averageDecimalHours = (averageSec / 3600).toFixed(decimalPlaces);
-
-      totalSalaryDiv.innerHTML = `
-        Počet odpracovaných dní: ${daysWithEntries}<br>
-        Celkový odpracovaný čas: ${totalHours}h ${totalMinutes}m (${totalDecimalHours} h)<br>
-        Celková hrubá mzda: ${totalGrossSalary.toFixed(decimalPlaces)}€<br>
-        Celková čistá mzda: ${totalNetSalary.toFixed(decimalPlaces)}€<br>
-        Priemerná čistá mzda: ${averageNetSalary}€<br>
-        <strong>Priemerný odpracovaný čas: ${averageHours}h ${averageMinutes}m (${averageDecimalHours} h)</strong>
-      `;
     }
 
     function moveNext(currentElement, nextId) {
