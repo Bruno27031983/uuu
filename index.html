@@ -9,79 +9,28 @@
   <link rel="manifest" href="./manifest.json" />
 
   <!-- Knižnice pre export do PDF a Excelu -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
   <style>
-    /* Základné štýly - minimálne zmeny pre čistotu a tmavý režim */
-    :root {
-      --bg-color: #f4f4f4;
-      --text-color: #333;
-      --container-bg: white;
-      --table-bg: #fff;
-      --table-border: #ddd;
-      --th-bg: #f2f2f2;
-      --input-bg: #ffffd0;
-      --input-border: #ccc;
-      --input-text: #333;
-      --total-bg: #e6f3ff;
-      --highlight-bg: #8a2be2; /* Blue Violet ako základ pre tlačidlo režimu */
-      --highlight-text: white;
-      --reset-btn-bg: #f44336;
-      --export-btn-bg: #4CAF50;
-      --backup-btn-bg: #8a2be2; /* Ponechané Blue Violet */
-      --notification-save-bg: #4CAF50;
-      --notification-error-bg: #f44336;
-      --current-day-bg: #8a2be2;
-      --current-day-text: white;
-      --current-day-input-bg: #9932cc; /* Dark Orchid */
-      --current-day-input-text: white;
-      --shadow-color: rgba(0,0,0,0.1);
-    }
-
-    body.dark-mode {
-      --bg-color: #333;
-      --text-color: #f4f4f4;
-      --container-bg: #444;
-      --table-bg: #555;
-      --table-border: #666;
-      --th-bg: #666;
-      --input-bg: #666;
-      --input-border: #888;
-      --input-text: #f4f4f4;
-      --total-bg: #2c3e50;
-      --highlight-bg: #6a1bb2; /* Tmavšia fialová pre tmavý režim */
-      --reset-btn-bg: #d32f2f;
-      --export-btn-bg: #388e3c;
-      --backup-btn-bg: #6a1bb2; /* Tmavšia fialová */
-      --notification-save-bg: #388e3c;
-      --notification-error-bg: #d32f2f;
-      --current-day-bg: #4a0e8f; /* Ešte tmavšia fialová */
-      --current-day-text: #fff;
-      --current-day-input-bg: #5c1db3;
-      --current-day-input-text: #fff;
-      --shadow-color: rgba(255,255,255,0.1);
-    }
-
+    /* Základné štýly - bez zmien */
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
       margin: 0;
       padding: 10px;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      transition: background-color 0.3s ease, color 0.3s ease; /* Plynulý prechod */
+      background-color: #f4f4f4;
+      color: #333;
     }
     .container {
       max-width: 1200px;
       margin: auto;
-      background: var(--container-bg);
+      background: white;
       padding: 15px;
       border-radius: 5px;
-      box-shadow: 0 0 10px var(--shadow-color);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       position: relative;
-      transition: background-color 0.3s ease;
     }
     h1 {
       text-align: center;
@@ -95,7 +44,7 @@
     }
     h2 {
       text-align: center;
-      color: #555; /* Ponechané, alebo použiť var(--text-color) s nižšou opacitou */
+      color: #555;
       margin-top: -10px;
       font-size: 1.2em;
     }
@@ -105,15 +54,14 @@
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
-      gap: 10px; /* Lepšie ako margin na flex itemoch */
     }
     .settings > div {
-      flex: 1 1 200px; /* Zachované */
+      flex: 1 1 200px;
+      margin: 5px;
     }
     .settings label {
       display: block;
       margin-bottom: 5px;
-      font-weight: bold; /* Zvýraznenie labelov */
     }
     .table-container {
       overflow-x: auto;
@@ -122,49 +70,39 @@
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 20px;
-      min-width: 800px; /* Zachované */
-      background-color: var(--table-bg);
-      transition: background-color 0.3s ease;
+      min-width: 800px;
     }
     th, td {
       padding: 8px;
-      border: 1px solid var(--table-border);
+      border: 1px solid #ddd;
       text-align: left;
       font-size: 0.9em;
-      transition: border-color 0.3s ease;
     }
     th {
-      background-color: var(--th-bg);
-      transition: background-color 0.3s ease;
-      white-space: nowrap; /* Zabráni zalomeniu textu v hlavičke */
+      background-color: #f2f2f2;
     }
-    /* Zachované šírky stĺpcov */
     th:nth-child(6), td:nth-child(6),
-    th:nth-child(7), td:nth-child(7) { width: 25%; }
+    th:nth-child(7), td:nth-child(7) {
+      width: 25%;
+    }
     th:nth-child(1), td:nth-child(1),
     th:nth-child(2), td:nth-child(2),
     th:nth-child(3), td:nth-child(3),
     th:nth-child(4), td:nth-child(4),
     th:nth-child(5), td:nth-child(5),
-    th:nth-child(8), td:nth-child(8) { width: 8.33%; }
-
-    input[type="tel"], input[type="number"], input[type="text"], select {
+    th:nth-child(8), td:nth-child(8) {
+      width: 8.33%;
+    }
+    input[type="tel"], input[type="number"], input[type="text"] {
       width: 100%;
-      padding: 6px 8px; /* Upravené padding */
+      padding: 5px;
       box-sizing: border-box;
-      background-color: var(--input-bg);
-      color: var(--input-text);
+      background-color: #ffffd0;
       font-size: 14px;
-      border: 1px solid var(--input-border);
-      border-radius: 4px; /* Mierne zaoblenie */
-      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      border: 1px solid #ccc;
+      border-radius: 3px;
     }
-    input:focus, select:focus {
-        outline: none;
-        border-color: var(--highlight-bg);
-        box-shadow: 0 0 5px var(--highlight-bg);
-    }
-    .result { /* Tento selektor sa nepoužíva, ale nechávam pre prípad */
+    .result {
       font-weight: bold;
       margin-top: 20px;
       text-align: center;
@@ -172,147 +110,265 @@
     .btn-container {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center; /* Centrovanie tlačidiel */
-      gap: 10px; /* Medzery medzi tlačidlami */
+      justify-content: space-between;
       margin-top: 20px;
     }
     .btn {
-      flex: 1 1 150px; /* Zachované */
-      padding: 10px 15px; /* Upravené padding */
-      color: white; /* Farba textu pre väčšinu tlačidiel */
+      flex: 1 1 150px;
+      padding: 10px 20px;
+      color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 15px; /* Mierne zmenšené */
-      text-align: center;
-      transition: background-color 0.3s ease, transform 0.1s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Jemný tieň */
+      font-size: 16px;
+      margin: 5px;
+      transition: background-color 0.3s ease;
     }
-    .btn:hover {
-        opacity: 0.9; /* Mierne zosvetlenie pri hover */
+    .reset-btn {
+      background-color: #f44336;
     }
-    .btn:active {
-        transform: translateY(1px); /* Efekt stlačenia */
-        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    .reset-btn:hover {
+      background-color: #d32f2f;
     }
-    .reset-btn { background-color: var(--reset-btn-bg); }
-    .export-btn { background-color: var(--export-btn-bg); }
-    .backup-btn { background-color: var(--backup-btn-bg); }
-    .toggle-dark-btn { background-color: var(--highlight-bg); color: var(--highlight-text); } /* Špecifické pre tmavý režim */
-
+    .export-btn {
+      background-color: #4CAF50;
+    }
+    .export-btn:hover {
+      background-color: #388e3c;
+    }
+    .backup-btn {
+      background-color: #8a2be2;
+      padding: 15px 20px;
+    }
+    .backup-btn:hover {
+      background-color: #6a1bb2;
+    }
+    .highlight {
+      background-color: #ffcc00;
+      color: #333;
+      font-weight: bold;
+      border: 2px solid #ffcc00;
+    }
     #totalSalary {
-      font-size: 1.1em; /* Relatívna veľkosť */
+      font-size: 18px;
       font-weight: bold;
       text-align: center;
       margin-top: 20px;
-      padding: 15px;
-      background-color: var(--total-bg);
+      padding: 10px;
+      background-color: #e6f3ff;
       border-radius: 5px;
-      border: 1px solid var(--table-border);
-      transition: background-color 0.3s ease, border-color 0.3s ease;
     }
-    /* Data size bar - bez zmien */
-    #dataSizeContainer { margin-top: 10px; text-align: center; }
-    #dataSizeText { margin-bottom: 5px; font-size: 14px; color: #555; }
-    #dataSizeBar { width: 80%; height: 20px; background-color: #ddd; border-radius: 10px; margin: 0 auto; overflow: hidden; }
-    #dataSizeFill { height: 100%; width: 0%; background-color: #4CAF50; transition: width 0.3s ease; }
-
+    #dataSizeContainer {
+      margin-top: 10px;
+      text-align: center;
+    }
+    #dataSizeText {
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #555;
+    }
+    #dataSizeBar {
+      width: 80%;
+      height: 20px;
+      background-color: #ddd;
+      border-radius: 10px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    #dataSizeFill {
+      height: 100%;
+      width: 0%;
+      background-color: #4CAF50;
+      transition: width 0.3s ease;
+    }
     .current-day {
-      background-color: var(--current-day-bg);
-      color: var(--current-day-text);
-      font-weight: bold;
-    }
-    .current-day td { /* Zabezpečí, že border bude viditeľný */
-        border-color: var(--current-day-input-bg);
+      background-color: #8a2be2;
+      color: white;
     }
     .current-day input {
-      background-color: var(--current-day-input-bg);
-      color: var(--current-day-input-text);
-      font-weight: bold; /* Zvýraznenie aj v inputoch */
+      background-color: #9932cc;
+      color: white;
     }
-    /* Animácie - bez zmien */
-    @keyframes gradientText { /*...*/ }
-    @keyframes textShadowPulse { /*...*/ }
-
-    /* Notifikácie */
-    .notification {
+    /* Opravený tmavý režim: selektory sa teraz vzťahujú na prvky v rámci body.dark-mode */
+    body.dark-mode {
+      background-color: #333;
+      color: #f4f4f4;
+    }
+    body.dark-mode .container {
+      background-color: #444;
+      color: #f4f4f4;
+    }
+    body.dark-mode table {
+      background-color: #555;
+      color: #f4f4f4;
+    }
+    body.dark-mode th {
+      background-color: #666;
+    }
+    body.dark-mode td {
+      background-color: #444;
+      color: #f4f4f4;
+    }
+    body.dark-mode input[type="tel"],
+    body.dark-mode input[type="number"],
+    body.dark-mode input[type="text"] {
+      background-color: #666;
+      color: white;
+    }
+    body.dark-mode .btn {
+      color: #333;
+    }
+    body.dark-mode .reset-btn {
+      background-color: #d32f2f;
+    }
+    body.dark-mode .export-btn {
+      background-color: #388e3c;
+    }
+    body.dark-mode .backup-btn {
+      background-color: #6a1bb2;
+    }
+    body.dark-mode #totalSalary {
+      background-color: #2c3e50;
+    }
+    body.dark-mode .current-day {
+      background-color: #4a0e8f;
+      color: #fff;
+    }
+    body.dark-mode .current-day input {
+      background-color: #5c1db3;
+      color: #fff;
+    }
+    @keyframes gradientText {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes textShadowPulse {
+      0%, 100% {
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
+                     0 0 20px rgba(255, 255, 255, 0.3),
+                     0 0 30px rgba(255, 255, 255, 0.2);
+      }
+      50% {
+        text-shadow: 0 0 20px rgba(255, 255, 255, 1),
+                     0 0 30px rgba(255, 255, 255, 0.9),
+                     0 0 40px rgba(255, 255, 255, 0.7);
+      }
+    }
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+      }
+      .container {
+        padding: 10px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+      h2 {
+        font-size: 1em;
+      }
+      .settings {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .settings > div {
+        flex: 1 1 auto;
+        margin: 10px 0;
+      }
+      table {
+        min-width: 800px;
+      }
+      th, td {
+        padding: 6px;
+        font-size: 0.8em;
+      }
+      .btn-container {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn {
+        flex: 1 1 auto;
+        font-size: 14px;
+        padding: 8px 16px;
+        margin: 5px 0;
+      }
+      .backup-btn {
+        padding: 15px 16px;
+      }
+      #totalSalary {
+        font-size: 16px;
+      }
+      #dataSizeContainer {
+        font-size: 12px;
+      }
+      .table-container {
+        overflow-x: auto;
+      }
+    }
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5em;
+      }
+      th, td {
+        font-size: 0.7em;
+      }
+      .btn {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+      .backup-btn {
+        padding: 15px 12px;
+      }
+      .settings label {
+        font-size: 0.9em;
+      }
+      input[type="tel"], input[type="number"], input[type="text"] {
+        font-size: 12px;
+      }
+      table {
+        min-width: 800px;
+      }
+    }
+    #saveNotification, #errorNotification {
       display: none;
       position: fixed;
       bottom: 20px;
       right: 20px;
-      padding: 12px 20px; /* Upravené padding */
+      padding: 10px 20px;
       border-radius: 5px;
       font-size: 14px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
       z-index: 1000;
       opacity: 0;
-      transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-      transform: translateY(20px); /* Štartovacia pozícia pre animáciu */
+      transition: opacity 0.5s ease-in-out;
     }
-    .notification.show {
+    #saveNotification.show, #errorNotification.show {
       display: block;
       opacity: 1;
-      transform: translateY(0); /* Cieľová pozícia */
     }
-    #saveNotification { background-color: var(--notification-save-bg); color: white; }
-    #errorNotification { background-color: var(--notification-error-bg); color: white; }
-    #statusNotification { background-color: grey; color: white; /* Bude upravené v JS */ }
-
-    /* Login forma */
+    #saveNotification {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #errorNotification {
+      background-color: #f44336;
+      color: white;
+    }
     #login-form {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px; /* Medzery medzi prvkami */
     }
     #login-form input[type="email"],
     #login-form input[type="password"] {
-      width: 250px; /* Trochu širšie */
-      max-width: 90%;
-      margin: 0 auto; /* Centrovanie */
+      width: 200px;
+      margin: 5px auto;
       display: block;
-      text-align: center;
-    }
-    #login-buttons {
-        display: flex;
-        gap: 10px; /* Medzera medzi login/register tlačidlami */
     }
     #login-form .btn {
-      width: auto; /* Prispôsobí sa obsahu */
-      flex: 0 1 auto; /* Nechať zmenšiť, ale nie rásť */
-      padding: 8px 16px; /* Menšie tlačidlá pre login */
-    }
-    #user-info {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        font-size: 0.9em;
-    }
-    #user-info .btn {
-        padding: 6px 12px; /* Menšie odhlasovacie tlačidlo */
-        font-size: 14px;
-        flex-grow: 0; /* Nezaberie viac miesta */
-    }
-
-    /* Media Queries - úpravy pre responzivitu */
-    @media (max-width: 768px) {
-      body { padding: 5px; }
-      .container { padding: 10px; }
-      h1 { font-size: 1.8em; }
-      h2 { font-size: 1em; }
-      .settings { flex-direction: column; align-items: stretch; gap: 15px; }
-      th, td { padding: 6px; font-size: 0.85em; } /* O niečo väčšie písmo */
-      .btn-container { flex-direction: column; align-items: stretch; gap: 8px; }
-      .btn { font-size: 14px; padding: 10px 16px; } /* Jednotnejšie tlačidlá */
-      #totalSalary { font-size: 1em; }
-    }
-    @media (max-width: 480px) {
-      h1 { font-size: 1.6em; }
-      th, td { font-size: 0.8em; } /* Menšie písmo na mobiloch */
-      .btn { font-size: 13px; padding: 9px 14px; }
-      input[type="tel"], input[type="number"], input[type="text"], select { font-size: 13px; }
-      #login-form input[type="email"], #login-form input[type="password"] { width: 200px; }
+      width: 120px;
+      margin: 5px 2px;
     }
   </style>
 </head>
@@ -321,56 +377,65 @@
     <!-- Autentifikačné UI -->
     <div id="auth-container" style="text-align: center; margin-bottom: 20px;">
       <div id="login-form" style="display: none;">
-        <input type="email" id="emailInput" placeholder="Email" autocomplete="email">
-        <input type="password" id="passwordInput" placeholder="Heslo" autocomplete="current-password">
-        <div id="login-buttons">
-            <button id="loginBtn" class="btn export-btn">Prihlásiť sa</button>
-            <button id="registerBtn" class="btn export-btn">Registrovať</button>
-        </div>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Heslo">
+        <button class="btn export-btn" onclick="login()">Prihlásiť sa</button>
+        <button class="btn export-btn" onclick="register()">Registrovať</button>
       </div>
       <div id="user-info" style="display: none;">
         <span id="user-email"></span>
-        <button id="logoutBtn" class="btn reset-btn">Odhlásiť sa</button>
+        <button class="btn reset-btn" onclick="logout()">Odhlásiť sa</button>
       </div>
     </div>
 
     <h1 id="mainTitle">Bruno's Calculator</h1>
-    <h2 id="subTitle"></h2> <!-- Pridané ID pre dynamický podnadpis -->
+    <h2></h2>
 
     <!-- Nastavenia -->
     <div class="settings">
       <div>
-        <label for="employeeNameInput">Meno pracovníka:</label>
-        <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka">
+        <label for="employeeNameInput">Meno pracovníka: </label>
+        <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka" oninput="updateEmployeeName()">
       </div>
       <div>
-        <label for="hourlyWageInput">Hodinová mzda (€):</label>
-        <input type="number" id="hourlyWageInput" value="10" min="0" step="0.1">
+        <label for="hourlyWageInput">Hodinová mzda (€): </label>
+        <input type="number" id="hourlyWageInput" value="10" min="0" step="0.1" oninput="updateSettings()">
       </div>
       <div>
-        <label for="taxRateInput">Daňové percento (%):</label>
-        <input type="number" id="taxRateInput" value="2" min="0" step="0.1">
+        <label for="taxRateInput">Daňové percento (%): </label>
+        <input type="number" id="taxRateInput" value="2" min="0" step="0.1" oninput="updateSettings()">
       </div>
       <div>
-        <label for="monthSelect">Mesiac:</label>
-        <select id="monthSelect">
-          <!-- Dynamicky generované mesiace v JS -->
+        <label for="monthSelect">Mesiac: </label>
+        <select id="monthSelect" onchange="changeMonth()">
+          <option value="0">Január</option>
+          <option value="1">Február</option>
+          <option value="2">Marec</option>
+          <option value="3">Apríl</option>
+          <option value="4">Máj</option>
+          <option value="5">Jún</option>
+          <option value="6">Júl</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">Október</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
         </select>
       </div>
       <div>
-        <label for="yearSelect">Rok:</label>
-        <select id="yearSelect">
-          <!-- Dynamicky generované roky v JS -->
+        <label for="yearSelect">Rok: </label>
+        <select id="yearSelect" onchange="changeYear()">
+          <!-- Dynamicky generované roky -->
         </select>
       </div>
       <div>
-        <label for="decimalPlacesSelect">Desatinné miesta:</label>
-        <select id="decimalPlacesSelect">
+        <label for="decimalPlacesSelect">Počet desatinných miest: </label>
+        <select id="decimalPlacesSelect" onchange="changeDecimalPlaces()">
           <option value="1">1</option>
-          <option value="2" selected>2</option> <!-- Predvolené 2 miesta -->
+          <option value="2">2</option>
         </select>
       </div>
-      <button id="toggleDarkModeBtn" class="btn toggle-dark-btn">Tmavý režim</button>
+      <button onclick="toggleDarkMode()" class="btn highlight">Prepínať tmavý režim</button>
     </div>
 
     <div class="table-container">
@@ -380,7 +445,7 @@
             <th>Deň</th>
             <th>Príchod</th>
             <th>Odchod</th>
-            <th>Prestávka (h)</th> <!-- Jasnejší popis -->
+            <th>Prestávka</th>
             <th>Odpracované</th>
             <th>Hrubá Mzda (€)</th>
             <th>Čistá Mzda (€)</th>
@@ -393,32 +458,41 @@
       </table>
     </div>
 
-    <div id="totalSalary">Celkové súčty sa vypočítajú...</div> <!-- Placeholder text -->
+    <div id="totalSalary"></div>
 
     <div class="btn-container">
-      <button id="exportPdfBtn" class="btn export-btn">Exportovať do PDF</button>
-      <button id="sendPdfBtn" class="btn export-btn">Odoslať PDF</button>
-      <button id="loadFirebaseBtn" class="btn export-btn">Načítať z Cloudu</button>
-      <button id="createBackupBtn" class="btn backup-btn">Vytvoriť Excel zálohu</button>
-      <button id="restoreBackupBtn" class="btn export-btn">Obnoviť zo zálohy</button>
+      <button class="btn export-btn" onclick="exportToPDF()">Exportovať do PDF</button>
+      <button class="btn export-btn" onclick="sendPDF()">Odoslať PDF</button>
+      <button class="btn export-btn" onclick="restoreBackup()">Obnoviť zálohu</button>
+      <button class="btn backup-btn" onclick="createBackup()">Vytvoriť zálohu</button>
+      <!-- UPRAVENÉ TLAČIDLO -->
+      <button class="btn export-btn" onclick="loadFromFirestore()">Načítanie z Firebase</button>
     </div>
   </div>
 
-  <!-- Notifikačné elementy -->
-  <div id="saveNotification" class="notification">Dáta boli úspešne uložené</div>
-  <div id="errorNotification" class="notification">Chyba</div>
-  <div id="statusNotification" class="notification">Status</div>
+  <div id="saveNotification">Dáta boli úspešne uložené</div>
+  <div id="errorNotification"></div>
 
   <!-- Hlavný JavaScript kód + Firebase -->
   <script type="module">
+    // Načítanie preferencie tmavého režimu z localStorage
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.body.classList.add('dark-mode');
+    }
+
+    // Funkcia pre prepínanie tmavého režimu
+    window.toggleDarkMode = function() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    }
+
     // ----------------------- IMPORTY Firebase -----------------------
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
-    import { getFirestore, collection, doc, setDoc, getDoc, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js'; // Pridaný writeBatch
+    import { getFirestore, collection, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
 
     // ---------------------- KONFIGURÁCIA Firebase --------------------
-    // POZNÁMKA: V produkčnej aplikácii by kľúče nemali byť priamo v kóde.
     const firebaseConfig = {
       apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
       authDomain: "uuuuu-f7ef9.firebaseapp.com",
@@ -428,130 +502,229 @@
       appId: "1:456105865458:web:101f0a4dcb455f174b606b",
     };
 
-    // ---------------------- GLOBÁLNE KONŠTANTY a PREMENNÉ --------------------
-    const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
-    const DAYS_OF_WEEK = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"]; // Kratšie názvy pre tabuľku
-    const DEBOUNCE_DELAY = 1500; // Dlhší debounce pre menej časté zápisy do FS
-    const LOCAL_STORAGE_PREFIX = 'brunoCalc_';
+    // Inicializácia Firebase
+    const app = initializeApp(firebaseConfig);
+    const appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'),
+      isTokenAutoRefreshEnabled: true
+    });
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    let app, auth, db, appCheck; // Firebase služby
+    // -------------------- GLOBÁLNE PREMENNÉ --------------------
     let currentUser = null;
-    let currentMonth, currentYear, decimalPlaces, employeeName, hourlyWage, taxRate;
-    let isSaving = false; // Flag na zabránenie simultánnym zápisom
-    let saveDataTimeout = null; // Pre debounce
-    let currentWorkData = {}; // Objekt na držanie dát aktuálneho mesiaca v pamäti
+    const workDays = document.getElementById('workDays');
+    const totalSalaryDiv = document.getElementById('totalSalary');
+    const mainTitle = document.getElementById('mainTitle');
+    const hourlyWageInput = document.getElementById('hourlyWageInput');
+    const taxRateInput = document.getElementById('taxRateInput');
+    const monthSelect = document.getElementById('monthSelect');
+    const yearSelect = document.getElementById('yearSelect');
+    const decimalPlacesSelect = document.getElementById('decimalPlacesSelect');
+    const employeeNameInput = document.getElementById('employeeNameInput');
 
-    // DOM Elementy
-    const Elements = {
-        container: document.querySelector('.container'),
-        authContainer: document.getElementById('auth-container'),
-        loginForm: document.getElementById('login-form'),
-        userInfo: document.getElementById('user-info'),
-        emailInput: document.getElementById('emailInput'),
-        passwordInput: document.getElementById('passwordInput'),
-        loginBtn: document.getElementById('loginBtn'),
-        registerBtn: document.getElementById('registerBtn'),
-        userEmailDisplay: document.getElementById('user-email'),
-        logoutBtn: document.getElementById('logoutBtn'),
-        mainTitle: document.getElementById('mainTitle'),
-        subTitle: document.getElementById('subTitle'),
-        employeeNameInput: document.getElementById('employeeNameInput'),
-        hourlyWageInput: document.getElementById('hourlyWageInput'),
-        taxRateInput: document.getElementById('taxRateInput'),
-        monthSelect: document.getElementById('monthSelect'),
-        yearSelect: document.getElementById('yearSelect'),
-        decimalPlacesSelect: document.getElementById('decimalPlacesSelect'),
-        toggleDarkModeBtn: document.getElementById('toggleDarkModeBtn'),
-        workDaysBody: document.getElementById('workDays'),
-        totalSalaryDiv: document.getElementById('totalSalary'),
-        exportPdfBtn: document.getElementById('exportPdfBtn'),
-        sendPdfBtn: document.getElementById('sendPdfBtn'),
-        loadFirebaseBtn: document.getElementById('loadFirebaseBtn'),
-        createBackupBtn: document.getElementById('createBackupBtn'),
-        restoreBackupBtn: document.getElementById('restoreBackupBtn'),
-        saveNotification: document.getElementById('saveNotification'),
-        errorNotification: document.getElementById('errorNotification'),
-        statusNotification: document.getElementById('statusNotification'),
-        // Pridajte ďalšie elementy podľa potreby
-    };
+    const currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+    let decimalPlaces = parseInt(localStorage.getItem('decimalPlaces')) || 1;
+    let employeeName = localStorage.getItem('employeeName') || '';
+    let hourlyWage = parseFloat(hourlyWageInput.value);
+    let taxRate = parseFloat(taxRateInput.value) / 100;
+    let monthData = {};
 
-    // ---------------------- INICIALIZÁCIA --------------------
-    function initializeAppAndListeners() {
-        console.log("Initializing App...");
-        initializeFirebase();
-        setupEventListeners();
-        initializeUIState(); // Načíta počiatočný stav (tmavý režim, atď.)
-        populateMonthSelect();
-        populateYearSelect();
-        setDefaultDateTime(); // Nastaví aktuálny mesiac/rok a načíta dáta
-        updateOnlineStatus(); // Zobrazí počiatočný online/offline stav
+    // -------------------- FUNKCIE PRE ROKY (select) --------------------
+    function populateYearSelect() {
+      const startYear = 2020;
+      const endYear = 2030;
+      for (let year = startYear; year <= endYear; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      }
+      yearSelect.value = currentYear;
+    }
+    populateYearSelect();
+
+    // Nastavenie predvolených hodnôt
+    monthSelect.value = currentMonth;
+    yearSelect.value = currentYear;
+    decimalPlacesSelect.value = decimalPlaces;
+    employeeNameInput.value = employeeName;
+
+    // -------------------- MONITOROVANIE ONLINE/OFFLINE --------------------
+    function isOnline() {
+      return navigator.onLine;
+    }
+    window.addEventListener('online', () => {
+      console.log('Zariadenie je online');
+      showStatusNotification('Online', 'green');
+      syncWithFirebase();
+    });
+    window.addEventListener('offline', () => {
+      console.log('Zariadenie je offline');
+      showStatusNotification('Offline', 'red');
+    });
+    function showStatusNotification(message, color) {
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      notification.style.position = 'fixed';
+      notification.style.top = '20px';
+      notification.style.right = '20px';
+      notification.style.padding = '10px 20px';
+      notification.style.borderRadius = '5px';
+      notification.style.backgroundColor = color;
+      notification.style.color = 'white';
+      notification.style.zIndex = '1000';
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+    function showErrorNotification(message) {
+      const notification = document.getElementById('errorNotification');
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+    function showSaveNotification(message = 'Dáta boli úspešne uložené') {
+      const notification = document.getElementById('saveNotification');
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 2000);
     }
 
-    function initializeFirebase() {
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            // Inicializácia AppCheck (dôležité pre bezpečnosť)
-            appCheck = initializeAppCheck(app, {
-              provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), // Váš ReCaptcha V3 kľúč stránky
-              isTokenAutoRefreshEnabled: true
-            });
-            console.log("Firebase Initialized");
-            // Listener na zmenu stavu prihlásenia
-            onAuthStateChanged(auth, handleAuthStateChange);
-        } catch (error) {
-            console.error("Firebase initialization failed:", error);
-            showNotification('error', 'Nepodarilo sa inicializovať Firebase. Niektoré funkcie (cloud) nebudú dostupné.');
+    // -------------------- AUTENTIFIKÁCIA (login, register, logout) --------------------
+    window.login = async function() {
+      if (!isOnline()) {
+        showErrorNotification('Ste offline. Prihlásenie je možné iba online.');
+        return;
+      }
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        currentUser = userCredential.user;
+        updateUI(); // Zavolá aj loadFromFirestore po prihlásení
+      } catch (error) {
+        showErrorNotification('Chyba pri prihlásení: ' + error.message);
+      }
+    }
+
+    window.register = async function() {
+      if (!isOnline()) {
+        showErrorNotification('Ste offline. Registrácia je možná iba online.');
+        return;
+      }
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        currentUser = userCredential.user;
+        await createUserCollection();
+        updateUI(); // Zavolá aj loadFromFirestore po registrácii
+      } catch (error) {
+        showErrorNotification('Chyba pri registrácii: ' + error.message);
+      }
+    }
+
+    window.logout = async function() {
+      try {
+        await signOut(auth);
+        currentUser = null;
+        updateUI(); // Zobrazí login formu a načíta dáta z localStorage
+        monthData = {}; // Vymaže dáta z pamäte
+        // createTable() sa volá v updateUI, ktorý potom zavolá loadFromLocalStorageOnly
+      } catch (error) {
+        showErrorNotification('Chyba pri odhlásení: ' + error.message);
+      }
+    }
+
+    async function createUserCollection() {
+      if (currentUser) {
+        const userRef = doc(db, 'users', currentUser.uid);
+        await setDoc(userRef, {
+          email: currentUser.email,
+          createdAt: new Date()
+        }, { merge: true });
+
+        const initialDocRef = doc(collection(userRef, 'workDays'), 'initial');
+        await setDoc(initialDocRef, { created: true });
+      }
+    }
+
+    // -------------------- UI Update a Logika Načítania --------------------
+    function updateUI() {
+        const loginForm = document.getElementById('login-form');
+        const userInfo = document.getElementById('user-info');
+        const userEmail = document.getElementById('user-email');
+
+        createTable(); // Vždy najprv vytvoríme štruktúru tabuľky
+
+        if (currentUser) {
+            loginForm.style.display = 'none';
+            userInfo.style.display = 'block';
+            userEmail.textContent = currentUser.email;
+            // Ak je používateľ prihlásený, pokúsime sa načítať dáta (prioritne z localStorage, potom Firestore)
+            loadInitialData();
+        } else {
+            loginForm.style.display = 'block';
+            userInfo.style.display = 'none';
+            // Ak používateľ nie je prihlásený, načítame iba z localStorage
+            loadFromLocalStorageOnly();
+            if (!isOnline()) {
+                showErrorNotification('Ste offline. Prihláste sa, keď budete online, pre prístup k cloudovým dátam.');
+            }
         }
     }
 
-    function setupEventListeners() {
-        // Autentifikácia
-        Elements.loginBtn.addEventListener('click', loginUser);
-        Elements.registerBtn.addEventListener('click', registerUser);
-        Elements.logoutBtn.addEventListener('click', logoutUser);
+    // Funkcia pre počiatočné načítanie dát po prihlásení alebo obnovení stránky
+    async function loadInitialData() {
+        const localKey = `workData-${currentYear}-${currentMonth}`;
+        const localData = localStorage.getItem(localKey);
 
-        // Nastavenia
-        Elements.employeeNameInput.addEventListener('input', handleSettingChange);
-        Elements.hourlyWageInput.addEventListener('input', handleSettingChange);
-        Elements.taxRateInput.addEventListener('input', handleSettingChange);
-        Elements.monthSelect.addEventListener('change', changeMonthYear);
-        Elements.yearSelect.addEventListener('change', changeMonthYear);
-        Elements.decimalPlacesSelect.addEventListener('change', handleSettingChange);
-        Elements.toggleDarkModeBtn.addEventListener('click', toggleDarkMode);
+        if (localData) {
+            console.log('Načítavam počiatočné údaje z localStorage (priorita)');
+            parseAndApplyData(localData);
+            // Po načítaní z localStorage môžeme skontrolovať synchronizáciu, ak sme online
+            if (isOnline()) {
+                syncWithFirebase(); // Skontroluje, či nie sú čakajúce dáta na odoslanie
+                // Voliteľne môžeme skontrolovať, či sa cloudové dáta nelíšia, ale to by mohlo prepísať offline prácu
+                // checkCloudForUpdates(); // Príklad možnej funkcie
+            }
+        } else if (isOnline() && currentUser) {
+            console.log('localStorage prázdny, načítavam počiatočné údaje z Firestore');
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                const docRef = doc(userRef, 'workDays', `${currentYear}-${currentMonth}`);
+                const docSnap = await getDoc(docRef);
 
-        // Tabuľka (Event Delegation)
-        Elements.workDaysBody.addEventListener('input', handleTableInput);
-        Elements.workDaysBody.addEventListener('click', handleTableButtonClick); // Pre reset tlačidlo
-
-        // Akcie
-        Elements.exportPdfBtn.addEventListener('click', exportToPDF);
-        Elements.sendPdfBtn.addEventListener('click', sendPDF);
-        Elements.loadFirebaseBtn.addEventListener('click', loadFromFirestore);
-        Elements.createBackupBtn.addEventListener('click', createBackup);
-        Elements.restoreBackupBtn.addEventListener('click', restoreBackup);
-
-        // Online/Offline status
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
+                if (docSnap.exists()) {
+                    const storedData = docSnap.data();
+                    console.log('Ukladám dáta z Firestore do localStorage:', storedData);
+                    const dataString = JSON.stringify(storedData);
+                    localStorage.setItem(localKey, dataString); // Uložíme do localStorage
+                    parseAndApplyData(dataString); // Aplikujeme dáta
+                } else {
+                    console.log('Žiadne údaje v Firestore pre tento mesiac.');
+                    // Tabuľka zostane prázdna
+                }
+            } catch (error) {
+                console.error('Chyba pri počiatočnom načítavaní z Firestore:', error);
+                showErrorNotification('Chyba pri načítavaní dát z Firebase: ' + error.message);
+            }
+        } else {
+            console.log('Offline a žiadne dáta v localStorage.');
+            // Tabuľka zostane prázdna
+        }
     }
 
-    function initializeUIState() {
-        // Tmavý režim
-        const darkMode = localStorage.getItem(LOCAL_STORAGE_PREFIX + 'darkMode') === 'true';
-        document.body.classList.toggle('dark-mode', darkMode);
 
-        // Predvolené nastavenia (ak nie sú v LS)
-        decimalPlaces = parseInt(localStorage.getItem(LOCAL_STORAGE_PREFIX + 'decimalPlaces') || '2');
-        employeeName = localStorage.getItem(LOCAL_STORAGE_PREFIX + 'employeeName') || '';
-        // Hodinová mzda a daň sa načítajú neskôr z dát mesiaca alebo default z inputu
-
-        Elements.decimalPlacesSelect.value = decimalPlaces;
-        Elements.employeeNameInput.value = employeeName;
-    }
-
-    // ---------------------- UTILITY FUNKCIE --------------------
+    // -------------------- Ukladanie do Firestore a localStorage s debounce --------------------
     function debounce(func, wait) {
       let timeout;
       return function executedFunction(...args) {
@@ -563,1210 +736,742 @@
         timeout = setTimeout(later, wait);
       };
     }
+    const debouncedSaveToFirestore = debounce(saveToFirestore, 300);
 
-    function isOnline() {
-      return navigator.onLine;
+    // Funkcia pre zozbieranie dát z tabuľky a nastavení
+    function collectCurrentData() {
+         const saveData = {
+            data: [],
+            hourlyWage: hourlyWage,
+            taxRate: taxRate,
+            employeeName: employeeName,
+            decimalPlaces: decimalPlaces,
+            lastUpdated: new Date().toISOString()
+         };
+
+         for (let i = 1; i <= getDaysInMonth(currentMonth); i++) {
+            const startElement = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
+            const endElement = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`);
+            const breakElement = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`);
+            const grossElement = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`);
+            const netElement = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`);
+
+            // Kontrola existencie elementov pred čítaním .value
+            const start = startElement ? startElement.value : '';
+            const end = endElement ? endElement.value : '';
+            const breakTime = breakElement ? breakElement.value : '';
+            const gross = grossElement ? grossElement.value : '0.00';
+            const net = netElement ? netElement.value : '0.00';
+
+            saveData.data.push({ start, end, breakTime, gross, net });
+         }
+         return saveData;
     }
 
-    function getDaysInMonth(year, month) {
-      // month je 0-based index (0 = Január)
-      return new Date(year, month + 1, 0).getDate();
-    }
+    async function saveToFirestore() {
+      if (!currentUser) return; // Ukladáme do FS len ak je user prihlásený
 
-    function getDayInfo(year, month, day) {
-      const date = new Date(year, month, day);
-      const dayOfWeek = date.getDay(); // 0 = Nedeľa, 1 = Pondelok...
-      const dayName = DAYS_OF_WEEK[dayOfWeek];
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-      return { dayName, isWeekend };
-    }
+      const saveData = collectCurrentData(); // Získame aktuálne dáta
 
-    function formatTimeInput(input) {
-      let value = input.value.replace(/[^\d]/g, ''); // Povolí len čísla najprv
-      if (value.length > 4) value = value.slice(0, 4);
-
-      if (value.length >= 3) {
-        // Vloží ":" medzi hodiny a minúty
-        value = value.slice(0, 2) + ':' + value.slice(2);
-      }
-      input.value = value;
-
-      // Validácia po dokončení (napr. pri strate fokusu alebo stlačení Enter)
-      if (value.length === 5) {
-          validateTime(input);
-      }
-    }
-
-    function validateTime(input) {
-        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-        if (!timeRegex.test(input.value)) {
-            // Ak je neplatný, môžeme ho vymazať alebo označiť chybu
-            // input.value = ''; // Možnosť vymazania
-            input.classList.add('input-error'); // Pridá triedu na zvýraznenie chyby (treba definovať v CSS)
-            showNotification('error', `Neplatný čas: ${input.value}. Zadajte HH:MM (00:00 - 23:59).`);
-            return false;
-        } else {
-            input.classList.remove('input-error');
-            return true;
+       // Lokálne uloženie je už riešené v calculateAndUpdateTotals, tu riešime len cloud
+      if (isOnline()) {
+        try {
+            const userRef = doc(db, 'users', currentUser.uid);
+            await setDoc(doc(userRef, 'workDays', `${currentYear}-${currentMonth}`), saveData);
+            // Odstránime príznak čakajúcej synchronizácie, ak existoval
+            localStorage.removeItem(`pendingSync-${currentYear}-${currentMonth}`);
+            showSaveNotification('Dáta synchronizované s Firebase.');
+            console.log('Dáta úspešne uložené do Firestore.');
+        } catch (error) {
+            console.error('Chyba pri ukladaní do Firestore:', error);
+            showErrorNotification('Chyba pri ukladaní dát do cloudu: ' + error.message);
+            // Ak ukladanie do FS zlyhá, označíme dáta ako čakajúce na synchronizáciu
+            localStorage.setItem(`pendingSync-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
         }
+      } else {
+        // Ak sme offline, len označíme dáta ako čakajúce na synchronizáciu
+        console.log('Offline: Označujem dáta pre neskoršiu synchronizáciu');
+        localStorage.setItem(`pendingSync-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
+        showSaveNotification('Ste offline, dáta uložené lokálne.');
+      }
     }
 
-    function parseTimeToMinutes(timeString) {
-        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
-        if (!timeRegex.test(timeString)) return null;
-        const match = timeString.match(timeRegex);
-        return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-    }
+    async function syncWithFirebase() {
+      if (!currentUser || !isOnline()) return; // Synchronizujeme len ak sme online a prihlásení
 
-    function formatDecimal(number, places) {
-        return number.toFixed(places);
-    }
+      console.log('Kontrolujem čakajúce dáta na synchronizáciu...');
+      const pendingKey = `pendingSync-${currentYear}-${currentMonth}`;
+      const pendingDataString = localStorage.getItem(pendingKey);
 
-    function getLocalStorageKey(year, month, type = 'workData') {
-        // Typ môže byť 'workData', 'settings', atď.
-        return `${LOCAL_STORAGE_PREFIX}${type}_${year}-${month}`;
-    }
-
-    function getFirestoreDocPath(year, month) {
-        if (!currentUser) return null;
-        return `users/${currentUser.uid}/workData/${year}-${month}`;
-    }
-
-    // ---------------------- UI FUNKCIE (Notifikácie, Stav, Populate Selects) --------------------
-
-    function showNotification(type, message, duration = 3000) {
-        let notificationElement;
-        switch (type) {
-            case 'save':
-                notificationElement = Elements.saveNotification;
-                break;
-            case 'error':
-                notificationElement = Elements.errorNotification;
-                break;
-            case 'status':
-                notificationElement = Elements.statusNotification;
-                break;
-            default:
-                console.warn("Unknown notification type:", type);
-                return;
+      if (pendingDataString) {
+        console.log('Našli sa čakajúce dáta, pokúšam sa synchronizovať...');
+        try {
+          const dataToSync = JSON.parse(pendingDataString);
+          const userRef = doc(db, 'users', currentUser.uid);
+          await setDoc(doc(userRef, 'workDays', `${currentYear}-${currentMonth}`), dataToSync);
+          console.log('Čakajúce dáta boli úspešne synchronizované s Firestore.');
+          localStorage.removeItem(pendingKey); // Odstránime príznak po úspechu
+          showSaveNotification('Offline dáta boli synchronizované s Firebase.');
+        } catch (error) {
+          console.error('Chyba pri synchronizácii čakajúcich dát s Firestore:', error);
+          showErrorNotification('Chyba pri synchronizácii offline dát: ' + error.message);
+          // Necháme pendingKey v localStorage pre ďalší pokus
         }
-
-        notificationElement.textContent = message;
-        notificationElement.classList.add('show');
-
-        // Skryť po čase
-        setTimeout(() => {
-            notificationElement.classList.remove('show');
-        }, duration);
-    }
-
-    function updateOnlineStatus() {
-        const online = isOnline();
-        console.log("Online status:", online);
-        showNotification('status', online ? 'Pripojené' : 'Offline', online ? 2000 : 5000);
-        if (online) {
-            Elements.statusNotification.style.backgroundColor = 'var(--notification-save-bg)'; // Zelená pre online
-            syncPendingData(); // Skús synchronizovať čakajúce dáta pri prechode do online
-        } else {
-            Elements.statusNotification.style.backgroundColor = 'var(--notification-error-bg)'; // Červená pre offline
-        }
-        // Update UI - napr. disable cloud tlačidiel
-        Elements.loadFirebaseBtn.disabled = !online || !currentUser;
-    }
-
-    function populateMonthSelect() {
-        Elements.monthSelect.innerHTML = '';
-        MONTH_NAMES.forEach((name, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = name;
-            Elements.monthSelect.appendChild(option);
-        });
-    }
-
-    function populateYearSelect() {
-        Elements.yearSelect.innerHTML = '';
-        const currentActualYear = new Date().getFullYear();
-        const startYear = currentActualYear - 5; // 5 rokov dozadu
-        const endYear = currentActualYear + 5;   // 5 rokov dopredu
-        for (let year = startYear; year <= endYear; year++) {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            Elements.yearSelect.appendChild(option);
-        }
-    }
-
-    function setDefaultDateTime() {
-        const now = new Date();
-        currentMonth = now.getMonth();
-        currentYear = now.getFullYear();
-        Elements.monthSelect.value = currentMonth;
-        Elements.yearSelect.value = currentYear;
-        updateSubTitle();
-        loadDataForMonth(currentYear, currentMonth); // Načíta dáta pre aktuálny mesiac/rok
-    }
-
-    function updateSubTitle() {
-        Elements.subTitle.textContent = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
-    }
-
-    function toggleDarkMode() {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      localStorage.setItem(LOCAL_STORAGE_PREFIX + 'darkMode', isDark);
-      console.log("Dark mode:", isDark);
-    }
-
-    function updateUIBasedOnAuthState() {
-        if (currentUser) {
-            Elements.loginForm.style.display = 'none';
-            Elements.userInfo.style.display = 'flex'; // Používame flex pre layout
-            Elements.userEmailDisplay.textContent = `Prihlásený: ${currentUser.email}`;
-            Elements.loadFirebaseBtn.disabled = !isOnline(); // Povolíme načítanie z cloudu, ak sme online
-        } else {
-            Elements.loginForm.style.display = 'flex'; // Používame flex pre layout
-            Elements.userInfo.style.display = 'none';
-            Elements.userEmailDisplay.textContent = '';
-            Elements.loadFirebaseBtn.disabled = true; // Zakážeme načítanie z cloudu
-        }
-        // Po zmene stavu prihlásenia znova načítame dáta (z LS alebo cloudu)
-        loadDataForMonth(currentYear, currentMonth);
-    }
-
-    // ---------------------- AUTENTIFIKÁCIA Firebase --------------------
-    function handleAuthStateChange(user) {
-      currentUser = user;
-      console.log("Auth State Changed. User:", currentUser ? currentUser.email : 'None');
-      updateUIBasedOnAuthState();
-      if (user && isOnline()) {
-          syncPendingData(); // Ak sa práve prihlásil a je online, skús synchronizovať
+      } else {
+         console.log('Žiadne čakajúce dáta na synchronizáciu.');
       }
     }
 
-    async function loginUser() {
-      if (!isOnline()) {
-        showNotification('error', 'Ste offline. Prihlásenie vyžaduje internetové pripojenie.');
-        return;
-      }
-      const email = Elements.emailInput.value;
-      const password = Elements.passwordInput.value;
-      if (!email || !password) {
-        showNotification('error', 'Zadajte email aj heslo.');
-        return;
-      }
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        showNotification('save', 'Prihlásenie úspešné.');
-        // handleAuthStateChange sa zavolá automaticky
-      } catch (error) {
-        console.error("Login failed:", error);
-        showNotification('error', `Chyba pri prihlásení: ${mapFirebaseAuthError(error.code)}`);
-      }
-    }
-
-    async function registerUser() {
-      if (!isOnline()) {
-        showNotification('error', 'Ste offline. Registrácia vyžaduje internetové pripojenie.');
-        return;
-      }
-      const email = Elements.emailInput.value;
-      const password = Elements.passwordInput.value;
-       if (!email || !password) {
-        showNotification('error', 'Zadajte email aj heslo.');
-        return;
-      }
-       if (password.length < 6) {
-           showNotification('error', 'Heslo musí mať aspoň 6 znakov.');
-           return;
-       }
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        currentUser = userCredential.user;
-        await createUserInitialData(currentUser); // Vytvorí počiatočné dáta/štruktúru
-        showNotification('save', 'Registrácia úspešná. Ste prihlásený.');
-        // handleAuthStateChange sa zavolá automaticky
-      } catch (error) {
-        console.error("Registration failed:", error);
-        showNotification('error', `Chyba pri registrácii: ${mapFirebaseAuthError(error.code)}`);
-      }
-    }
-
-    async function logoutUser() {
-      try {
-        await signOut(auth);
-        showNotification('save', 'Odhlásenie úspešné.');
-        currentWorkData = {}; // Vyčistiť dáta aktuálneho mesiaca z pamäte
-        // handleAuthStateChange sa zavolá automaticky
-      } catch (error) {
-        console.error("Logout failed:", error);
-        showNotification('error', 'Chyba pri odhlásení.');
-      }
-    }
-
-    async function createUserInitialData(user) {
-      // Vytvorí základnú štruktúru v DB pre nového usera, ak je to potrebné
-      if (!user || !db) return;
-      const userBaseRef = doc(db, 'users', user.uid);
-      try {
-          await setDoc(userBaseRef, {
-              email: user.email,
-              registeredAt: new Date().toISOString()
-          }, { merge: true }); // Merge pre prípad, že by záznam už existoval (nemalo by nastať)
-          console.log("User initial data structure created/verified.");
-      } catch(error) {
-          console.error("Failed to create user initial data structure:", error);
-          // Nepovažujeme za kritickú chybu pre používateľa
-      }
-    }
-
-    function mapFirebaseAuthError(errorCode) {
-        // Jednoduché mapovanie bežných chýb na používateľsky prívetivejšie správy
-        switch (errorCode) {
-            case 'auth/invalid-email': return 'Neplatný formát emailu.';
-            case 'auth/user-not-found': return 'Používateľ s týmto emailom neexistuje.';
-            case 'auth/wrong-password': return 'Nesprávne heslo.';
-            case 'auth/email-already-in-use': return 'Tento email je už zaregistrovaný.';
-            case 'auth/weak-password': return 'Heslo je príliš slabé (min. 6 znakov).';
-            case 'auth/network-request-failed': return 'Chyba siete. Skontrolujte pripojenie.';
-            default: return 'Neznáma chyba autentifikácie.';
-        }
-    }
-
-    // ---------------------- MANAŽMENT DÁT (Load, Save, Sync) --------------------
-
-    // Načíta dáta pre zadaný mesiac/rok (priorita: pamäť -> LS -> FS -> default)
-    async function loadDataForMonth(year, month) {
-        console.log(`Loading data for ${year}-${month}`);
-        const localStorageKey = getLocalStorageKey(year, month);
-        const firestorePath = getFirestoreDocPath(year, month);
-
-        // 1. Skús Local Storage
-        const localDataString = localStorage.getItem(localStorageKey);
-        if (localDataString) {
-            console.log("Data found in Local Storage.");
-            try {
-                const parsedData = JSON.parse(localDataString);
-                applyDataToUI(parsedData);
-                // Skontroluj, či nie sú novšie dáta vo Firestore (ak sme online a prihlásení)
-                if (isOnline() && currentUser && firestorePath) {
-                   checkFirestoreForUpdates(firestorePath, parsedData.lastUpdated || 0);
-                }
-                return; // Dáta načítané z LS
-            } catch (error) {
-                console.error("Failed to parse data from Local Storage:", error);
-                localStorage.removeItem(localStorageKey); // Odstrániť poškodené dáta
-            }
-        }
-
-        // 2. Skús Firestore (ak sme online a prihlásení)
-        if (isOnline() && currentUser && firestorePath) {
-            console.log("Trying to load from Firestore...");
-            try {
-                const docRef = doc(db, firestorePath);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    console.log("Data found in Firestore.");
-                    const firestoreData = docSnap.data();
-                    // Ulož do LS pre offline prístup
-                    localStorage.setItem(localStorageKey, JSON.stringify(firestoreData));
-                    applyDataToUI(firestoreData);
-                    return; // Dáta načítané z FS
-                } else {
-                    console.log("No data found in Firestore for this month.");
-                }
-            } catch (error) {
-                console.error("Error loading data from Firestore:", error);
-                showNotification('error', 'Chyba pri načítavaní dát z cloudu.');
-                // Pokračujeme k defaultným dátam
-            }
-        }
-
-        // 3. Ak nič nebolo nájdené, použi defaultné/prázdne dáta
-        console.log("No data found, using default/empty data.");
-        applyDataToUI(getDefaultDataStructure()); // Aplikuje prázdnu štruktúru
-    }
-
-    // Funkcia, ktorá sa volá explicitne tlačidlom "Načítať z Cloudu"
-    async function loadFromFirestore() {
+    // -------------------- Načítanie z Firestore (explicitne tlačidlom) --------------------
+    window.loadFromFirestore = async function() {
         if (!currentUser) {
-          showNotification('error', 'Pre načítanie z cloudu sa musíte prihlásiť.');
+          showErrorNotification('Pre načítanie z Firebase sa musíte prihlásiť.');
           return;
         }
         if (!isOnline()) {
-           showNotification('error', 'Ste offline. Načítanie z cloudu vyžaduje internetové pripojenie.');
+           showErrorNotification('Ste offline. Pre načítanie z Firebase je potrebné pripojenie na internet.');
            return;
         }
 
-        const firestorePath = getFirestoreDocPath(currentYear, currentMonth);
-        if (!firestorePath) return;
-
-        console.log('Manual request to load data from Firestore');
-        if (!confirm('Naozaj chcete načítať dáta z cloudu? Prepíšu sa tým všetky lokálne zmeny pre tento mesiac.')) {
-            console.log('Loading from Firestore cancelled by user.');
-            return;
-        }
-
+        console.log('Manuálne vyžiadané načítanie údajov z Firestore');
         try {
-            const docRef = doc(db, firestorePath);
+            const userRef = doc(db, 'users', currentUser.uid);
+            const docRef = doc(userRef, 'workDays', `${currentYear}-${currentMonth}`);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
-                const firestoreData = docSnap.data();
-                const dataString = JSON.stringify(firestoreData);
+                const storedData = docSnap.data();
+                const dataString = JSON.stringify(storedData);
 
-                console.log('Overwriting local data with Firestore data and saving to localStorage:', firestoreData);
-                localStorage.setItem(getLocalStorageKey(currentYear, currentMonth), dataString);
-                // Odstránime príznak čakajúcej synchronizácie, lebo sme práve načítali cloud verziu
-                localStorage.removeItem(getLocalStorageKey(currentYear, currentMonth, 'pendingSync'));
-                applyDataToUI(firestoreData); // Aplikujeme načítané dáta do tabuľky
-                showNotification('save', 'Dáta boli úspešne načítané z cloudu.');
-            } else {
-                console.log('No data found in Firestore for this month.');
-                showNotification('error', 'Pre tento mesiac neboli v cloude nájdené žiadne dáta.');
-                // Možno by sme mali vyčistiť lokálne dáta? Alebo nechať tak? Zatiaľ necháme.
-                // applyDataToUI(getDefaultDataStructure()); // Možnosť vyčistenia UI
-            }
-        } catch (error) {
-            console.error('Error during manual load from Firestore:', error);
-            showNotification('error', 'Chyba pri načítavaní dát z cloudu: ' + error.message);
-        }
-    }
-
-    // Skontroluje, či vo Firestore nie sú novšie dáta ako tie lokálne
-    async function checkFirestoreForUpdates(firestorePath, localLastUpdatedTimestamp) {
-        try {
-            const docRef = doc(db, firestorePath);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const firestoreData = docSnap.data();
-                const firestoreLastUpdated = new Date(firestoreData.lastUpdated || 0).getTime();
-
-                if (firestoreLastUpdated > new Date(localLastUpdatedTimestamp).getTime() + 60000) { // Tolerancia 1 minúta
-                    console.warn("Firestore data is newer than local data.");
-                    if (confirm('Boli nájdené novšie dáta v cloude. Chcete ich načítať? (Lokálne zmeny pre tento mesiac budú stratené)')) {
-                        localStorage.setItem(getLocalStorageKey(currentYear, currentMonth), JSON.stringify(firestoreData));
-                        applyDataToUI(firestoreData);
-                        showNotification('save', 'Novšie dáta boli načítané z cloudu.');
-                        // Odstrániť pending sync flag, ak existoval
-                        localStorage.removeItem(getLocalStorageKey(currentYear, currentMonth, 'pendingSync'));
-                    } else {
-                        console.log("User chose not to load newer Firestore data.");
-                        // Môžeme označiť lokálne dáta ako "nezhodné" alebo čakajúce na manuálne zlúčenie? Zatiaľ nie.
-                    }
+                 // VAROVANIE: Toto prepíše akékoľvek lokálne zmeny!
+                if (confirm('Naozaj chcete načítať dáta z Firebase? Prepíšu sa tým všetky neuložené lokálne zmeny.')) {
+                    console.log('Prepisujem lokálne dáta dátami z Firestore a ukladám do localStorage:', storedData);
+                    localStorage.setItem(`workData-${currentYear}-${currentMonth}`, dataString);
+                     // Odstránime príznak čakajúcej synchronizácie, ak existoval, lebo sme práve načítali cloud verziu
+                    localStorage.removeItem(`pendingSync-${currentYear}-${currentMonth}`);
+                    parseAndApplyData(dataString); // Aplikujeme načítané dáta do tabuľky
+                    showSaveNotification('Dáta boli úspešne načítané z Firebase.');
                 } else {
-                    console.log("Local data is up-to-date or newer than Firestore.");
-                }
-            }
-        } catch (error) {
-            console.error("Error checking Firestore for updates:", error);
-            // Nerobíme nič, pokračujeme s lokálnymi dátami
-        }
-    }
-
-    function getDefaultDataStructure() {
-        const days = getDaysInMonth(currentYear, currentMonth);
-        return {
-            hourlyWage: parseFloat(Elements.hourlyWageInput.value) || 10,
-            taxRate: (parseFloat(Elements.taxRateInput.value) || 2) / 100,
-            employeeName: Elements.employeeNameInput.value || '',
-            decimalPlaces: parseInt(Elements.decimalPlacesSelect.value) || 2,
-            lastUpdated: new Date(0).toISOString(), // Označí ako veľmi staré
-            days: Array(days).fill(null).map(() => ({
-                start: '', end: '', breakTime: '', notes: '' // Pridané pole pre poznámky?
-            }))
-        };
-    }
-
-    // Aplikuje načítané dáta (z LS/FS/Default) do UI a pamäte
-    function applyDataToUI(data) {
-        currentWorkData = data; // Uložíme do pamäte
-
-        // Aktualizácia nastavení v UI
-        Elements.hourlyWageInput.value = data.hourlyWage.toFixed(1); // Nastavíme aj desatinné miesta
-        Elements.taxRateInput.value = (data.taxRate * 100).toFixed(1);
-        Elements.employeeNameInput.value = data.employeeName;
-        Elements.decimalPlacesSelect.value = data.decimalPlaces;
-
-        // Aktualizácia globálnych premenných pre výpočty
-        hourlyWage = data.hourlyWage;
-        taxRate = data.taxRate;
-        employeeName = data.employeeName;
-        decimalPlaces = data.decimalPlaces;
-
-        // Vytvorenie alebo aktualizácia tabuľky
-        createTableStructure(); // Vytvorí štruktúru riadkov
-        populateTableData(); // Naplní dáta do vytvorených riadkov
-        calculateAllRowsAndTotal(); // Prepočíta všetky sumy
-    }
-
-    // Získa aktuálne dáta z UI a pamäte do štruktúry pre ukladanie
-    function collectCurrentDataForSave() {
-        const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-        const dataToSave = {
-            hourlyWage: parseFloat(Elements.hourlyWageInput.value) || 0,
-            taxRate: (parseFloat(Elements.taxRateInput.value) || 0) / 100,
-            employeeName: Elements.employeeNameInput.value.trim(),
-            decimalPlaces: parseInt(Elements.decimalPlacesSelect.value) || 2,
-            lastUpdated: new Date().toISOString(),
-            days: []
-        };
-
-        for (let i = 1; i <= daysInMonth; i++) {
-            const startInput = Elements.workDaysBody.querySelector(`#start-${i}`);
-            const endInput = Elements.workDaysBody.querySelector(`#end-${i}`);
-            const breakInput = Elements.workDaysBody.querySelector(`#break-${i}`);
-
-            dataToSave.days.push({
-                start: startInput ? startInput.value : '',
-                end: endInput ? endInput.value : '',
-                breakTime: breakInput ? breakInput.value : ''
-                // gross a net sa neukladajú, vždy sa počítajú
-            });
-        }
-        return dataToSave;
-    }
-
-    // Hlavná funkcia na spustenie ukladania (volaná po zmenách)
-    function scheduleSaveData() {
-        // Debounce: Zruší predchádzajúce plánované uloženie a naplánuje nové
-        clearTimeout(saveDataTimeout);
-        saveDataTimeout = setTimeout(() => {
-            saveData();
-        }, DEBOUNCE_DELAY);
-    }
-
-    // Vykoná samotné uloženie (LS a potom FS)
-    async function saveData() {
-        if (isSaving) {
-            console.warn("Save already in progress, skipping.");
-            // Môžeme naplánovať ďalší pokus po dokončení aktuálneho?
-            // scheduleSaveData(); // Pozor na nekonečnú slučku
-            return;
-        }
-        isSaving = true;
-        console.log("Saving data...");
-
-        const dataToSave = collectCurrentDataForSave();
-        const dataString = JSON.stringify(dataToSave);
-        const localStorageKey = getLocalStorageKey(currentYear, currentMonth);
-        const pendingSyncKey = getLocalStorageKey(currentYear, currentMonth, 'pendingSync');
-        const firestorePath = getFirestoreDocPath(currentYear, currentMonth);
-
-        // 1. Vždy uložiť do Local Storage
-        try {
-            localStorage.setItem(localStorageKey, dataString);
-            currentWorkData = dataToSave; // Aktualizovať dáta v pamäti
-            console.log("Data saved to Local Storage.");
-            // Odstrániť pending flag, ak bol zápis do LS úspešný (aj keby FS zlyhal)
-            // Alebo ho necháme, ak FS zlyhá? Radšej necháme, ak FS zlyhá.
-            // localStorage.removeItem(pendingSyncKey); // Zatiaľ nie
-        } catch (error) {
-            console.error("Failed to save data to Local Storage:", error);
-            showNotification('error', 'Kritická chyba: Nepodarilo sa uložiť dáta lokálne!');
-            isSaving = false;
-            return; // Ak LS zlyhá, neukladáme ani do FS
-        }
-
-        // 2. Skúsiť uložiť do Firestore (ak sme online a prihlásení)
-        if (isOnline() && currentUser && firestorePath) {
-            console.log("Attempting to save to Firestore...");
-            try {
-                const docRef = doc(db, firestorePath);
-                await setDoc(docRef, dataToSave);
-                console.log("Data successfully saved to Firestore.");
-                localStorage.removeItem(pendingSyncKey); // Odstrániť pending flag po úspešnom FS zápise
-                showNotification('save', 'Dáta uložené lokálne aj v cloude.');
-            } catch (error) {
-                console.error("Failed to save data to Firestore:", error);
-                showNotification('error', 'Chyba pri ukladaní dát do cloudu. Dáta sú uložené lokálne.');
-                // Označiť dáta ako čakajúce na synchronizáciu
-                localStorage.setItem(pendingSyncKey, dataString);
-            }
-        } else {
-            // Sme offline alebo neprihlásení
-            console.log("Offline or not logged in. Marking data for pending sync.");
-            localStorage.setItem(pendingSyncKey, dataString); // Označíme pre neskoršiu synchronizáciu
-            showNotification('save', 'Dáta uložené lokálne (synchronizácia s cloudom neskôr).');
-        }
-
-        isSaving = false;
-    }
-
-    // Synchronizuje čakajúce dáta (z `pendingSync`) do Firestore
-    async function syncPendingData() {
-        if (!isOnline() || !currentUser || !db) {
-            console.log("Cannot sync: Offline, not logged in, or DB not initialized.");
-            return;
-        }
-
-        console.log("Checking for pending data to sync...");
-        let pendingKeys = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith(LOCAL_STORAGE_PREFIX + 'pendingSync_')) {
-                pendingKeys.push(key);
-            }
-        }
-
-        if (pendingKeys.length === 0) {
-            console.log("No pending data found.");
-            return;
-        }
-
-        console.log(`Found ${pendingKeys.length} items pending sync.`);
-        showNotification('status', `Synchronizujem ${pendingKeys.length} záznamov...`, 5000);
-
-        const batch = writeBatch(db); // Použijeme batch pre efektívnejší zápis
-        let successCount = 0;
-        let failedKeys = [];
-
-        for (const pendingKey of pendingKeys) {
-            const dataString = localStorage.getItem(pendingKey);
-            const mainDataKey = pendingKey.replace('pendingSync_', 'workData_'); // Kľúč hlavných dát
-            const firestorePath = pendingKey.replace(LOCAL_STORAGE_PREFIX + 'pendingSync_', '').replace('_', '/'); // Odvodí cestu users/uid/workData/YYYY-MM
-
-            if (dataString && firestorePath.includes('/')) { // Kontrola platnosti cesty
-                 try {
-                    const dataToSync = JSON.parse(dataString);
-                    const docRef = doc(db, `users/${currentUser.uid}/workData/${firestorePath}`); // Správna cesta
-
-                    // Skontrolujeme, či cloud nie je NÁHODOU novší ako dáta, ktoré chceme synchronizovať
-                    const docSnap = await getDoc(docRef);
-                    let shouldWrite = true;
-                    if (docSnap.exists()) {
-                        const cloudLastUpdated = new Date(docSnap.data().lastUpdated || 0).getTime();
-                        const pendingLastUpdated = new Date(dataToSync.lastUpdated || 0).getTime();
-                        if (cloudLastUpdated > pendingLastUpdated) {
-                            console.warn(`Skipping sync for ${firestorePath}: Cloud data is newer.`);
-                            shouldWrite = false;
-                            localStorage.removeItem(pendingKey); // Odstránime pending flag, lebo cloud je novší
-                        }
-                    }
-
-                    if (shouldWrite) {
-                        batch.set(docRef, dataToSync); // Pridáme do batch operácie
-                        successCount++;
-                    }
-
-                } catch (error) {
-                    console.error(`Error preparing sync for ${pendingKey}:`, error);
-                    failedKeys.push(pendingKey); // Tento kľúč sa nepodarilo spracovať
+                     console.log('Načítanie z Firebase zrušené používateľom.');
                 }
             } else {
-                console.warn(`Invalid data or path for pending key: ${pendingKey}. Removing.`);
-                localStorage.removeItem(pendingKey); // Odstrániť neplatný kľúč
+                console.log('Žiadne údaje v Firestore pre tento mesiac.');
+                showErrorNotification('Pre tento mesiac neboli vo Firebase nájdené žiadne dáta.');
             }
+        } catch (error) {
+            console.error('Chyba pri manuálnom načítavaní z Firestore:', error);
+            showErrorNotification('Chyba pri načítavaní dát z Firebase: ' + error.message);
         }
+    }
 
-        // Vykonanie batch zápisu
-        if (successCount > 0) {
-            try {
-                await batch.commit();
-                console.log(`${successCount} items successfully synced.`);
-                // Odstrániť úspešne synchronizované pending kľúče
-                pendingKeys.forEach(key => {
-                    if (!failedKeys.includes(key)) { // Neodstránime tie, ktoré zlyhali pri príprave alebo boli preskočené
-                        localStorage.removeItem(key);
-                    }
-                });
-                 showNotification('save', `${successCount} záznamov úspešne synchronizovaných s cloudom.`);
-            } catch (error) {
-                console.error("Error committing sync batch:", error);
-                showNotification('error', 'Chyba počas synchronizácie dát s cloudom.');
-                // Neodstraňujeme pending kľúče, skúsime znova neskôr
-            }
-        } else if (failedKeys.length === 0 && pendingKeys.length > 0) {
-             console.log("Sync skipped for all items (likely cloud data was newer).");
-        } else if (failedKeys.length > 0) {
-             showNotification('error', 'Niektoré záznamy sa nepodarilo synchronizovať.');
+    // Funkcia pre načítanie LEN z localStorage (používa sa, keď user nie je prihlásený)
+    function loadFromLocalStorageOnly() {
+        const localKey = `workData-${currentYear}-${currentMonth}`;
+        const localData = localStorage.getItem(localKey);
+
+        if (localData) {
+            console.log('Načítavam údaje iba z localStorage (offline alebo neprihlásený)');
+            parseAndApplyData(localData);
+        } else {
+            console.log('Žiadne údaje v localStorage na načítanie.');
+            // Tabuľka zostane prázdna (bola vytvorená v updateUI)
+            calculateTotal(); // Zobrazí nulové súčty
+        }
+    }
+
+    // Pomocná funkcia na spracovanie JSON stringu a aplikovanie dát do UI
+    function parseAndApplyData(dataString) {
+        try {
+            const storedData = JSON.parse(dataString);
+
+            monthData[currentYear] = monthData[currentYear] || {};
+            monthData[currentYear][currentMonth] = storedData.data;
+
+            // Aktualizácia globálnych premenných a inputov pre nastavenia
+            hourlyWage = storedData.hourlyWage || parseFloat(hourlyWageInput.value);
+            taxRate = storedData.taxRate || parseFloat(taxRateInput.value) / 100;
+            employeeName = storedData.employeeName || '';
+            decimalPlaces = storedData.decimalPlaces || 1;
+
+            hourlyWageInput.value = hourlyWage;
+            taxRateInput.value = (taxRate * 100).toFixed(1);
+            employeeNameInput.value = employeeName;
+            decimalPlacesSelect.value = decimalPlaces;
+
+            // Aplikácia dát do tabuľky
+            storedData.data.forEach((day, index) => {
+                const i = index + 1;
+                const startElement = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
+                const endElement = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`);
+                const breakElement = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`);
+
+                if (startElement && endElement && breakElement) {
+                    startElement.value = day.start || '';
+                    endElement.value = day.end || '';
+                    breakElement.value = day.breakTime || '';
+                    // Prepočítame riadok, aby sa aktualizovali aj vypočítané hodnoty (čas, mzdy)
+                    calculateRow(i);
+                } else {
+                    console.warn(`Elementy pre deň ${i} neboli nájdené pri aplikovaní dát.`);
+                }
+            });
+            // Po aplikovaní všetkých riadkov prepočítame celkové súčty
+            calculateTotal();
+        } catch (error) {
+            console.error('Chyba pri parsovaní alebo aplikovaní dát:', error);
+            showErrorNotification('Chyba pri spracovaní uložených dát: ' + error.message);
+            // V prípade chyby je lepšie zobraziť prázdnu tabuľku alebo nechať pôvodný stav
+            // createTable(); // Znovu vytvorí prázdnu tabuľku
+            calculateTotal(); // Vynuluje súčty
         }
     }
 
 
-    // ---------------------- TVORBA TABUĽKY A VÝPOČTY --------------------
-
-    function createTableStructure() {
-        Elements.workDaysBody.innerHTML = ''; // Vyčistiť predchádzajúci obsah
-        const days = getDaysInMonth(currentYear, currentMonth);
-        const today = new Date();
-        const currentDayOfMonth = today.getDate();
-        const currentMonthIndex = today.getMonth();
-        const currentYearValue = today.getFullYear();
-        const fragment = document.createDocumentFragment(); // Pre lepší výkon
-
-        for (let i = 1; i <= days; i++) {
-            const row = document.createElement('tr');
-            row.dataset.day = i; // Pridáme data atribút pre ľahšiu identifikáciu
-            const { dayName, isWeekend } = getDayInfo(currentYear, currentMonth, i);
-
-            // Zvýraznenie aktuálneho dňa
-            if (i === currentDayOfMonth && currentMonth === currentMonthIndex && currentYear === currentYearValue) {
-                row.classList.add('current-day');
-            }
-            if (isWeekend) {
-                // row.classList.add('weekend'); // Možnosť pridať štýl pre víkend
-            }
-
-            row.innerHTML = `
-              <td>${i}. (${dayName})</td>
-              <td><input type="tel" id="start-${i}" maxlength="5" pattern="\\d{2}:\\d{2}" inputmode="numeric" placeholder="HH:MM"></td>
-              <td><input type="tel" id="end-${i}" maxlength="5" pattern="\\d{2}:\\d{2}" inputmode="numeric" placeholder="HH:MM"></td>
-              <td><input type="number" id="break-${i}" min="0" step="0.1" placeholder="hod."></td>
-              <td id="total-${i}" class="total-time-cell">0h 0m (0.0 h)</td>
-              <td id="gross-${i}" class="gross-salary-cell">0.00 €</td>
-              <td id="net-${i}" class="net-salary-cell">0.00 €</td>
-              <td><button class="btn reset-btn reset-row-btn" data-day="${i}" title="Vynulovať riadok">X</button></td>
-            `;
-            fragment.appendChild(row);
-        }
-        Elements.workDaysBody.appendChild(fragment);
-        console.log(`Table structure created for ${days} days.`);
+    // -------------------- Tvorba tabuľky a výpočty --------------------
+    function getDayName(year, month, day) {
+      const daysOfWeek = ["Nedeľa", "Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota"];
+      const date = new Date(year, month, day);
+      return daysOfWeek[date.getDay()];
     }
 
-    function populateTableData() {
-        if (!currentWorkData || !currentWorkData.days) {
-            console.warn("No data available to populate table.");
+    function createTable() {
+      console.log('Vytváram štruktúru tabuľky pre mesiac:', currentMonth, 'rok:', currentYear);
+      workDays.innerHTML = ''; // Vyčistíme predchádzajúci obsah
+      const currentDayOfMonth = new Date().getDate(); // Oprava názvu premennej
+      const currentMonthIndex = new Date().getMonth();
+      const currentYearValue = new Date().getFullYear();
+      const daysInMonth = getDaysInMonth(currentMonth);
+
+      //console.log('Počet dní v mesiaci:', daysInMonth);
+
+      for (let i = 1; i <= daysInMonth; i++) {
+        const row = document.createElement('tr');
+         // Zvýraznenie aktuálneho dňa
+        if (i === currentDayOfMonth && currentMonth === currentMonthIndex && currentYear === currentYearValue) {
+          row.classList.add('current-day');
+        }
+
+        const dayName = getDayName(currentYear, currentMonth, i);
+        // Vytvoríme riadok s prázdnymi inputmi
+        row.innerHTML = `
+          <td>Deň ${i} (${dayName})</td>
+          <td><input type="tel" id="start-${currentYear}-${currentMonth}-${i}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, 'end-${currentYear}-${currentMonth}-${i}')"></td>
+          <td><input type="tel" id="end-${currentYear}-${currentMonth}-${i}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, 'break-${currentYear}-${currentMonth}-${i}')"></td>
+          <td><input type="number" id="break-${currentYear}-${currentMonth}-${i}" min="0" step="0.5" placeholder="prestávka" oninput="handleBreakInput(${i})"></td>
+          <td id="total-${currentYear}-${currentMonth}-${i}">0h 0m (${(0).toFixed(decimalPlaces)} h)</td>
+          <td><input type="number" id="gross-${currentYear}-${currentMonth}-${i}" min="0" step="0.01" placeholder="Hrubá Mzda" readonly></td>
+          <td><input type="number" id="net-${currentYear}-${currentMonth}-${i}" min="0" step="0.01" placeholder="Čistá Mzda" readonly></td>
+          <td><button class="btn reset-btn" onclick="resetRow(${i})">Vynulovať</button></td>
+        `;
+        workDays.appendChild(row);
+      }
+      console.log('Štruktúra tabuľky vytvorená.');
+      // Načítanie dát sa teraz deje v updateUI alebo loadFromLocalStorageOnly
+    }
+
+    window.handleInput = function(input, nextId) {
+      formatAndMoveNext(input, nextId);
+      calculateAndUpdateTotals(); // Uloží zmenu
+    }
+    window.handleBreakInput = function(day) {
+      calculateRow(day); // Prepočíta riadok
+      calculateAndUpdateTotals(); // Uloží zmenu
+      // Presun fokusu na ďalší prvok (ak je to žiaduce)
+      // const nextDay = day + 1;
+      // if (nextDay <= getDaysInMonth(currentMonth)) {
+      //    const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`);
+      //    if (breakInput && !isNaN(parseFloat(breakInput.value))) {
+      //       moveNext(breakInput, `start-${currentYear}-${currentMonth}-${nextDay}`);
+      //    }
+      //}
+    }
+
+    // Hlavná funkcia pre ukladanie dát po akejkoľvek zmene
+    function calculateAndUpdateTotals() {
+        // Prepočítame celkové súčty na základe aktuálnych hodnôt v tabuľke
+        calculateTotal();
+
+        // Získame aktuálne dáta z UI
+        const saveData = collectCurrentData();
+
+        // Vždy uložíme do localStorage - toto zaručuje offline perzistenciu
+        console.log('Ukladám aktuálne dáta do localStorage:', saveData);
+        localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(saveData));
+
+        // Pokúsime sa uložiť/synchronizovať s Firestore (s debounce)
+        debouncedSaveToFirestore();
+    }
+
+
+    function formatAndMoveNext(input, nextId) {
+      let value = input.value.replace(/[^\d:]/g, '');
+      if (value.length === 2 && !value.includes(':')) {
+           // Automaticky pridá ':' po dvoch číslach
+           value = value + ':';
+      }
+      if (value.length > 5) {
+         value = value.slice(0, 5); // Obmedzí na 5 znakov HH:MM
+      }
+      input.value = value;
+
+      if (value.length === 5) {
+        const [hours, minutes] = value.split(':').map(Number);
+        if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
+          const day = parseInt(input.id.split('-')[3]);
+          calculateRow(day); // Prepočíta riadok po zadaní platného času
+          moveNext(input, nextId); // Presunie fokus
+        } else {
+          showErrorNotification("Neplatný čas. Prosím, zadajte čas vo formáte HH:MM (napr. 06:30).");
+          // Nevalidný čas - nemažeme, užívateľ môže opraviť
+        }
+      } else if (input.id.startsWith('end-') || input.id.startsWith('start-')) {
+          // Ak editujeme čas a nie je kompletný, prepočítame riadok aj tak (na nulu, ak chýba druhý čas)
+           const day = parseInt(input.id.split('-')[3]);
+           calculateRow(day);
+      }
+      // calculateAndUpdateTotals() sa volá v handleInput/handleBreakInput po tejto funkcii
+    }
+
+    function moveNext(currentElement, nextId) {
+      const nextElement = document.getElementById(nextId);
+      if (nextElement) {
+        nextElement.focus();
+        // Voliteľne: Označí text v ďalšom poli pre ľahšie prepísanie
+         if (nextElement.tagName === 'INPUT') {
+             nextElement.select();
+         }
+      }
+    }
+
+    // --- VÝPOČET RIADKU --- (Bez zmien, ale potvrdzujeme, že je OK)
+    function calculateRow(day) {
+        const startTimeInput = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`);
+        const endTimeInput = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`);
+        const breakTimeInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`);
+        const totalCell = document.getElementById(`total-${currentYear}-${currentMonth}-${day}`);
+        const grossInput = document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`);
+        const netInput = document.getElementById(`net-${currentYear}-${currentMonth}-${day}`);
+
+        if (!startTimeInput || !endTimeInput || !breakTimeInput || !totalCell || !grossInput || !netInput) {
+            //console.error(`Chýbajúce elementy pre výpočet dňa ${day}`);
+            return; // Ak element neexistuje (napr. počas inicializácie), nerobíme nič
+        }
+
+        const startTime = startTimeInput.value;
+        const endTime = endTimeInput.value;
+        const breakTime = parseFloat(breakTimeInput.value) || 0;
+
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        if (!timeRegex.test(startTime) || !timeRegex.test(endTime)) {
+            totalCell.textContent = `0h 0m (${(0).toFixed(decimalPlaces)} h)`;
+            grossInput.value = (0).toFixed(decimalPlaces);
+            netInput.value = (0).toFixed(decimalPlaces);
+            // calculateAndUpdateTotals() sa volá zvonku po calculateRow
             return;
         }
-        const daysInMonth = getDaysInMonth(currentYear, currentMonth);
 
-        for (let i = 1; i <= daysInMonth; i++) {
-             const dayData = currentWorkData.days[i - 1]; // Dáta sú 0-based pole
-             if (!dayData) continue; // Ak by dáta chýbali
+        const [startHours, startMinutes] = startTime.split(':').map(Number);
+        const [endHours, endMinutes] = endTime.split(':').map(Number);
 
-             const startInput = Elements.workDaysBody.querySelector(`#start-${i}`);
-             const endInput = Elements.workDaysBody.querySelector(`#end-${i}`);
-             const breakInput = Elements.workDaysBody.querySelector(`#break-${i}`);
+        const startDate = new Date(2000, 0, 1, startHours, startMinutes, 0, 0);
+        const endDate = new Date(2000, 0, 1, endHours, endMinutes, 0, 0);
+        let diffMillis = endDate.getTime() - startDate.getTime();
+        if (diffMillis < 0) diffMillis += 24 * 60 * 60 * 1000;
 
-             if (startInput) startInput.value = dayData.start || '';
-             if (endInput) endInput.value = dayData.end || '';
-             if (breakInput) breakInput.value = dayData.breakTime || '';
-        }
-        console.log("Table populated with data.");
+        let diffMinutes = diffMillis / (60 * 1000);
+        const breakMinutes = breakTime * 60;
+        diffMinutes -= breakMinutes;
+        if (diffMinutes < 0) diffMinutes = 0;
+
+        const totalMinutesRounded = Math.round(diffMinutes);
+        const hours = Math.floor(totalMinutesRounded / 60);
+        const minutes = totalMinutesRounded % 60;
+        const decimalHours = diffMinutes / 60;
+
+        totalCell.textContent = `${hours}h ${minutes}m (${decimalHours.toFixed(decimalPlaces)} h)`;
+        const grossSalary = decimalHours * hourlyWage;
+        grossInput.value = Math.max(0, grossSalary).toFixed(decimalPlaces);
+        updateNetSalary(day); // Aktualizuje čistú mzdu
+        // calculateAndUpdateTotals() sa volá zvonku po calculateRow
     }
 
-    function calculateRow(day) {
-        const row = Elements.workDaysBody.querySelector(`tr[data-day="${day}"]`);
-        if (!row) return { workedMinutes: 0, grossSalary: 0, netSalary: 0 }; // Riadok neexistuje
+    // --- VÝPOČET ČISTEJ MZDY --- (Bez zmien)
+    function updateNetSalary(day) {
+        const grossSalaryInput = document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`);
+        const netSalaryInput = document.getElementById(`net-${currentYear}-${currentMonth}-${day}`);
+        if (!grossSalaryInput || !netSalaryInput) return;
+        const grossSalary = parseFloat(grossSalaryInput.value) || 0;
+        const netSalary = grossSalary * (1 - taxRate);
+        netSalaryInput.value = Math.max(0, netSalary).toFixed(decimalPlaces);
+    }
 
-        const startInput = row.querySelector(`#start-${day}`);
-        const endInput = row.querySelector(`#end-${day}`);
-        const breakInput = row.querySelector(`#break-${day}`);
-        const totalCell = row.querySelector(`#total-${day}`);
-        const grossCell = row.querySelector(`#gross-${day}`);
-        const netCell = row.querySelector(`#net-${day}`);
+    window.resetRow = function(day) {
+      const startInput = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`);
+      const endInput = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`);
+      const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`);
+      if(startInput) startInput.value = '';
+      if(endInput) endInput.value = '';
+      if(breakInput) breakInput.value = '';
+      calculateRow(day); // Prepočíta na nulu
+      calculateAndUpdateTotals(); // Uloží zmeny
+    }
 
-        const startTime = startInput.value;
-        const endTime = endInput.value;
-        // Prestávku berieme ako hodiny (napr. 0.5)
-        const breakTimeHours = parseFloat(breakInput.value) || 0;
-        const breakTimeMinutes = Math.round(breakTimeHours * 60);
+    // --- VÝPOČET CELKOVÝCH SÚČTOV --- (Bez zmien)
+    function calculateTotal() {
+        let totalMinutesPrecise = 0;
+        let totalGrossSalaryPrecise = 0;
+        let totalNetSalaryPrecise = 0;
+        let daysWithEntries = 0;
+        const daysInMonth = getDaysInMonth(currentMonth);
+        const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
-        let workedMinutes = 0;
-        let grossSalary = 0;
-        let netSalary = 0;
+        for (let i = 1; i <= daysInMonth; i++) {
+            const startInput = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`);
+            const endInput = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`);
+            const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`);
+            if (!startInput || !endInput || !breakInput) continue;
 
-        const startTotalMinutes = parseTimeToMinutes(startTime);
-        const endTotalMinutes = parseTimeToMinutes(endTime);
+            const startTime = startInput.value;
+            const endTime = endInput.value;
+            const breakTime = parseFloat(breakInput.value) || 0;
+            let dayMinutes = 0;
+            let dayGrossSalary = 0;
+            let dayNetSalary = 0;
+            let hasEntry = false;
 
-        if (startTotalMinutes !== null && endTotalMinutes !== null) {
-            let diffMinutes = endTotalMinutes - startTotalMinutes;
-            // Ak odchod je skôr ako príchod (práca cez polnoc)
-            if (diffMinutes < 0) {
-                diffMinutes += 24 * 60; // Pridáme 24 hodín v minútach
+            if (timeRegex.test(startTime) && timeRegex.test(endTime)) {
+                const [startHours, startMinutes] = startTime.split(':').map(Number);
+                const [endHours, endMinutes] = endTime.split(':').map(Number);
+                const startDate = new Date(2000, 0, 1, startHours, startMinutes, 0, 0);
+                const endDate = new Date(2000, 0, 1, endHours, endMinutes, 0, 0);
+                let diffMillis = endDate.getTime() - startDate.getTime();
+                if (diffMillis < 0) diffMillis += 24 * 60 * 60 * 1000;
+                let diffMinutes = diffMillis / (60 * 1000);
+                const breakMinutes = breakTime * 60;
+                diffMinutes -= breakMinutes;
+                if (diffMinutes < 0) diffMinutes = 0;
+                dayMinutes = diffMinutes;
+                const dayDecimalHours = diffMinutes / 60;
+                dayGrossSalary = Math.max(0, dayDecimalHours * hourlyWage);
+                dayNetSalary = Math.max(0, dayGrossSalary * (1 - taxRate));
+                if (dayMinutes > 0 || breakTime > 0) hasEntry = true;
+            } else if (startTime || endTime || (breakTime && breakTime > 0)) {
+               hasEntry = true; // Rátame ako deň so záznamom, aj keď nekompletným
             }
 
-            workedMinutes = Math.max(0, diffMinutes - breakTimeMinutes);
-
-            const workedHours = workedMinutes / 60;
-            grossSalary = Math.max(0, workedHours * hourlyWage);
-            netSalary = Math.max(0, grossSalary * (1 - taxRate));
+            totalMinutesPrecise += dayMinutes;
+            totalGrossSalaryPrecise += dayGrossSalary;
+            totalNetSalaryPrecise += dayNetSalary;
+            if (hasEntry) daysWithEntries++;
         }
 
-        // Aktualizácia UI pre riadok
-        const displayHours = Math.floor(workedMinutes / 60);
-        const displayMinutes = workedMinutes % 60;
-        const displayDecimalHours = (workedMinutes / 60).toFixed(decimalPlaces);
+        const totalMinutesRounded = Math.round(totalMinutesPrecise);
+        const totalHours = Math.floor(totalMinutesRounded / 60);
+        const totalMinutesRemainder = totalMinutesRounded % 60;
+        const totalDecimalHoursPrecise = totalMinutesPrecise / 60;
+        const averageNetSalaryPrecise = daysWithEntries > 0 ? totalNetSalaryPrecise / daysWithEntries : 0;
+        const averageWorkedMinutesPrecise = daysWithEntries > 0 ? totalMinutesPrecise / daysWithEntries : 0;
+        const averageMinutesRounded = Math.round(averageWorkedMinutesPrecise);
+        const averageHours = Math.floor(averageMinutesRounded / 60);
+        const averageMinutes = averageMinutesRounded % 60;
+        const averageDecimalHoursPrecise = averageWorkedMinutesPrecise / 60;
 
-        totalCell.textContent = `${displayHours}h ${displayMinutes}m (${displayDecimalHours} h)`;
-        grossCell.textContent = `${grossSalary.toFixed(decimalPlaces)} €`;
-        netCell.textContent = `${netSalary.toFixed(decimalPlaces)} €`;
-
-        // Vrátime hodnoty pre celkový súčet
-        return { workedMinutes, grossSalary, netSalary };
-    }
-
-    function calculateAllRowsAndTotal() {
-        let totalWorkedMinutes = 0;
-        let totalGrossSalary = 0;
-        let totalNetSalary = 0;
-        let daysWithEntries = 0;
-        const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-
-        for (let i = 1; i <= daysInMonth; i++) {
-            const rowResults = calculateRow(i);
-            totalWorkedMinutes += rowResults.workedMinutes;
-            totalGrossSalary += rowResults.grossSalary;
-            totalNetSalary += rowResults.netSalary;
-
-            // Započítanie dňa, ak je nejaký záznam (čas alebo prestávka > 0)
-             const startInput = Elements.workDaysBody.querySelector(`#start-${i}`);
-             const endInput = Elements.workDaysBody.querySelector(`#end-${i}`);
-             const breakInput = Elements.workDaysBody.querySelector(`#break-${i}`);
-             if ((startInput && startInput.value) || (endInput && endInput.value) || (breakInput && parseFloat(breakInput.value) > 0)) {
-                 daysWithEntries++;
-             }
-        }
-
-        // Výpočet a zobrazenie celkových súčtov a priemerov
-        const totalHours = Math.floor(totalWorkedMinutes / 60);
-        const totalMinutesRemainder = totalWorkedMinutes % 60;
-        const totalDecimalHours = (totalWorkedMinutes / 60).toFixed(decimalPlaces);
-
-        const averageNetSalary = daysWithEntries > 0 ? (totalNetSalary / daysWithEntries) : 0;
-        const averageWorkedMinutes = daysWithEntries > 0 ? (totalWorkedMinutes / daysWithEntries) : 0;
-        const averageHours = Math.floor(averageWorkedMinutes / 60);
-        const averageMinutesRemainder = Math.round(averageWorkedMinutes % 60); // Zaokrúhlime priemerné minúty
-        const averageDecimalHours = (averageWorkedMinutes / 60).toFixed(decimalPlaces);
-
-        Elements.totalSalaryDiv.innerHTML = `
+        totalSalaryDiv.innerHTML = `
             Počet započítaných dní: ${daysWithEntries}<br>
-            Celkový čas: <strong>${totalHours}h ${totalMinutesRemainder}m</strong> (${totalDecimalHours} h)<br>
-            Hrubá mzda celkom: <strong>${totalGrossSalary.toFixed(decimalPlaces)} €</strong><br>
-            Čistá mzda celkom: <strong>${totalNetSalary.toFixed(decimalPlaces)} €</strong><br>
-            Priemerná denná čistá mzda: ${averageNetSalary.toFixed(decimalPlaces)} €<br>
-            Priemerný denný čas: ${averageHours}h ${averageMinutesRemainder}m (${averageDecimalHours} h)
+            Celkový odpracovaný čas: ${totalHours}h ${totalMinutesRemainder}m (${totalDecimalHoursPrecise.toFixed(decimalPlaces)} h)<br>
+            Celková hrubá mzda: ${totalGrossSalaryPrecise.toFixed(decimalPlaces)}€<br>
+            Celková čistá mzda: ${totalNetSalaryPrecise.toFixed(decimalPlaces)}€<br>
+            Priemerná čistá mzda: ${averageNetSalaryPrecise.toFixed(decimalPlaces)}€<br>
+            <strong>Priemerný odpracovaný čas: ${averageHours}h ${averageMinutes}m (${averageDecimalHoursPrecise.toFixed(decimalPlaces)} h)</strong>
         `;
     }
 
-    function resetRow(day) {
-      const row = Elements.workDaysBody.querySelector(`tr[data-day="${day}"]`);
-      if (!row) return;
 
-      row.querySelector(`#start-${day}`).value = '';
-      row.querySelector(`#end-${day}`).value = '';
-      row.querySelector(`#break-${day}`).value = '';
-
-      // Prepočítať riadok a celkové sumy a uložiť zmeny
-      calculateAllRowsAndTotal();
-      scheduleSaveData(); // Naplánovať uloženie
-      console.log(`Row ${day} reset.`);
+    // -------------------- EXPORT DO PDF -------------------- (Bez zmien)
+    function getMonthName(month) {
+      const monthNames = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
+      return monthNames[month];
     }
-
-    // ---------------------- OBSLUHA EVENTOV --------------------
-
-    function handleSettingChange(event) {
-        const target = event.target;
-        console.log(`Setting changed: ${target.id}, Value: ${target.value}`);
-
-        // Aktualizácia globálnych premenných
-        switch (target.id) {
-            case 'employeeNameInput':
-                employeeName = target.value.trim();
-                localStorage.setItem(LOCAL_STORAGE_PREFIX + 'employeeName', employeeName); // Uložíme aj samotné nastavenie
-                break;
-            case 'hourlyWageInput':
-                hourlyWage = parseFloat(target.value) || 0;
-                break;
-            case 'taxRateInput':
-                taxRate = (parseFloat(target.value) || 0) / 100;
-                break;
-            case 'decimalPlacesSelect':
-                decimalPlaces = parseInt(target.value) || 2;
-                 localStorage.setItem(LOCAL_STORAGE_PREFIX + 'decimalPlaces', decimalPlaces); // Uložíme aj samotné nastavenie
-                break;
+    window.exportToPDF = function() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+      doc.setFont('Roboto');
+      doc.setFontSize(18);
+      doc.text(`Bruno's Calculator - Výkaz práce (${getMonthName(currentMonth)} ${currentYear})`, 14, 20);
+      doc.setFontSize(14);
+      doc.text(`Meno pracovníka: ${employeeName}`, 14, 25);
+      const tableData = [];
+      for (let i = 1; i <= getDaysInMonth(currentMonth); i++) {
+        const dayName = getDayName(currentYear, currentMonth, i);
+        const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const totalTime = document.getElementById(`total-${currentYear}-${currentMonth}-${i}`)?.textContent || '';
+        const grossSalary = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const netSalary = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        if (startTime || endTime || (breakTime && parseFloat(breakTime) >= 0) ) {
+          tableData.push([`Deň ${i} (${dayName})`, startTime, endTime, breakTime || '0', totalTime, grossSalary, netSalary]);
         }
-
-        // Prepočítať všetko a uložiť
-        calculateAllRowsAndTotal();
-        scheduleSaveData();
+      }
+      doc.autoTable({
+        head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
+        body: tableData,
+        startY: 30,
+        styles: { font: 'Roboto' },
+        headStyles: { font: 'Roboto' },
+      });
+      const totalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(12);
+      const totalTextContent = totalSalaryDiv.innerHTML.replace(/<br>/g, '\n').replace(/<strong>|<\/strong>/g, '');
+      doc.text(totalTextContent, 14, totalY);
+      doc.save(`brunos-calculator-report-${getMonthName(currentMonth)}-${currentYear}.pdf`);
     }
-
-    function changeMonthYear() {
-        const newMonth = parseInt(Elements.monthSelect.value);
-        const newYear = parseInt(Elements.yearSelect.value);
-
-        if (newMonth !== currentMonth || newYear !== currentYear) {
-            console.log(`Changing view to: ${newYear}-${newMonth}`);
-            currentMonth = newMonth;
-            currentYear = newYear;
-            updateSubTitle();
-            loadDataForMonth(currentYear, currentMonth); // Načíta nové dáta
+    window.sendPDF = function() { // Bez zmien
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+      doc.setFont('Roboto');
+      doc.setFontSize(18);
+      doc.text(`Bruno's Calculator - Výkaz práce (${getMonthName(currentMonth)} ${currentYear})`, 14, 20);
+      doc.setFontSize(14);
+      doc.text(`Meno pracovníka: ${employeeName}`, 14, 25);
+      const tableData = [];
+      for (let i = 1; i <= getDaysInMonth(currentMonth); i++) {
+        const dayName = getDayName(currentYear, currentMonth, i);
+        const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const totalTime = document.getElementById(`total-${currentYear}-${currentMonth}-${i}`)?.textContent || '';
+        const grossSalary = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`)?.value || '';
+        const netSalary = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`)?.value || '';
+         if (startTime || endTime || (breakTime && parseFloat(breakTime) >= 0) ) {
+           tableData.push([`Deň ${i} (${dayName})`, startTime, endTime, breakTime || '0', totalTime, grossSalary, netSalary]);
         }
-    }
-
-    function handleTableInput(event) {
-        const target = event.target;
-
-        // Formátovanie času pri zadávaní
-        if (target.matches('input[type="tel"]')) {
-            formatTimeInput(target);
-            // Validácia pri strate focusu (blur)
-            target.addEventListener('blur', () => validateTime(target), { once: true });
-        }
-
-        // Ak je vstup v tabuľke, prepočítaj a naplánuj uloženie
-        if (target.closest('tbody#workDays')) {
-             const row = target.closest('tr');
-             const day = row ? parseInt(row.dataset.day) : null;
-             if (day) {
-                 calculateAllRowsAndTotal(); // Prepočíta všetko
-                 scheduleSaveData(); // Naplánuje uloženie
-             }
-        }
-    }
-
-     function handleTableButtonClick(event) {
-         const target = event.target;
-         // Ak bolo kliknuté na tlačidlo Reset v riadku
-         if (target.classList.contains('reset-row-btn')) {
-             const day = parseInt(target.dataset.day);
-             if (day) {
-                 resetRow(day);
-             }
-         }
-     }
-
-
-    // ---------------------- EXPORT a BACKUP FUNKCIE --------------------
-
-    function getPDFExportData() {
-        const data = {
-            title: `Výkaz práce - ${employeeName} (${MONTH_NAMES[currentMonth]} ${currentYear})`,
-            headers: ['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)'],
-            rows: [],
-            totals: Elements.totalSalaryDiv.innerText // Jednoduchý text súčtov
-        };
-
-        const daysInMonth = getDaysInMonth(currentYear, currentMonth);
-        for (let i = 1; i <= daysInMonth; i++) {
-             const row = Elements.workDaysBody.querySelector(`tr[data-day="${i}"]`);
-             if (!row) continue;
-
-             const start = row.querySelector(`#start-${i}`).value || '-';
-             const end = row.querySelector(`#end-${i}`).value || '-';
-             const breakTime = row.querySelector(`#break-${i}`).value || '0';
-             const totalTime = row.querySelector(`#total-${i}`).textContent || '-';
-             const gross = row.querySelector(`#gross-${i}`).textContent || '-';
-             const net = row.querySelector(`#net-${i}`).textContent || '-';
-
-             // Pridať riadok len ak má nejaký záznam
-             if (start !== '-' || end !== '-' || parseFloat(breakTime) > 0) {
-                 const { dayName } = getDayInfo(currentYear, currentMonth, i);
-                 data.rows.push([
-                     `${i}. (${dayName})`,
-                     start,
-                     end,
-                     breakTime,
-                     totalTime,
-                     gross,
-                     net
-                 ]);
-             }
-        }
-        return data;
-    }
-
-    async function exportToPDF() {
-        // Dynamický import, ak by knižnica nebola načítaná
-        const { jsPDF } = window.jspdf;
-        if (!jsPDF || !jsPDF.API || !jsPDF.API.autoTable) {
-           showNotification('error', 'Knižnica pre PDF nebola načítaná. Skúste obnoviť stránku.');
-           console.error("jsPDF or autoTable not loaded");
-           return;
-        }
-
-        const pdfData = getPDFExportData();
-        const doc = new jsPDF();
-
-        // Pridanie fontu Roboto (ak je to potrebné pre špeciálne znaky)
-        // Stiahni font: https://github.com/MrRio/jsPDF/tree/master/src/fonts
-        // a skonvertuj ho napr. pomocou: https://peckconsulting.github.io/jsPDF-CustomFonts-support/
-        // Potom ho pridaj lokálne alebo cez CDN. Zatiaľ PREDPOKLADÁME, že základné fonty stačia.
-        // Ak by si potreboval plnú podporu SK znakov, pridanie fontu je nevyhnutné.
-        // Príklad pridania (ak máš súbor Roboto-Regular-normal.js):
-        // doc.addFont('Roboto-Regular-normal.js', 'Roboto', 'normal');
-        // doc.setFont('Roboto', 'normal');
-        // POZNÁMKA: Vyžiadanie bolo NEPRIDÁVAŤ Helvetica, Roboto je OK.
-
-        doc.setFontSize(16);
-        doc.text(pdfData.title, 14, 20);
-
-        doc.autoTable({
-            head: [pdfData.headers],
-            body: pdfData.rows,
-            startY: 28,
-            theme: 'grid', // Alebo 'striped', 'plain'
-            styles: { fontSize: 8 }, // Menšie písmo pre viac dát
-            headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' }, // Príklad štýlovania hlavičky
-            columnStyles: {
-                0: { cellWidth: 25 }, // Deň
-                1: { cellWidth: 18 }, // Príchod
-                2: { cellWidth: 18 }, // Odchod
-                3: { cellWidth: 20 }, // Prestávka
-                4: { cellWidth: 35 }, // Odpracované
-                5: { cellWidth: 27, halign: 'right' }, // Hrubá
-                6: { cellWidth: 27, halign: 'right' }  // Čistá
-            }
+      }
+      doc.autoTable({
+        head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Odpracované', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
+        body: tableData,
+        startY: 30,
+        styles: { font: 'Roboto' },
+        headStyles: { font: 'Roboto' },
+      });
+      const totalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(12);
+      const totalTextContent = totalSalaryDiv.innerHTML.replace(/<br>/g, '\n').replace(/<strong>|<\/strong>/g, '');
+      doc.text(totalTextContent, 14, totalY);
+      const pdfBlob = doc.output('blob');
+      const pdfFile = new File(
+        [pdfBlob],
+        `brunos-calculator-report-${getMonthName(currentMonth)}-${currentYear}.pdf`,
+        { type: 'application/pdf' }
+      );
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+        navigator.share({
+          files: [pdfFile],
+          title: `Bruno's Calculator Report`,
+          text: `Pozrite si výkaz práce za ${getMonthName(currentMonth)} ${currentYear}`
+        })
+        .then(() => console.log('PDF bolo úspešne odoslané'))
+        .catch(error => {
+          console.error('Chyba pri odosielaní PDF:', error);
+          alert('Chyba pri odosielaní PDF: ' + error.message);
         });
-
-        const finalY = doc.lastAutoTable.finalY || 30; // Pozícia po tabuľke
-        doc.setFontSize(10);
-        doc.text("Celkové súčty:", 14, finalY + 10);
-        doc.text(pdfData.totals, 14, finalY + 15);
-
-        const filename = `vykaz_prace_${employeeName}_${currentYear}_${MONTH_NAMES[currentMonth]}.pdf`;
-        doc.save(filename.replace(/[^a-z0-9_.-]/gi, '_')); // Nahradí neplatné znaky v názve súboru
-        showNotification('save', 'PDF bolo úspešne vygenerované.');
+      } else {
+        alert('Funkcia zdieľania súborov nie je podporovaná vo vašom prehliadači.');
+      }
     }
 
-     async function sendPDF() {
-        const { jsPDF } = window.jspdf;
-         if (!jsPDF || !jsPDF.API || !jsPDF.API.autoTable) {
-           showNotification('error', 'Knižnica pre PDF nebola načítaná.');
-           return;
-         }
-
-         const pdfData = getPDFExportData();
-         const doc = new jsPDF();
-         // ... (rovnaké generovanie PDF ako v exportToPDF) ...
-         doc.setFontSize(16);
-         doc.text(pdfData.title, 14, 20);
-         doc.autoTable({ /* ... rovnaké nastavenia ... */
-            head: [pdfData.headers], body: pdfData.rows, startY: 28, theme: 'grid',
-            styles: { fontSize: 8 }, headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
-            columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 18 }, 2: { cellWidth: 18 }, 3: { cellWidth: 20 }, 4: { cellWidth: 35 }, 5: { cellWidth: 27, halign: 'right' }, 6: { cellWidth: 27, halign: 'right' } }
-         });
-         const finalY = doc.lastAutoTable.finalY || 30;
-         doc.setFontSize(10);
-         doc.text("Celkové súčty:", 14, finalY + 10);
-         doc.text(pdfData.totals, 14, finalY + 15);
-
-         const filename = `vykaz_prace_${employeeName}_${currentYear}_${MONTH_NAMES[currentMonth]}.pdf`;
-         const cleanFilename = filename.replace(/[^a-z0-9_.-]/gi, '_');
-         const pdfBlob = doc.output('blob');
-         const pdfFile = new File([pdfBlob], cleanFilename, { type: 'application/pdf' });
-
-         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-             try {
-                 await navigator.share({
-                     files: [pdfFile],
-                     title: `Výkaz práce ${MONTH_NAMES[currentMonth]} ${currentYear}`,
-                     text: `Výkaz práce pre ${employeeName} za ${MONTH_NAMES[currentMonth]} ${currentYear}`
-                 });
-                 console.log('PDF shared successfully');
-                 showNotification('save', 'PDF bolo úspešne pripravené na zdieľanie.');
-             } catch (error) {
-                 console.error('Error sharing PDF:', error);
-                 // Zobrazíme chybu len ak to nie je chyba zrušenia používateľom
-                 if (error.name !== 'AbortError') {
-                    showNotification('error', 'Chyba pri zdieľaní PDF: ' + error.message);
-                 } else {
-                    console.log("Sharing cancelled by user.");
-                 }
-             }
-         } else {
-            showNotification('error', 'Váš prehliadač nepodporuje zdieľanie súborov.');
-            // Ako fallback môžeme ponúknuť stiahnutie
-            doc.save(cleanFilename);
-         }
-     }
-
-     // -- Excel Backup/Restore (Logika zostáva podobná, len volania funkcií) --
-     async function createBackup() {
-         const { utils, writeFile } = window.XLSX;
-         if (!utils || !writeFile) {
-             showNotification('error', 'Knižnica pre Excel nebola načítaná.');
-             return;
-         }
-
-         const key = getLocalStorageKey(currentYear, currentMonth);
-         const dataString = localStorage.getItem(key);
-         if (!dataString) {
-             showNotification('error', 'Nie sú dostupné žiadne lokálne dáta na zálohu pre tento mesiac.');
-             return;
-         }
-
-         try {
-             const dataObj = JSON.parse(dataString);
-             const ws_data = [
-                 ["Mesiac", MONTH_NAMES[currentMonth], "Rok", currentYear], // Info o období
-                 [], // Prázdny riadok
-                 ["Nastavenia"],
-                 ["Meno pracovníka", dataObj.employeeName],
-                 ["Hodinová mzda (€)", dataObj.hourlyWage],
-                 ["Daňové percento (%)", dataObj.taxRate * 100],
-                 ["Desatinné miesta", dataObj.decimalPlaces],
-                 ["Posledná aktualizácia", new Date(dataObj.lastUpdated).toLocaleString('sk-SK')],
-                 [], // Prázdny riadok
-                 ["Záznamy práce"],
-                 ["Deň", "Príchod", "Odchod", "Prestávka (h)"] // Hlavička dát
-             ];
-
-             dataObj.days.forEach((dayData, index) => {
-                 const dayNum = index + 1;
-                 // Pridať riadok len ak má nejaký záznam
-                 if (dayData.start || dayData.end || parseFloat(dayData.breakTime) > 0) {
-                     const { dayName } = getDayInfo(currentYear, currentMonth, dayNum);
-                     ws_data.push([
-                         `${dayNum}. (${dayName})`,
-                         dayData.start || '',
-                         dayData.end || '',
-                         dayData.breakTime || ''
-                     ]);
-                 }
-             });
-
-             const wb = utils.book_new();
-             const ws = utils.aoa_to_sheet(ws_data);
-
-             // Nastavenie šírky stĺpcov (príklad)
-             ws['!cols'] = [ { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 15 } ];
-
-             utils.book_append_sheet(wb, ws, `Zaloha_${MONTH_NAMES[currentMonth]}_${currentYear}`);
-             const filename = `zaloha_bruno_${employeeName}_${currentYear}_${MONTH_NAMES[currentMonth]}.xlsx`;
-             writeFile(wb, filename.replace(/[^a-z0-9_.-]/gi, '_'));
-             showNotification('save', 'Excel záloha bola úspešne vytvorená.');
-
-         } catch (error) {
-             console.error('Error creating Excel backup:', error);
-             showNotification('error', 'Chyba pri vytváraní Excel zálohy: ' + error.message);
-         }
-     }
-
-    async function restoreBackup() {
-         const { read, utils } = window.XLSX;
-          if (!read || !utils) {
-              showNotification('error', 'Knižnica pre Excel nebola načítaná.');
-              return;
+    // -------------------- OSTATNÉ NASTAVENIA --------------------
+    window.changeDecimalPlaces = function() {
+      decimalPlaces = parseInt(decimalPlacesSelect.value);
+      localStorage.setItem('decimalPlaces', JSON.stringify(decimalPlaces)); // Uložíme aj do LS samotné nastavenie
+      // Prepočítame zobrazenie a uložíme dáta
+      for (let i = 1; i <= getDaysInMonth(currentMonth); i++) {
+          // Najprv musíme zabezpečiť, že elementy existujú
+          if(document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)){
+             calculateRow(i);
           }
-
-         const input = document.createElement('input');
-         input.type = 'file';
-         input.accept = '.xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-
-         input.onchange = async (event) => {
-             const file = event.target.files[0];
-             if (!file) return;
-
-             if (!confirm(`Naozaj chcete obnoviť dáta zo súboru "${file.name}"? Aktuálne dáta pre zvolený mesiac a rok (${MONTH_NAMES[currentMonth]} ${currentYear}) budú prepísané.`)) {
-                 return;
-             }
-
-             const reader = new FileReader();
-             reader.onload = async (e) => {
-                 try {
-                     const data = new Uint8Array(e.target.result);
-                     const workbook = read(data, { type: 'array' });
-                     const sheetName = workbook.SheetNames[0]; // Berieme prvý list
-                     const ws = workbook.Sheets[sheetName];
-                     const rows = utils.sheet_to_json(ws, { header: 1, defval: "" });
-
-                     // --- Parsovanie dát zo sheetu ---
-                     const restoredData = getDefaultDataStructure(); // Začneme s default štruktúrou
-                     let readingDataRows = false;
-                     let dataHeaderIndex = {};
-
-                     for (const row of rows) {
-                         if (!row || row.length === 0) continue; // Preskočiť prázdne riadky
-
-                         const key = row[0]?.toString().toLowerCase().trim();
-                         const value1 = row[1]?.toString().trim();
-                         const value3 = row[3]?.toString().trim(); // Pre rok
-
-                         // Čítanie hlavičky s mesiacom a rokom
-                          if (key === 'mesiac' && value1 && row[2]?.toString().toLowerCase().trim() === 'rok' && value3) {
-                               const restoredMonthIndex = MONTH_NAMES.findIndex(m => m.toLowerCase() === value1.toLowerCase());
-                               const restoredYear = parseInt(value3);
-                               if (restoredMonthIndex !== -1 && !isNaN(restoredYear)) {
-                                    if (restoredMonthIndex !== currentMonth || restoredYear !== currentYear) {
-                                        if (!confirm(`Záloha je pre ${value1} ${restoredYear}, ale aktuálne prezeráte ${MONTH_NAMES[currentMonth]} ${currentYear}. Naozaj chcete dáta obnoviť do aktuálne zobrazeného obdobia?`)) {
-                                            throw new Error("Obnovenie zrušené používateľom kvôli nesúladu obdobia.");
-                                        }
-                                    }
-                                } else {
-                                     console.warn("Nepodarilo sa načítať obdobie zo zálohy.");
-                                }
-                          }
-                         // Čítanie nastavení
-                         else if (key === 'meno pracovníka') restoredData.employeeName = value1;
-                         else if (key === 'hodinová mzda (€)') restoredData.hourlyWage = parseFloat(value1) || restoredData.hourlyWage;
-                         else if (key === 'daňové percento (%)') restoredData.taxRate = (parseFloat(value1) || (restoredData.taxRate * 100)) / 100;
-                         else if (key === 'desatinné miesta') restoredData.decimalPlaces = parseInt(value1) || restoredData.decimalPlaces;
-                         else if (key === 'posledná aktualizácia') restoredData.lastUpdated = new Date().toISOString(); // Nastavíme nový čas pri obnove
-
-                         // Začiatok čítania dátových riadkov
-                         else if (key === 'deň' && row[1]?.toString().toLowerCase().trim() === 'príchod') {
-                             readingDataRows = true;
-                             // Uložíme indexy stĺpcov pre flexibilitu
-                             row.forEach((header, index) => {
-                                 const headerLower = header?.toString().toLowerCase().trim();
-                                 if (headerLower === 'deň') dataHeaderIndex.day = index;
-                                 else if (headerLower === 'príchod') dataHeaderIndex.start = index;
-                                 else if (headerLower === 'odchod') dataHeaderIndex.end = index;
-                                 else if (headerLower.includes('prestávka')) dataHeaderIndex.break = index; // Hľadá "prestávka"
-                             });
-                             continue; // Preskočiť hlavičku dát
-                         }
-
-                         // Čítanie dátových riadkov
-                         if (readingDataRows && dataHeaderIndex.day !== undefined) {
-                             const dayMatch = row[dataHeaderIndex.day]?.toString().match(/^(\d+)\./); // Získa číslo dňa
-                             if (dayMatch) {
-                                 const dayIndex = parseInt(dayMatch[1]) - 1;
-                                 if (dayIndex >= 0 && dayIndex < restoredData.days.length) {
-                                     if (dataHeaderIndex.start !== undefined) restoredData.days[dayIndex].start = row[dataHeaderIndex.start]?.toString() || '';
-                                     if (dataHeaderIndex.end !== undefined) restoredData.days[dayIndex].end = row[dataHeaderIndex.end]?.toString() || '';
-                                     if (dataHeaderIndex.break !== undefined) restoredData.days[dayIndex].breakTime = row[dataHeaderIndex.break]?.toString() || '';
-                                 }
-                             } else {
-                                 // Ak riadok nezačína číslom dňa, pravdepodobne sme skončili s dátovými riadkami
-                                 readingDataRows = false;
-                             }
-                         }
-                     }
-                     // --- Koniec parsovania ---
-
-                     // Uloženie obnovených dát do LS a aplikácia do UI
-                     const dataString = JSON.stringify(restoredData);
-                     localStorage.setItem(getLocalStorageKey(currentYear, currentMonth), dataString);
-                     applyDataToUI(restoredData); // Znovu načíta a zobrazí obnovené dáta
-                     showNotification('save', 'Dáta boli úspešne obnovené zo zálohy.');
-
-                     // Ak je užívateľ prihlásený a online, môžeme tieto obnovené dáta hneď poslať do cloudu
-                     scheduleSaveData(); // Naplánuje uloženie (ktoré zahŕňa aj FS, ak je to možné)
-
-                 } catch (error) {
-                     console.error('Error processing backup file:', error);
-                     showNotification('error', `Chyba pri spracovaní zálohy: ${error.message}`);
-                 }
-             };
-             reader.onerror = () => {
-                 showNotification('error', 'Chyba pri čítaní súboru zálohy.');
-             }
-             reader.readAsArrayBuffer(file);
-         };
-         input.click(); // Otvorí dialóg na výber súboru
+      }
+      calculateAndUpdateTotals(); // Prepočíta súčty a uloží všetky dáta (vrátane nového nastavenia)
     }
 
+    window.updateEmployeeName = function() {
+      employeeName = employeeNameInput.value.trim();
+      localStorage.setItem('employeeName', employeeName); // Uložíme aj do LS samotné nastavenie
+      calculateAndUpdateTotals(); // Uloží všetky dáta (vrátane nového mena)
+    }
 
-    // ---------------------- ŠTART APLIKÁCIE --------------------
-    document.addEventListener('DOMContentLoaded', initializeAppAndListeners);
+    window.updateSettings = function() {
+      hourlyWage = parseFloat(hourlyWageInput.value) || 0;
+      taxRate = (parseFloat(taxRateInput.value) || 0) / 100;
+       // Prepočítame všetky riadky a celkové súčty
+      for (let i = 1; i <= getDaysInMonth(currentMonth); i++) {
+         if(document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)){
+             calculateRow(i);
+          }
+      }
+      calculateAndUpdateTotals(); // Prepočíta súčty a uloží všetky dáta (vrátane nových nastavení)
+    }
 
+    window.changeMonth = function() {
+      const previousMonth = currentMonth; // Uchováme si predchádzajúci mesiac pre prípadnú logiku
+      currentMonth = parseInt(monthSelect.value);
+      console.log(`Zmena mesiaca na: ${currentMonth}`);
+      updateUI(); // Prekreslí UI a načíta dáta pre nový mesiac
+    }
+
+    window.changeYear = function() {
+      const previousYear = currentYear; // Uchováme si predchádzajúci rok
+      currentYear = parseInt(yearSelect.value);
+      console.log(`Zmena roku na: ${currentYear}`);
+      updateUI(); // Prekreslí UI a načíta dáta pre nový rok
+    }
+
+    function getDaysInMonth(month) {
+      // Mesiac je 0-based, rok je normálny
+      // new Date(year, month + 1, 0) vracia posledný deň predchádzajúceho mesiaca
+      return new Date(currentYear, month + 1, 0).getDate();
+    }
+
+    // -------------------- INIT --------------------
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      // updateUI() sa postará o všetko - vytvorenie tabuľky a načítanie dát
+      // (buď z FS alebo LS podľa stavu prihlásenia a online statusu)
+      updateUI();
+    });
+
+    // -------------------- FUNKCIE PRE ZÁLOHU A OBNOVU DO EXCELU -------------------- (Bez zmien)
+    window.createBackup = function() {
+      const key = `workData-${currentYear}-${currentMonth}`;
+      const dataString = localStorage.getItem(key);
+      if (dataString) {
+        try {
+            const dataObj = JSON.parse(dataString);
+            const ws_data = [
+              ["Deň", "Príchod", "Odchod", "Prestávka (h)", "Hrubá Mzda (€)", "Čistá Mzda (€)"]
+            ];
+            // Použijeme dáta z objektu, nie z UI, aby sme mali istotu konzistencie
+            dataObj.data.forEach((row, index) => {
+                ws_data.push([`Deň ${index+1}`, row.start, row.end, row.breakTime, row.gross, row.net]);
+            });
+            ws_data.push([]);
+            ws_data.push(["Hodinová mzda", dataObj.hourlyWage]);
+            ws_data.push(["Daňové percento", dataObj.taxRate * 100 + "%"]);
+            ws_data.push(["Meno pracovníka", dataObj.employeeName]);
+            ws_data.push(["Počet desatinných miest", dataObj.decimalPlaces]);
+            ws_data.push(["Posledná aktualizácia", dataObj.lastUpdated]);
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Záloha");
+            XLSX.writeFile(wb, `brunos-calculator-backup-${getMonthName(currentMonth)}-${currentYear}.xlsx`);
+            showSaveNotification('Záloha bola úspešne vytvorená.');
+        } catch(error) {
+             console.error('Chyba pri vytváraní zálohy:', error);
+             showErrorNotification('Chyba pri vytváraní zálohy: ' + error.message);
+        }
+      } else {
+        showErrorNotification('Nie sú dostupné žiadne lokálne dáta na zálohu.');
+      }
+    };
+    window.restoreBackup = function() { // Bez zmien v logike, len potvrdenie
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      input.onchange = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const ws = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+            const headerRowIndex = rows.findIndex(row => row[0]?.toString().toLowerCase() === "deň");
+            if (headerRowIndex === -1) throw new Error("Hlavička tabuľky ('Deň', 'Príchod', ...) nebola nájdená.");
+            const header = rows[headerRowIndex];
+            let dataArray = [];
+            let settings = {};
+            let i = headerRowIndex + 1;
+            const dayIndex = header.findIndex(h => h?.toString().toLowerCase().includes("deň"));
+            const startIndex = header.findIndex(h => h?.toString().toLowerCase().includes("príchod"));
+            const endIndex = header.findIndex(h => h?.toString().toLowerCase().includes("odchod"));
+            const breakIndex = header.findIndex(h => h?.toString().toLowerCase().includes("prestávka"));
+            const grossIndex = header.findIndex(h => h?.toString().toLowerCase().includes("hrubá mzda"));
+            const netIndex = header.findIndex(h => h?.toString().toLowerCase().includes("čistá mzda"));
+             if (startIndex === -1 || endIndex === -1 || breakIndex === -1 || grossIndex === -1 || netIndex === -1) {
+                throw new Error("Nepodarilo sa nájsť všetky požadované stĺpce v hlavičke.");
+            }
+            for (; i < rows.length; i++) {
+              const row = rows[i];
+              if (!row || row.length === 0 || !row[dayIndex]?.toString().toLowerCase().startsWith("deň")) break;
+              dataArray.push({
+                start: row[startIndex] !== undefined ? row[startIndex].toString() : "",
+                end: row[endIndex] !== undefined ? row[endIndex].toString() : "",
+                breakTime: row[breakIndex] !== undefined ? row[breakIndex].toString() : "",
+                gross: row[grossIndex] !== undefined ? row[grossIndex].toString() : "0.00",
+                net: row[netIndex] !== undefined ? row[netIndex].toString() : "0.00"
+              });
+            }
+            for (; i < rows.length; i++) {
+              const row = rows[i];
+              if (row && row.length > 1 && row[0]) {
+                 const key = row[0].toString().toLowerCase();
+                 const value = row[1]?.toString() || "";
+                 if (key.includes("hodinová mzda")) settings.hourlyWage = parseFloat(value) || 0;
+                 else if (key.includes("daňové percento")) settings.taxRate = (parseFloat(value.replace('%','')) || 0) / 100;
+                 else if (key.includes("meno pracovníka")) settings.employeeName = value;
+                 else if (key.includes("počet desatinných miest")) settings.decimalPlaces = parseInt(value) || 1;
+                 else if (key.includes("posledná aktualizácia")) settings.lastUpdated = value;
+              }
+            }
+            const backupData = {
+              data: dataArray,
+              hourlyWage: settings.hourlyWage !== undefined ? settings.hourlyWage : (parseFloat(hourlyWageInput.value) || 0),
+              taxRate: settings.taxRate !== undefined ? settings.taxRate : ((parseFloat(taxRateInput.value) || 0) / 100),
+              employeeName: settings.employeeName !== undefined ? settings.employeeName : (employeeNameInput.value || ""),
+              decimalPlaces: settings.decimalPlaces !== undefined ? settings.decimalPlaces : (parseInt(decimalPlacesSelect.value) || 1),
+              lastUpdated: settings.lastUpdated || new Date().toISOString()
+            };
+
+            // Uložíme obnovené dáta do localStorage
+            localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(backupData));
+            // Aplikujeme dáta do UI
+            parseAndApplyData(JSON.stringify(backupData));
+            showSaveNotification('Záloha bola úspešne obnovená a načítaná.');
+
+            // Ak je užívateľ prihlásený a online, môžeme tieto obnovené dáta hneď poslať do cloudu
+            if (currentUser && isOnline()) {
+              saveToFirestore(); // Pošle obnovené dáta do cloudu
+            }
+          } catch (error) {
+            console.error('Chyba pri načítavaní zálohy:', error);
+            showErrorNotification('Chyba pri načítavaní zálohy: ' + error.message);
+          }
+        };
+        reader.onerror = function() {
+            showErrorNotification('Chyba pri čítaní súboru.');
+        }
+        reader.readAsArrayBuffer(file);
+      };
+      input.click();
+    };
   </script>
 
   <!-- Registrácia Service Workera -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js') // Uistite sa, že cesta je správna
+        navigator.serviceWorker.register('./service-worker.js')
           .then(registration => {
-            console.log('Service Worker registered successfully with scope:', registration.scope);
-            // Môžete pridať logiku na kontrolu aktualizácií SW
+            console.log('Service Worker zaregistrovaný úspešne s rozsahom:', registration.scope);
           })
           .catch(error => {
-            console.error('Service Worker registration failed:', error);
+            console.error('Registrácia Service Workera zlyhala:', error);
           });
       });
     }
