@@ -370,6 +370,20 @@
       width: 120px;
       margin: 5px 2px;
     }
+    /* --- NOVÝ ŠTÝL pre odkaz na obnovu hesla --- */
+    #login-form a {
+        margin-top: 10px;
+        display: block;
+        font-size: 0.9em;
+        color: #007bff; /* Modrá farba odkazu */
+        text-decoration: none;
+    }
+    #login-form a:hover {
+        text-decoration: underline;
+    }
+    body.dark-mode #login-form a {
+        color: #6bbaff; /* Svetlejšia modrá v tmavom režime */
+    }
   </style>
 </head>
 <body>
@@ -381,6 +395,8 @@
         <input type="password" id="password" placeholder="Heslo">
         <button class="btn export-btn" onclick="login()">Prihlásiť sa</button>
         <button class="btn export-btn" onclick="register()">Registrovať</button>
+        <!-- --- NOVÝ ODKAZ na obnovu hesla --- -->
+        <a href="#" onclick="resetPassword(); return false;">Zabudli ste heslo?</a>
       </div>
       <div id="user-info" style="display: none;">
         <span id="user-email"></span>
@@ -487,7 +503,8 @@
 
     // ----------------------- IMPORTY Firebase -----------------------
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+    // --- ZMENA: Pridaný import sendPasswordResetEmail ---
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
     import { getFirestore, collection, doc, setDoc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
 
@@ -599,7 +616,7 @@
       notification.classList.add('show');
       setTimeout(() => {
         notification.classList.remove('show');
-      }, 2000);
+      }, 3000); // Zvýšený čas pre notifikáciu o obnove hesla
     }
 
     // -------------------- AUTENTIFIKÁCIA (login, register, logout) --------------------
@@ -665,6 +682,36 @@
       }
     }
 
+    // --- NOVÁ FUNKCIA: Obnova hesla ---
+    window.resetPassword = async function() {
+      if (!isOnline()) {
+        showErrorNotification('Ste offline. Obnova hesla je možná iba online.');
+        return;
+      }
+      const emailInput = document.getElementById('email');
+      const email = emailInput.value;
+      if (!email) {
+        // Zvýrazníme emailové pole ak je prázdne
+        emailInput.style.border = '1px solid red';
+        showErrorNotification('Prosím, zadajte váš email do poľa "Email" pre obnovu hesla.');
+        // Odstránime zvýraznenie po chvíli
+        setTimeout(() => { emailInput.style.border = '1px solid #ccc'; }, 3000);
+        return;
+      }
+      // Resetujeme štýl okraja, ak bol predtým červený
+      emailInput.style.border = '1px solid #ccc';
+
+      try {
+        await sendPasswordResetEmail(auth, email);
+        console.log('Email na obnovu hesla odoslaný na:', email);
+        // Dlhšia notifikácia
+        showSaveNotification(`Email na obnovu hesla bol odoslaný na ${email}. Skontrolujte si poštu (aj priečinok spam).`);
+      } catch (error) {
+        console.error('Chyba pri odosielaní emailu na obnovu hesla:', error);
+        showErrorNotification('Chyba pri obnove hesla: ' + mapFirebaseAuthError(error.code));
+      }
+    }
+
     // Pomocná funkcia na preklad Firebase chybových kódov
     function mapFirebaseAuthError(errorCode) {
         switch (errorCode) {
@@ -675,6 +722,8 @@
             case 'auth/weak-password': return 'Heslo je príliš slabé (min. 6 znakov).';
             case 'auth/requires-recent-login': return 'Táto operácia vyžaduje nedávne prihlásenie.';
             case 'auth/network-request-failed': return 'Chyba siete. Skontrolujte pripojenie.';
+            // --- ZMENA: Pridaný preklad pre prípadnú chybu pri resete ---
+            case 'auth/missing-email': return 'Prosím, zadajte emailovú adresu.';
             default: return errorCode; // Vráti pôvodný kód, ak nie je preklad
         }
     }
@@ -1009,6 +1058,12 @@
                         //console.warn(`Elementy pre deň ${i} neboli nájdené pri aplikovaní dát.`);
                     }
                 }
+                 // Vyčistíme riadky, ktoré sú navyše v tabuľke oproti uloženým dátam
+                 for (let i = daysToProcess + 1; i <= daysInMonth; i++) {
+                     if (document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) {
+                        resetRow(i, false); // Vynulujeme bez ukladania
+                     }
+                 }
             } else {
                 console.warn('Načítané dáta neobsahujú pole `data`. Tabuľka zostane prázdna.');
                  // Vyčistíme tabuľku pre istotu
