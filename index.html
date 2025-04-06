@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
   <style>
-    /* Základné štýly - bez zmien */
+    /* Základné štýly - bez zmien okrem h1 */
     body {
       font-family: Arial, sans-serif;
       line-height: 1.6;
@@ -32,16 +32,16 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       position: relative;
     }
+    /* --- ZMENENÝ ŠTÝL PRE h1 --- */
     h1 {
       text-align: center;
       font-size: 2.5em;
-      background: linear-gradient(90deg, #ff0000, #00ff00, #0000ff, #ffff00, #ff00ff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: gradientText 5s ease-in-out infinite, textShadowPulse 2s ease-in-out infinite;
+      color: black; /* Statická čierna farba */
+      /* Odstránené: background, background-clip, -webkit-background-clip, animation */
       margin-bottom: 10px;
     }
+    /* --- KONIEC ZMENY PRE h1 --- */
+
     h2 {
       text-align: center;
       color: #555;
@@ -198,6 +198,11 @@
       background-color: #444;
       color: #f4f4f4;
     }
+    /* --- ŠTÝL PRE h1 V TMAVOM REŽIME --- */
+    body.dark-mode h1 {
+        color: #f4f4f4; /* Svetlá farba pre tmavý režim */
+    }
+    /* --- KONIEC ŠTÝLU PRE h1 V TMAVOM REŽIME --- */
     body.dark-mode table {
       background-color: #555;
       color: #f4f4f4;
@@ -216,7 +221,7 @@
       color: white;
     }
     body.dark-mode .btn {
-      color: #333;
+      color: #333; /* Možno by toto malo byť biele? Ponechané ako v origináli */
     }
     body.dark-mode .reset-btn {
       background-color: #d32f2f;
@@ -238,23 +243,11 @@
       background-color: #5c1db3;
       color: #fff;
     }
-    @keyframes gradientText {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes textShadowPulse {
-      0%, 100% {
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
-                     0 0 20px rgba(255, 255, 255, 0.3),
-                     0 0 30px rgba(255, 255, 255, 0.2);
-      }
-      50% {
-        text-shadow: 0 0 20px rgba(255, 255, 255, 1),
-                     0 0 30px rgba(255, 255, 255, 0.9),
-                     0 0 40px rgba(255, 255, 255, 0.7);
-      }
-    }
+    /* Odstránené animácie, lebo už nie sú potrebné */
+    /*
+    @keyframes gradientText { ... }
+    @keyframes textShadowPulse { ... }
+    */
     @media (max-width: 768px) {
       body {
         padding: 5px;
@@ -404,7 +397,7 @@
       </div>
     </div>
 
-    <h1 id="mainTitle">Bruno's Calculator</h1>
+    <h1 id="mainTitle">Bruno's Calculator</h1> <!-- Nadpis je teraz statický -->
     <h2></h2>
 
     <!-- Nastavenia -->
@@ -488,7 +481,7 @@
   <div id="saveNotification">Dáta boli úspešne uložené</div>
   <div id="errorNotification"></div>
 
-  <!-- Hlavný JavaScript kód + Firebase -->
+  <!-- Hlavný JavaScript kód + Firebase (BEZ ZMIEN) -->
   <script type="module">
     // Načítanie preferencie tmavého režimu z localStorage
     if (localStorage.getItem('darkMode') === 'true') {
@@ -1522,7 +1515,7 @@
       const totalTextContent = totalSalaryDiv.innerHTML
                                 .replace(/<br\s*\/?>/gi, '\n') // Nahradí <br> za nový riadok
                                 .replace(/<\/?strong>/gi, '') // Odstráni <strong> a </strong>
-                                .replace(/ /g, ' ') // Nahradí   medzerou
+                                .replace(/ /g, ' ') // Nahradí   medzerou
                                 .replace(/€/g, ' EUR'); // Nahradí symbol za kód meny
       doc.text(totalTextContent, 14, totalY);
 
@@ -1943,7 +1936,7 @@
 
   </script>
 
-  <!-- Registrácia Service Workera -->
+  <!-- Registrácia Service Workera (BEZ ZMIEN) -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
