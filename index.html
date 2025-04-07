@@ -397,7 +397,7 @@
       </div>
     </div>
 
-    <h1 id="mainTitle">ahoj</h1> <!-- Nadpis je teraz statický -->
+    <h1 id="mainTitle">Ahoj</h1> <!-- Nadpis sa aktualizuje cez JS -->
     <h2></h2>
 
     <!-- Nastavenia -->
@@ -481,7 +481,7 @@
   <div id="saveNotification">Dáta boli úspešne uložené</div>
   <div id="errorNotification"></div>
 
-  <!-- Hlavný JavaScript kód + Firebase (BEZ ZMIEN) -->
+  <!-- Hlavný JavaScript kód + Firebase -->
   <script type="module">
     // Načítanie preferencie tmavého režimu z localStorage
     if (localStorage.getItem('darkMode') === 'true') {
@@ -536,10 +536,21 @@
     let currentMonth = currentDate.getMonth();
     let currentYear = currentDate.getFullYear();
     let decimalPlaces = parseInt(localStorage.getItem('decimalPlaces')) || 1;
-    let employeeName = localStorage.getItem('employeeName') || '';
+    let employeeName = localStorage.getItem('employeeName') || ''; // Načítanie mena z localStorage
     let hourlyWage = parseFloat(hourlyWageInput.value) || 10; // Default hodnota
     let taxRate = (parseFloat(taxRateInput.value) || 2) / 100; // Default hodnota
     let monthData = {}; // Toto sa už nepoužíva na priame načítanie, ale môže slúžiť na iné účely
+
+    // --- PRIDANÝ KÓD: Funkcia na aktualizáciu nadpisu ---
+    function updateGreeting() {
+      if (employeeName) {
+        mainTitle.textContent = `Ahoj ${employeeName}`;
+      } else {
+        mainTitle.textContent = 'Ahoj'; // Predvolený text, ak meno nie je zadané
+      }
+    }
+    // --- KONIEC PRIDANÉHO KÓDU ---
+
 
     // -------------------- FUNKCIE PRE ROKY (select) --------------------
     function populateYearSelect() {
@@ -560,9 +571,13 @@
     monthSelect.value = currentMonth;
     yearSelect.value = currentYear;
     decimalPlacesSelect.value = decimalPlaces;
-    employeeNameInput.value = employeeName;
+    employeeNameInput.value = employeeName; // Nastavenie inputu podľa načítaného mena
     hourlyWageInput.value = hourlyWage;
     taxRateInput.value = (taxRate * 100).toFixed(1); // Zobrazíme percento
+
+    // --- PRIDANÝ KÓD: Zavolať funkciu pri štarte na nastavenie počiatočného nadpisu ---
+    updateGreeting();
+    // --- KONIEC PRIDANÉHO KÓDU ---
 
 
     // -------------------- MONITOROVANIE ONLINE/OFFLINE --------------------
@@ -1015,7 +1030,7 @@
             // Použijeme hodnoty z uložených dát, ak existujú, inak použijeme aktuálne hodnoty z UI ako fallback
             hourlyWage = storedData.hourlyWage !== undefined ? storedData.hourlyWage : (parseFloat(hourlyWageInput.value) || 10);
             taxRate = storedData.taxRate !== undefined ? storedData.taxRate : ((parseFloat(taxRateInput.value) || 2) / 100);
-            employeeName = storedData.employeeName !== undefined ? storedData.employeeName : (employeeNameInput.value || '');
+            employeeName = storedData.employeeName !== undefined ? storedData.employeeName : (employeeNameInput.value || ''); // Aj meno sa načíta z dát
             decimalPlaces = storedData.decimalPlaces !== undefined ? storedData.decimalPlaces : (parseInt(decimalPlacesSelect.value) || 1);
 
             // Aktualizujeme UI prvky nastavení
@@ -1024,9 +1039,13 @@
             employeeNameInput.value = employeeName;
             decimalPlacesSelect.value = decimalPlaces;
 
+            // --- PRIDANÝ KÓD: Aktualizácia nadpisu po načítaní dát ---
+            updateGreeting();
+            // --- KONIEC PRIDANÉHO KÓDU ---
+
             // Uložíme aktuálne platné nastavenia do localStorage pre konzistenciu
             localStorage.setItem('decimalPlaces', decimalPlaces);
-            localStorage.setItem('employeeName', employeeName);
+            localStorage.setItem('employeeName', employeeName); // Uložíme aj meno
 
             // Aplikácia dát do tabuľky
             if (storedData.data && Array.isArray(storedData.data)) {
@@ -1653,6 +1672,11 @@
     window.updateEmployeeName = function() {
       employeeName = employeeNameInput.value.trim();
       localStorage.setItem('employeeName', employeeName); // Uložíme nastavenie do LS
+
+      // --- PRIDANÝ KÓD: Aktualizácia nadpisu pri zmene mena ---
+      updateGreeting();
+      // --- KONIEC PRIDANÉHO KÓDU ---
+
       // Meno neovplyvňuje výpočty, ale chceme uložiť zmenu
       calculateAndUpdateTotals(); // Uloží všetky dáta (vrátane nového mena)
     }
