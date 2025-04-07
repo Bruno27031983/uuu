@@ -541,15 +541,18 @@
     let taxRate = (parseFloat(taxRateInput.value) || 2) / 100; // Default hodnota
     let monthData = {}; // Toto sa už nepoužíva na priame načítanie, ale môže slúžiť na iné účely
 
-    // --- PRIDANÝ KÓD: Funkcia na aktualizáciu nadpisu ---
+    // --- UPRAVENÁ FUNKCIA: Funkcia na aktualizáciu nadpisu (zobrazí len prvé meno) ---
     function updateGreeting() {
       if (employeeName) {
-        mainTitle.textContent = `Ahoj ${employeeName}`;
+        // --- ZMENA: Zobrazenie len prvého mena ---
+        const firstName = employeeName.split(' ')[0]; // Rozdelí meno podľa medzery a vezme prvú časť
+        mainTitle.textContent = `Ahoj ${firstName}`; // Použije len prvé meno v pozdrave
+        // --- KONIEC ZMENY ---
       } else {
         mainTitle.textContent = 'Ahoj'; // Predvolený text, ak meno nie je zadané
       }
     }
-    // --- KONIEC PRIDANÉHO KÓDU ---
+    // --- KONIEC UPRAVENEJ FUNKCIE ---
 
 
     // -------------------- FUNKCIE PRE ROKY (select) --------------------
@@ -575,9 +578,8 @@
     hourlyWageInput.value = hourlyWage;
     taxRateInput.value = (taxRate * 100).toFixed(1); // Zobrazíme percento
 
-    // --- PRIDANÝ KÓD: Zavolať funkciu pri štarte na nastavenie počiatočného nadpisu ---
+    // --- Zavolať funkciu pri štarte na nastavenie počiatočného nadpisu ---
     updateGreeting();
-    // --- KONIEC PRIDANÉHO KÓDU ---
 
 
     // -------------------- MONITOROVANIE ONLINE/OFFLINE --------------------
@@ -868,7 +870,7 @@
             data: [],
             hourlyWage: hourlyWage,
             taxRate: taxRate,
-            employeeName: employeeName,
+            employeeName: employeeName, // Ukladáme stále celé meno
             decimalPlaces: decimalPlaces,
             lastUpdated: new Date().toISOString() // Vždy pridáme časovú značku
          };
@@ -1039,9 +1041,8 @@
             employeeNameInput.value = employeeName;
             decimalPlacesSelect.value = decimalPlaces;
 
-            // --- PRIDANÝ KÓD: Aktualizácia nadpisu po načítaní dát ---
+            // --- Aktualizácia nadpisu po načítaní dát ---
             updateGreeting();
-            // --- KONIEC PRIDANÉHO KÓDU ---
 
             // Uložíme aktuálne platné nastavenia do localStorage pre konzistenciu
             localStorage.setItem('decimalPlaces', decimalPlaces);
@@ -1462,7 +1463,7 @@
       doc.setFontSize(16);
       doc.text(`Výkaz práce - ${getMonthName(currentMonth)} ${currentYear}`, 14, 22);
       doc.setFontSize(12);
-      doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30);
+      doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30); // V PDF stále celé meno
 
       const tableData = [];
       const daysInMonth = getDaysInMonth(currentMonth);
@@ -1556,7 +1557,7 @@
       doc.setFontSize(16);
       doc.text(`Záznam dochádzky - ${getMonthName(currentMonth)} ${currentYear}`, 14, 22);
       doc.setFontSize(12);
-      doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30);
+      doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30); // V PDF stále celé meno
 
       const tableData = [];
       const daysInMonth = getDaysInMonth(currentMonth);
@@ -1670,15 +1671,14 @@
     }
 
     window.updateEmployeeName = function() {
-      employeeName = employeeNameInput.value.trim();
+      employeeName = employeeNameInput.value.trim(); // Stále ukladáme celé meno
       localStorage.setItem('employeeName', employeeName); // Uložíme nastavenie do LS
 
-      // --- PRIDANÝ KÓD: Aktualizácia nadpisu pri zmene mena ---
+      // --- Aktualizácia nadpisu pri zmene mena (zobrazí len prvé meno) ---
       updateGreeting();
-      // --- KONIEC PRIDANÉHO KÓDU ---
 
       // Meno neovplyvňuje výpočty, ale chceme uložiť zmenu
-      calculateAndUpdateTotals(); // Uloží všetky dáta (vrátane nového mena)
+      calculateAndUpdateTotals(); // Uloží všetky dáta (vrátane nového celého mena)
     }
 
     window.updateSettings = function() {
@@ -1777,7 +1777,7 @@
             ws_data.push(["Nastavenia:", "Hodnota"]);
             ws_data.push(["Hodinová mzda", dataObj.hourlyWage]);
             ws_data.push(["Daňové percento (%)", dataObj.taxRate * 100]); // Uložíme ako číslo percenta
-            ws_data.push(["Meno pracovníka", dataObj.employeeName]);
+            ws_data.push(["Meno pracovníka", dataObj.employeeName]); // V zálohe stále celé meno
             ws_data.push(["Počet desatinných miest", dataObj.decimalPlaces]);
             ws_data.push(["Posledná aktualizácia", dataObj.lastUpdated ? new Date(dataObj.lastUpdated).toLocaleString('sk-SK') : "Neznáma"]);
 
@@ -1912,7 +1912,7 @@
                  const value = row[1]?.toString().trim() || ""; // Hodnota z druhého stĺpca
                  if (key.includes("hodinová mzda")) settings.hourlyWage = parseFloat(value.replace(',', '.')) || undefined;
                  else if (key.includes("daňové percento")) settings.taxRate = (parseFloat(value.replace(',', '.').replace('%', '')) || undefined) / 100;
-                 else if (key.includes("meno pracovníka")) settings.employeeName = value || undefined;
+                 else if (key.includes("meno pracovníka")) settings.employeeName = value || undefined; // Načítame celé meno zo zálohy
                  else if (key.includes("počet desatinných miest")) settings.decimalPlaces = parseInt(value) || undefined;
                  // lastUpdated nečítame, nastavíme aktuálny čas
               }
@@ -1924,7 +1924,7 @@
               // Použijeme hodnoty z Excelu, ak boli nájdené, inak fallback na aktuálne hodnoty z UI
               hourlyWage: settings.hourlyWage !== undefined ? settings.hourlyWage : (parseFloat(hourlyWageInput.value) || 10),
               taxRate: settings.taxRate !== undefined ? settings.taxRate : ((parseFloat(taxRateInput.value) || 2) / 100),
-              employeeName: settings.employeeName !== undefined ? settings.employeeName : (employeeNameInput.value || ""),
+              employeeName: settings.employeeName !== undefined ? settings.employeeName : (employeeNameInput.value || ""), // Obnovíme celé meno
               decimalPlaces: settings.decimalPlaces !== undefined ? settings.decimalPlaces : (parseInt(decimalPlacesSelect.value) || 1),
               lastUpdated: new Date().toISOString() // Vždy nastavíme aktuálny čas ako poslednú úpravu pri obnove
             };
@@ -1937,7 +1937,7 @@
 
             // Uložíme obnovené dáta do localStorage pre aktuálny mesiac/rok
             localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(backupData));
-            // Aplikujeme dáta do UI (parseAndApplyData načíta aj nastavenia)
+            // Aplikujeme dáta do UI (parseAndApplyData načíta aj nastavenia a zavolá updateGreeting)
             parseAndApplyData(JSON.stringify(backupData));
             showSaveNotification('Záloha bola úspešne obnovená a načítaná.');
 
