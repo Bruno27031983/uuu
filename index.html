@@ -52,19 +52,71 @@
       margin-bottom: 20px;
       display: flex;
       flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
+      /* Zmenené: zarovnanie na začiatok pre lepšie zobrazenie tlačidla */
+      align-items: flex-start;
+      /* Odstránené justify-content, flex riadi šírku */
     }
     /* --- ÚPRAVA PRE TESNEJŠIE ROZLOŽENIE --- */
-    .settings > div {
-      flex: 1 1 200px;
-      margin: 2px 5px; /* Zmenšený vertikálny margin (bol 5px) */
+    .settings > div, .settings > button#toggleSettingsBtn, .settings > button.highlight {
+       /* Aplikujeme margin na všetky priame deti .settings */
+      margin: 2px 5px;
     }
+    .settings > div {
+      flex: 1 1 200px; /* Ponecháme flex pre input divy */
+    }
+     /* Tlačidlá v settings majú pevnú šírku alebo sa prispôsobia obsahu */
+    .settings > button#toggleSettingsBtn {
+      flex-basis: 100%; /* Tlačidlo na rozbalenie zaberie celú šírku */
+      margin-bottom: 10px; /* Väčší odstup pod tlačidlom */
+      background-color: #eee;
+      color: #333;
+      border: 1px solid #ccc;
+      text-align: left;
+      padding: 8px 12px;
+    }
+    body.dark-mode .settings > button#toggleSettingsBtn {
+        background-color: #555;
+        color: #f4f4f4;
+        border-color: #666;
+    }
+     .settings > button.highlight {
+       /* Ponecháme flex: 1 1 150px; ako bolo definované v .btn */
+       flex: 1 1 150px;
+       /* Prípadne pevná šírka */
+       /* width: auto; */
+       /* min-width: 150px; */
+     }
+
+
     .settings label {
       display: block;
       margin-bottom: 2px; /* Zmenšený margin pod labelom (bol 5px) */
     }
-    /* --- KONIEC ÚPRAVY --- */
+    /* --- KONIEC ÚPRAVY PRE TESNEJŠIE ROZLOŽENIE --- */
+
+    /* --- NOVÉ ŠTÝLY PRE SKRÝVANIE --- */
+    #settings-collapsible-content {
+        display: flex; /* Použijeme flex pre vnútorné elementy */
+        flex-wrap: wrap; /* Umožní zalamovanie */
+        width: 100%; /* Zaberie celú šírku */
+        max-height: 0;
+        opacity: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
+        /* Odstránené justify-content, flex na deťoch to riadi */
+    }
+    #settings-collapsible-content.visible {
+        max-height: 400px; /* Dostatočne veľká hodnota, upravte podľa potreby */
+        opacity: 1;
+        /* Pridáme malý odstup zhora, keď je viditeľný */
+        margin-top: 5px;
+    }
+    #settings-collapsible-content > div {
+         flex: 1 1 200px; /* Zachováme flex pre vnútorné divy */
+         margin: 2px 5px; /* Zachováme marginy */
+    }
+     /* --- KONIEC NOVÝCH ŠTÝLOV PRE SKRÝVANIE --- */
+
     .table-container {
       overflow-x: auto;
     }
@@ -267,13 +319,39 @@
         font-size: 1em;
       }
       .settings {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: column; /* Toto už je, ale potvrdzujeme */
+        align-items: stretch; /* Zarovnáme položky na šírku */
       }
       .settings > div {
-        flex: 1 1 auto;
+        flex-basis: auto; /* Resetujeme flex-basis pre vnútorné divy */
+        width: 100%; /* Všetky divy na 100% šírky */
         margin: 5px 0; /* Upravený margin pre mobilné zobrazenie */
       }
+       .settings > button#toggleSettingsBtn {
+           flex-basis: auto; /* Reset */
+           width: 100%;
+           margin-bottom: 10px;
+       }
+       .settings > button.highlight {
+           flex-basis: auto; /* Reset */
+           width: 100%;
+           margin: 5px 0;
+       }
+       /* Vnútro collapsible kontajnera na mobiloch */
+       #settings-collapsible-content {
+            flex-direction: column; /* Pod sebou */
+            align-items: stretch;
+       }
+       #settings-collapsible-content > div {
+           flex-basis: auto;
+           width: 100%; /* Každý input na 100% šírky */
+           margin: 5px 0;
+       }
+       #settings-collapsible-content.visible {
+           max-height: 600px; /* Zvýšená max-height pre mobil */
+       }
+
+
       table {
         min-width: 800px;
       }
@@ -327,6 +405,18 @@
       table {
         min-width: 800px;
       }
+      /* Oprava pre najmenšie obrazovky, aby tlačidlá mali nejaký margin */
+       .settings > button#toggleSettingsBtn,
+       .settings > button.highlight {
+           margin: 5px 0;
+       }
+       #settings-collapsible-content > div {
+          margin: 5px 0;
+       }
+       #settings-collapsible-content.visible {
+           max-height: 700px; /* Ešte väčšia výška pre istotu */
+       }
+
     }
     #saveNotification, #errorNotification {
       display: none;
@@ -407,50 +497,59 @@
 
     <!-- Nastavenia -->
     <div class="settings">
-      <div>
-        <label for="employeeNameInput">Meno pracovníka: </label>
-        <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka" oninput="updateEmployeeName()">
-      </div>
-      <div>
-        <label for="hourlyWageInput">Hodinová mzda (€): </label>
-        <input type="number" id="hourlyWageInput" value="10" min="0" step="0.1" oninput="updateSettings()">
-      </div>
-      <div>
-        <label for="taxRateInput">Daňové percento (%): </label>
-        <input type="number" id="taxRateInput" value="2" min="0" step="0.1" oninput="updateSettings()">
-      </div>
-      <div>
-        <label for="monthSelect">Mesiac: </label>
-        <select id="monthSelect" onchange="changeMonth()">
-          <option value="0">Január</option>
-          <option value="1">Február</option>
-          <option value="2">Marec</option>
-          <option value="3">Apríl</option>
-          <option value="4">Máj</option>
-          <option value="5">Jún</option>
-          <option value="6">Júl</option>
-          <option value="7">August</option>
-          <option value="8">September</option>
-          <option value="9">Október</option>
-          <option value="10">November</option>
-          <option value="11">December</option>
-        </select>
-      </div>
-      <div>
-        <label for="yearSelect">Rok: </label>
-        <select id="yearSelect" onchange="changeYear()">
-          <!-- Dynamicky generované roky -->
-        </select>
-      </div>
-      <div>
-        <label for="decimalPlacesSelect">Počet desatinných miest: </label>
-        <select id="decimalPlacesSelect" onchange="changeDecimalPlaces()">
-          <option value="1">1</option>
-          <option value="2">2</option>
-        </select>
-      </div>
-      <button onclick="toggleDarkMode()" class="btn highlight">Prepínať tmavý režim</button>
-    </div>
+      <!-- NOVÉ / UPRAVENÉ: Tlačidlo na zobrazenie/skrytie -->
+      <button id="toggleSettingsBtn" class="btn">Zobraziť nastavenia ▼</button>
+
+      <!-- NOVÉ / UPRAVENÉ: Kontajner pre skryté nastavenia -->
+      <div id="settings-collapsible-content">
+          <div>
+            <label for="employeeNameInput">Meno pracovníka: </label>
+            <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka" oninput="updateEmployeeName()">
+          </div>
+          <div>
+            <label for="hourlyWageInput">Hodinová mzda (€): </label>
+            <input type="number" id="hourlyWageInput" value="10" min="0" step="0.1" oninput="updateSettings()">
+          </div>
+          <div>
+            <label for="taxRateInput">Daňové percento (%): </label>
+            <input type="number" id="taxRateInput" value="2" min="0" step="0.1" oninput="updateSettings()">
+          </div>
+          <div>
+            <label for="monthSelect">Mesiac: </label>
+            <select id="monthSelect" onchange="changeMonth()">
+              <option value="0">Január</option>
+              <option value="1">Február</option>
+              <option value="2">Marec</option>
+              <option value="3">Apríl</option>
+              <option value="4">Máj</option>
+              <option value="5">Jún</option>
+              <option value="6">Júl</option>
+              <option value="7">August</option>
+              <option value="8">September</option>
+              <option value="9">Október</option>
+              <option value="10">November</option>
+              <option value="11">December</option>
+            </select>
+          </div>
+          <div>
+            <label for="yearSelect">Rok: </label>
+            <select id="yearSelect" onchange="changeYear()">
+              <!-- Dynamicky generované roky -->
+            </select>
+          </div>
+          <div>
+            <label for="decimalPlacesSelect">Počet desatinných miest: </label>
+            <select id="decimalPlacesSelect" onchange="changeDecimalPlaces()">
+              <option value="1">1</option>
+              <option value="2">2</option>
+            </select>
+          </div>
+      </div> <!-- Koniec settings-collapsible-content -->
+
+       <!-- NOVÉ / UPRAVENÉ: Tlačidlo tmavého režimu zostáva viditeľné -->
+       <button onclick="toggleDarkMode()" class="btn highlight">Prepínať tmavý režim</button>
+    </div> <!-- Koniec settings -->
+
 
     <div class="table-container">
       <table>
@@ -536,6 +635,10 @@
     const yearSelect = document.getElementById('yearSelect');
     const decimalPlacesSelect = document.getElementById('decimalPlacesSelect');
     const employeeNameInput = document.getElementById('employeeNameInput');
+    // --- NOVÉ / UPRAVENÉ: Referencie pre collapsible časť ---
+    const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+    const settingsCollapsibleContent = document.getElementById('settings-collapsible-content');
+
 
     const currentDate = new Date();
     let currentMonth = currentDate.getMonth();
@@ -585,6 +688,19 @@
 
     // --- Zavolať funkciu pri štarte na nastavenie počiatočného nadpisu ---
     updateGreeting();
+
+    // --- NOVÝ KÓD PRE SKRÝVANIE NASTAVENÍ ---
+    if (toggleSettingsBtn && settingsCollapsibleContent) {
+        toggleSettingsBtn.addEventListener('click', () => {
+            const isVisible = settingsCollapsibleContent.classList.toggle('visible');
+            if (isVisible) {
+                toggleSettingsBtn.textContent = 'Skryť nastavenia ▲';
+            } else {
+                toggleSettingsBtn.textContent = 'Zobraziť nastavenia ▼';
+            }
+        });
+    }
+    // --- KONIEC NOVÉHO KÓDU PRE SKRÝVANIE NASTAVENÍ ---
 
 
     // -------------------- MONITOROVANIE ONLINE/OFFLINE --------------------
