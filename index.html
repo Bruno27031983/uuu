@@ -55,14 +55,16 @@
       justify-content: space-between;
       align-items: center;
     }
+    /* --- ÚPRAVA PRE TESNEJŠIE ROZLOŽENIE --- */
     .settings > div {
       flex: 1 1 200px;
-      margin: 5px;
+      margin: 2px 5px; /* Zmenšený vertikálny margin (bol 5px) */
     }
     .settings label {
       display: block;
-      margin-bottom: 5px;
+      margin-bottom: 2px; /* Zmenšený margin pod labelom (bol 5px) */
     }
+    /* --- KONIEC ÚPRAVY --- */
     .table-container {
       overflow-x: auto;
     }
@@ -93,7 +95,7 @@
     th:nth-child(8), td:nth-child(8) {
       width: 8.33%;
     }
-    input[type="tel"], input[type="number"], input[type="text"] {
+    input[type="tel"], input[type="number"], input[type="text"], select { /* Pridaný select pre konzistenciu */
       width: 100%;
       padding: 5px;
       box-sizing: border-box;
@@ -101,6 +103,7 @@
       font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 3px;
+      vertical-align: middle; /* Pomáha zarovnaniu s labelom */
     }
     .result {
       font-weight: bold;
@@ -216,12 +219,14 @@
     }
     body.dark-mode input[type="tel"],
     body.dark-mode input[type="number"],
-    body.dark-mode input[type="text"] {
+    body.dark-mode input[type="text"],
+    body.dark-mode select { /* Pridaný select */
       background-color: #666;
       color: white;
+      border-color: #555; /* Trochu tmavší okraj pre kontrast */
     }
     body.dark-mode .btn {
-      color: #333; /* Možno by toto malo byť biele? Ponechané ako v origináli */
+      color: #f4f4f4; /* Svetlejší text na tmavých tlačidlách */
     }
     body.dark-mode .reset-btn {
       background-color: #d32f2f;
@@ -267,7 +272,7 @@
       }
       .settings > div {
         flex: 1 1 auto;
-        margin: 10px 0;
+        margin: 5px 0; /* Upravený margin pre mobilné zobrazenie */
       }
       table {
         min-width: 800px;
@@ -316,7 +321,7 @@
       .settings label {
         font-size: 0.9em;
       }
-      input[type="tel"], input[type="number"], input[type="text"] {
+      input[type="tel"], input[type="number"], input[type="text"], select { /* Pridaný select */
         font-size: 12px;
       }
       table {
