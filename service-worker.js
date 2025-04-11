@@ -21,7 +21,6 @@ if (!firebase.apps.length) {
     console.log("[Service Worker] Firebase app already initialized.");
 }
 
-
 // Získanie Messaging inštancie (len ak je messaging podporovaný)
 let messaging;
 try {
@@ -38,7 +37,7 @@ try {
             // OPRAVA: Použitie správnej cesty k ikone
             const notificationOptions = {
                 body: payload.notification?.body || 'Máte novú správu.',
-                icon: payload.notification?.icon || './icons/icon-192x192.png', // Použije ikonu z payloadu, inak defaultnú
+                icon: payload.notification?.icon || './icons/icon-192x192.png', // Správna cesta
                 data: payload.data
             };
 
@@ -55,38 +54,31 @@ try {
     console.error("[Service Worker] Error initializing Firebase Messaging:", err);
 }
 
-
 // Základné event listenery pre Service Worker lifecycle
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing.');
-  // self.skipWaiting(); // Odkomentujte, ak chcete okamžitú aktiváciu nového SW
+  // self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Activating.');
-  // event.waitUntil(clients.claim()); // Odkomentujte pre okamžité prevzatie kontroly
+  // event.waitUntil(clients.claim());
 });
 
 // Listener na kliknutie na notifikáciu
 self.addEventListener('notificationclick', (event) => {
     console.log('[Service Worker] Notification click Received.', event.notification);
     event.notification.close();
-
     // Otvorí/prepne sa na hlavnú stránku aplikácie
-    // Predpokladáme, že index.html je v koreňovom adresári rozsahu SW (uuu/)
     const urlToOpen = new URL('./index.html', self.location.origin).href;
-
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-            // Skontroluje, či už je nejaké okno s danou URL otvorené
             for (let i = 0; i < windowClients.length; i++) {
                 const windowClient = windowClients[i];
-                // Porovnáme URL bez query parametrov a hashov pre väčšiu robustnosť
                 if (windowClient.url.split(/[?#]/)[0] === urlToOpen.split(/[?#]/)[0]) {
-                    return windowClient.focus(); // Prepne sa na existujúce okno
+                    return windowClient.focus();
                 }
             }
-            // Ak žiadne okno nie je otvorené, otvorí nové
             return clients.openWindow(urlToOpen);
         })
     );
