@@ -137,10 +137,9 @@
     window.changeYear = function() { const oldYear = currentYear; currentYear = parseInt(yearSelect.value); console.log(`Zmena roku z ${oldYear} na ${currentYear}`); updateUI(); }
     function getDaysInMonth(month) { if (month < 0 || month > 11) return 31; return new Date(currentYear, month + 1, 0).getDate(); }
     window.createBackup = function() { const key = `workData-${currentYear}-${currentMonth}`; const dataString = localStorage.getItem(key); if (dataString) { try { const dataObj = JSON.parse(dataString); const ws_data = [ ["Deň", "Príchod", "Odchod", "Prestávka (h)", "Hrubá Mzda (€)", "Čistá Mzda (€)"] ]; if (dataObj.data && Array.isArray(dataObj.data)) { const daysInMonth = getDaysInMonth(currentMonth); const dataToExport = dataObj.data.slice(0, daysInMonth); dataToExport.forEach((row, index) => { const dayNum = index + 1; const dayName = getDayName(currentYear, currentMonth, dayNum); ws_data.push([ `${dayNum}. ${dayName}`, row.start || "", row.end || "", row.breakTime || "", row.gross ? parseFloat(row.gross) : 0, row.net ? parseFloat(row.net) : 0 ]); }); } ws_data.push([]); ws_data.push(["Nastavenia:", "Hodnota"]); ws_data.push(["Hodinová mzda", dataObj.hourlyWage]); ws_data.push(["Daňové percento (%)", dataObj.taxRate * 100]); ws_data.push(["Meno pracovníka", dataObj.employeeName]); ws_data.push(["Počet desatinných miest", dataObj.decimalPlaces]); ws_data.push(["Posledná aktualizácia", dataObj.lastUpdated ? new Date(dataObj.lastUpdated).toLocaleString('sk-SK') : "Neznáma"]); const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(ws_data); const moneyFormat = `0.00" €"`; const timeFormat = "hh:mm"; const breakFormat = "0.0"; const dataEndRow = (dataObj.data ? dataObj.data.length : 0) + 1; for (let R = 1; R < dataEndRow; ++R) { if(ws[XLSX.utils.encode_cell({c:1, r:R})]) ws[XLSX.utils.encode_cell({c:1, r:R})].z = timeFormat; if(ws[XLSX.utils.encode_cell({c:2, r:R})]) ws[XLSX.utils.encode_cell({c:2, r:R})].z = timeFormat; if(ws[XLSX.utils.encode_cell({c:3, r:R})]) ws[XLSX.utils.encode_cell({c:3, r:R})].z = breakFormat; if(ws[XLSX.utils.encode_cell({c:4, r:R})]) ws[XLSX.utils.encode_cell({c:4, r:R})].z = moneyFormat; if(ws[XLSX.utils.encode_cell({c:5, r:R})]) ws[XLSX.utils.encode_cell({c:5, r:R})].z = moneyFormat; } ws['!cols'] = [ { wch: 12 }, { wch: 8 }, { wch: 8 }, { wch: 10 }, { wch: 14 }, { wch: 14 } ]; const settingsRowIndex = ws_data.findIndex(row => row[0] === "Nastavenia:"); if (settingsRowIndex !== -1) { ws['!cols'][0].wch = 25; } XLSX.utils.book_append_sheet(wb, ws, `Výkaz ${getMonthName(currentMonth)}`); const safeEmployeeName = employeeName.replace(/[^a-zA-Z0-9]/g, '_') || 'Nezadane'; XLSX.writeFile(wb, `Zaloha_BrunoCalc_${safeEmployeeName}_${getMonthName(currentMonth)}_${currentYear}.xlsx`); showSaveNotification('Záloha bola úspešne vytvorená.'); } catch(error) { console.error('Chyba pri vytváraní zálohy:', error); showErrorNotification('Chyba pri vytváraní zálohy: ' + error.message); } } else { showErrorNotification('Nie sú dostupné žiadne lokálne dáta na zálohu pre tento mesiac.'); } };
-    // OPRAVA SYNTAX ERROR: Pridaná bodkočiarka za definíciu reader.onerror
     window.restoreBackup = function() { const input = document.createElement('input'); input.type = 'file'; input.accept = '.xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; input.onchange = function(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array', cellDates: true, cellNF: true }); const sheetName = workbook.SheetNames[0]; const ws = workbook.Sheets[sheetName]; const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", raw: false }); const headerRowIndex = rows.findIndex(row => row && row[0]?.toString().toLowerCase().includes("deň")); if (headerRowIndex === -1) throw new Error("Hlavička tabuľky ('Deň', 'Príchod', ...) nebola nájdená."); const header = rows[headerRowIndex]; const dayIndex = header.findIndex(h => h?.toString().toLowerCase().includes("deň")); const startIndex = header.findIndex(h => h?.toString().toLowerCase().includes("príchod")); const endIndex = header.findIndex(h => h?.toString().toLowerCase().includes("odchod")); const breakIndex = header.findIndex(h => h?.toString().toLowerCase().includes("prestávka")); if (dayIndex === -1 || startIndex === -1 || endIndex === -1 || breakIndex === -1) { throw new Error("Nepodarilo sa nájsť všetky požadované stĺpce (Deň, Príchod, Odchod, Prestávka) v hlavičke."); } let dataArray = []; let settings = {}; let i = headerRowIndex + 1; for (; i < rows.length; i++) { const row = rows[i]; if (!row || row.length === 0 || !(row[dayIndex]?.toString().match(/^\d+\.|^Deň/i))) { break; } let startTimeStr = row[startIndex]?.toString() || ""; let endTimeStr = row[endIndex]?.toString() || ""; if (!isNaN(parseFloat(startTimeStr)) && parseFloat(startTimeStr) >= 0 && parseFloat(startTimeStr) <= 1 && !startTimeStr.includes(':')) { startTimeStr = XLSX.SSF.format('hh:mm', parseFloat(startTimeStr)); } if (!isNaN(parseFloat(endTimeStr)) && parseFloat(endTimeStr) >= 0 && parseFloat(endTimeStr) <= 1 && !endTimeStr.includes(':')) { endTimeStr = XLSX.SSF.format('hh:mm', parseFloat(endTimeStr)); } dataArray.push({ start: startTimeStr, end: endTimeStr, breakTime: row[breakIndex] !== undefined ? row[breakIndex].toString().replace(',', '.') : "", gross: "0", net: "0" }); } for (; i < rows.length; i++) { const row = rows[i]; if (row && row.length > 1 && row[0] && typeof row[0] === 'string') { const key = row[0].toString().trim().toLowerCase(); const value = row[1]?.toString().trim() || ""; if (key.includes("hodinová mzda")) settings.hourlyWage = parseFloat(value.replace(',', '.')) || undefined; else if (key.includes("daňové percento")) settings.taxRate = (parseFloat(value.replace(',', '.').replace('%', '')) || undefined) / 100; else if (key.includes("meno pracovníka")) settings.employeeName = value || undefined; else if (key.includes("počet desatinných miest")) settings.decimalPlaces = parseInt(value) || undefined; } } const backupData = { data: dataArray, hourlyWage: settings.hourlyWage !== undefined ? settings.hourlyWage : (parseFloat(hourlyWageInput.value) || 10), taxRate: settings.taxRate !== undefined ? settings.taxRate : ((parseFloat(taxRateInput.value) || 2) / 100), employeeName: settings.employeeName !== undefined ? settings.employeeName : (employeeNameInput.value || ""), decimalPlaces: settings.decimalPlaces !== undefined ? settings.decimalPlaces : (parseInt(decimalPlacesSelect.value) || 1), lastUpdated: new Date().toISOString() }; if (!confirm(`Načítaná záloha obsahuje ${dataArray.length} dní. Naozaj chcete prepísať aktuálne dáta pre ${getMonthName(currentMonth)} ${currentYear}?`)) { console.log('Obnova zálohy zrušená používateľom.'); return; } localStorage.setItem(`workData-${currentYear}-${currentMonth}`, JSON.stringify(backupData)); parseAndApplyData(JSON.stringify(backupData)); showSaveNotification('Záloha bola úspešne obnovená a načítaná.'); if (currentUser && isOnline()) { saveToFirestore(); } } catch (error) { console.error('Chyba pri načítavaní zálohy:', error); showErrorNotification('Chyba pri načítavaní zálohy: ' + error.message); } };
-        reader.onerror = function() { showErrorNotification('Chyba pri čítaní súboru.'); }; // <--- Tu bola pridaná bodkočiarka
-        reader.readAsArrayBuffer(file); // Toto musí byť až po definíciách onload a onerror
+        reader.onerror = function() { showErrorNotification('Chyba pri čítaní súboru.'); }; // Opravené ukončenie
+        reader.readAsArrayBuffer(file);
       };
       input.click();
     };
@@ -157,29 +156,23 @@
     if (messaging) { onMessage(messaging, (payload) => { console.log('Message received while app is in foreground: ', payload); const notificationTitle = payload.notification?.title || 'Nová správa'; const notificationBody = payload.notification?.body || ''; showSaveNotification(`${notificationTitle}: ${notificationBody}`); }); }
     // ==================== KONIEC SEKCIE: PUSH NOTIFIKÁCIE ====================
 
-    // DEBUG: UI Update s logovaním
+    // Vyčistená UI Update funkcia
     function updateUI() {
-        console.log('>>> Vstupujem do updateUI. User:', currentUser ? currentUser.email : 'None');
         const loginForm = document.getElementById('login-form');
         const userInfo = document.getElementById('user-info');
         const userEmail = document.getElementById('user-email');
-        console.log('Element loginForm:', loginForm);
-        console.log('Element workDays:', workDays);
 
-        createTable(); // Volanie tvorby tabuľky
+        createTable(); // Vykreslí tabuľku
 
         if (currentUser) {
-            console.log('--- updateUI: vetva pre PRIHLASENEHO ---');
             if (loginForm) loginForm.style.display = 'none'; else console.error("loginForm not found!");
             if (userInfo) userInfo.style.display = 'block'; else console.error("userInfo not found!");
             if (userEmail) userEmail.textContent = currentUser.email; else console.error("userEmail not found!");
             loadInitialData();
             updateNotificationButtonState();
         } else {
-            console.log('--- updateUI: vetva pre NEPRIHLASENEHO ---');
             if (loginForm) {
                  loginForm.style.display = 'flex';
-                 console.log('Nastavujem loginForm display na flex');
             } else {
                  console.error('Element loginForm nebol najdeny!');
             }
@@ -190,20 +183,16 @@
                 enableNotificationsBtn.disabled = true;
                 enableNotificationsBtn.textContent = 'Prihláste sa pre notifikácie';
                 enableNotificationsBtn.style.display = 'block';
-                console.log('Nastavujem notifikacne tlacitko pre odhlaseneho');
             } else { console.error("enableNotificationsBtn not found!"); }
         }
-        console.log('<<< Opúšťam updateUI');
     }
 
-    // DEBUG: CreateTable s logovaním
+    // Vyčistená createTable funkcia
     function createTable() {
-      console.log('>>> Vstupujem do createTable');
       const daysInMonth = getDaysInMonth(currentMonth);
-      console.log(`Vytváram štruktúru tabuľky pre ${getMonthName(currentMonth)} ${currentYear}. Dni: ${daysInMonth}`);
       if (!workDays) { console.error("Element workDays (tbody) nebol nájdený PRED mazaním obsahu!"); return; }
       workDays.innerHTML = '';
-      if (daysInMonth <= 0) { console.warn("Počet dní v mesiaci je 0 alebo menej."); console.log('<<< Opúšťam createTable (žiadne dni)'); return; }
+      if (daysInMonth <= 0) { console.warn("Počet dní v mesiaci je 0 alebo menej."); return; }
       const today = new Date(); const currentDayOfMonth = today.getDate(); const currentMonthIndex = today.getMonth(); const currentYearValue = today.getFullYear();
       const fragment = document.createDocumentFragment();
       for (let i = 1; i <= daysInMonth; i++) {
@@ -215,13 +204,11 @@
       }
       if (!workDays) { console.error("Element workDays (tbody) nebol nájdený PRED pripojením fragmentu!"); return; }
       workDays.appendChild(fragment);
-      console.log(`Štruktúra tabuľky vytvorená a pripojená (${daysInMonth} riadkov).`);
-      console.log('<<< Opúšťam createTable');
     }
 
     // -------------------- INIT --------------------
     onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed. User:', user ? user.email : 'None');
+      console.log('Auth state changed. User:', user ? user.email : 'None'); // Tento log je užitočný, necháme ho
       currentUser = user;
       updateUI();
     });
@@ -237,15 +224,15 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
           .then(registration => {
-            console.log('Service Worker zaregistrovaný úspešne s rozsahom:', registration.scope);
+            console.log('Service Worker zaregistrovaný úspešne s rozsahom:', registration.scope); // Tento log je užitočný
             if (typeof window.setSwRegistration === 'function') {
                  window.setSwRegistration(registration);
             } else {
-                 console.error("Funkcia window.setSwRegistration nebola nájdená! Skontrolujte poradie načítania skriptov.");
+                 console.error("Funkcia window.setSwRegistration nebola nájdená! Skontrolujte poradie načítania skriptov."); // Tento error je dôležitý
             }
           })
           .catch(error => {
-            console.error('Registrácia Service Workera zlyhala:', error);
+            console.error('Registrácia Service Workera zlyhala:', error); // Tento error je dôležitý
             const btn = document.getElementById('enableNotificationsBtn');
             if(btn) {
                  btn.disabled = true;
