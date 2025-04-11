@@ -1,12 +1,10 @@
-// service-worker.js
+// Import Firebase SDK skriptov (používame compat verziu pre jednoduchší import v SW)
+importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js");
 
-// DÔLEŽITÉ: Používame compat knižnice pre jednoduchšiu syntax v SW
-importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
-
-// Vaša Firebase konfigurácia (rovnaká ako v index.html)
+// Vaša Firebase konfigurácia (MUSÍ byť rovnaká ako v hlavnom HTML)
 const firebaseConfig = {
-    apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // Nahraďte za Váš API kľúč ak je iný
+    apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
     authDomain: "uuuuu-f7ef9.firebaseapp.com",
     projectId: "uuuuu-f7ef9",
     storageBucket: "uuuuu-f7ef9.firebasestorage.app",
@@ -14,168 +12,90 @@ const firebaseConfig = {
     appId: "1:456105865458:web:101f0a4dcb455f174b606b",
 };
 
-// Inicializácia Firebase v Service Worker
-let app;
-try {
-    app = firebase.initializeApp(firebaseConfig);
-    console.log("[service-worker.js] Firebase Initialized.");
-} catch (e) {
-    console.error("[service-worker.js] Error initializing Firebase in SW:", e);
+// Inicializácia Firebase app v Service Workeri
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("[Service Worker] Firebase app initialized.");
+} else {
+    firebase.app(); // Získanie existujúcej default app
+    console.log("[Service Worker] Firebase app already initialized.");
 }
 
 
-// Získanie inštancie Messaging (len ak inicializácia prebehla)
+// Získanie Messaging inštancie (len ak je messaging podporovaný)
 let messaging;
-if (app) {
-    try {
+try {
+    if (firebase.messaging.isSupported()) {
         messaging = firebase.messaging();
-        console.log("[service-worker.js] Firebase Messaging Initialized.");
+        console.log("[Service Worker] Firebase Messaging instance obtained.");
 
-        // Listener pre správy na pozadí
+        // Handler pre push správy prijaté, keď je aplikácia zatvorená alebo na pozadí
         messaging.onBackgroundMessage((payload) => {
-            console.log('[service-worker.js] Received background message ', payload);
+            console.log("[Service Worker] Received background message: ", payload);
 
-            // Pokúsime sa extrahovať dáta z payloadu
-            const notificationTitle = payload.notification?.title || 'Bruno\'s Calculator';
+            // Extrahujeme dáta pre notifikáciu
+            const notificationTitle = payload.notification?.title || 'Nová správa';
             const notificationOptions = {
                 body: payload.notification?.body || 'Máte novú správu.',
-                icon: payload.notification?.icon || './icons/icon-192x192.png', // Upravte cestu k ikone
-                badge: './icons/badge-72x72.png', // Upravte cestu k ikone (voliteľné)
-                data: { // Dáta pre notificationclick event
-                    url: payload.data?.url || '/' // URL na otvorenie po kliknutí
-                }
-                // Ďalšie možnosti: tag, renotify, actions...
+                icon: payload.notification?.icon || './images/ikona.png', // --> UPRAVTE CESTU k vašej ikone (napr. 192x192 z manifestu)
+                data: payload.data // Pridá dáta k notifikácii pre prípadné spracovanie po kliknutí
             };
 
-             // Zobrazíme notifikáciu
-            self.registration.showNotification(notificationTitle, notificationOptions)
-                .then(() => console.log("[service-worker.js] Notification shown."))
-                .catch(err => console.error("[service-worker.js] Error showing notification:", err));
+            // Zobrazíme notifikáciu
+            // `self.registration` odkazuje na registráciu tohto service workera
+            return self.registration.showNotification(notificationTitle, notificationOptions)
+                .then(() => console.log("[Service Worker] Background notification shown."))
+                .catch(err => console.error("[Service Worker] Error showing background notification:", err));
         });
-    } catch(e) {
-        console.error("[service-worker.js] Error initializing Firebase Messaging in SW:", e);
-    }
 
-} else {
-    console.error("[service-worker.js] Firebase app was not initialized. Messaging cannot be set up.");
+    } else {
+        console.log("[Service Worker] Firebase Messaging is not supported in this browser environment.");
+    }
+} catch (err) {
+    console.error("[Service Worker] Error initializing Firebase Messaging:", err);
 }
 
 
-// Listener pre kliknutie na notifikáciu
-self.addEventListener('notificationclick', (event) => {
-    console.log('[service-worker.js] Notification click Received.', event.notification);
-
-    event.notification.close(); // Zatvorí notifikáciu
-
-    const urlToOpen = event.notification.data?.url || '/'; // Získa URL z dát notifikácie
-
-    // Otvorí okno/kartu alebo fokusuje existujúce
-    event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Skontroluje, či už existuje okno s rovnakou URL (pathname)
-            const targetUrl = new URL(urlToOpen, self.location.origin); // Vytvorí plnú URL
-            for (let i = 0; i < clientList.length; i++) {
-                const client = clientList[i];
-                 const clientUrl = new URL(client.url);
-                 // Porovnáme len cestu, nie query parametre alebo hash
-                if (clientUrl.pathname === targetUrl.pathname && 'focus' in client) {
-                    console.log("[service-worker.js] Focusing existing window:", client.url);
-                    return client.focus();
-                }
-            }
-            // Ak okno neexistuje, otvorí nové
-            if (clients.openWindow) {
-                 console.log("[service-worker.js] Opening new window:", targetUrl.href);
-                return clients.openWindow(targetUrl.href);
-            }
-        }).catch(err => console.error("[service-worker.js] Error handling notification click:", err))
-    );
-});
-
-// === Základné PWA Listenery (ponechajte alebo pridajte, ak ich nemáte) ===
-// Mali by ste mať aspoň základnú offline stratégiu
-
-// Príklad: Cache-first stratégia (upravte podľa vašich potrieb)
-const CACHE_NAME = 'bruno-cache-v1';
-const urlsToCache = [
-  '/',
-  './index.html', // Alebo len '/' ak index.html je koreňový
-  './manifest.json',
-  './icons/icon-192x192.png', // Pridajte všetky vaše ikony a dôležité assety
-  './icons/icon-512x512.png',
-  // Pridajte cesty k JS/CSS, ak nie sú inline
-  // Pozor na externé knižnice (CDN) - tie sa cachujú ťažšie spoľahlivo
-];
-
+// Základné event listenery pre Service Worker lifecycle (môžete rozšíriť pre PWA caching atď.)
 self.addEventListener('install', (event) => {
-  console.log('[service-worker.js] Installing...');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[service-worker.js] Opened cache, caching files...');
-        return cache.addAll(urlsToCache).catch(err => {
-            console.error("[service-worker.js] Failed to cache initial files:", err);
-            // Chyba pri cachovaní môže byť spôsobená nedostupnosťou niektorého súboru
-        });
-      })
-      .then(() => self.skipWaiting()) // Aktivuje nový SW hneď po inštalácii
-  );
+  console.log('[Service Worker] Installing.');
+  // Príklad: Preskočenie čakania, aby sa nový SW aktivoval hneď
+  // self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('[service-worker.js] Activating...');
-  // Odstránenie starých cache
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
-      );
-    }).then(() => clients.claim()) // Prevezme kontrolu nad otvorenými stránkami
-  );
+  console.log('[Service Worker] Activating.');
+  // Príklad: Odstránenie starých kešiek
+  // event.waitUntil(clients.claim()); // Prevzatie kontroly nad otvorenými stránkami
 });
 
-self.addEventListener('fetch', (event) => {
-   // Ignorujeme non-GET requesty a requesty na Firebase/iné externé služby pre jednoduchosť
-   if (event.request.method !== 'GET' ||
-       event.request.url.includes('firestore.googleapis.com') ||
-       event.request.url.includes('firebaseappcheck.googleapis.com') ||
-       event.request.url.includes('google.com/recaptcha') ||
-       event.request.url.includes('googleapis.com/identitytoolkit') ) {
-     // console.log('[service-worker.js] Skipping fetch (non-GET or external API):', event.request.url);
-     event.respondWith(fetch(event.request));
-     return;
-   }
+// (Voliteľné) Listener na kliknutie na notifikáciu
+self.addEventListener('notificationclick', (event) => {
+    console.log('[Service Worker] Notification click Received.', event.notification);
 
-  // Cache-first stratégia
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          // console.log('[service-worker.js] Serving from cache:', event.request.url);
-          return response; // Nájdené v cache
-        }
-        // console.log('[service-worker.js] Fetching from network:', event.request.url);
-        // Nie je v cache, skúsime sieť a uložíme do cache
-        return fetch(event.request).then(
-          (networkResponse) => {
-            // Skontrolujeme, či je odpoveď platná
-            if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-              return networkResponse;
+    // Zatvorí notifikáciu
+    event.notification.close();
+
+    // Príklad: Otvorí okno aplikácie alebo sa naň prepne, ak je už otvorené
+    // Môžete pridať logiku na základe event.notification.data
+    const urlToOpen = new URL('/', self.location.origin).href; // Otvorí koreňovú stránku
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+            let matchingClient = null;
+            for (let i = 0; i < windowClients.length; i++) {
+                const windowClient = windowClients[i];
+                if (windowClient.url === urlToOpen) {
+                    matchingClient = windowClient;
+                    break;
+                }
             }
-            // Klonujeme odpoveď, lebo ju potrebujeme použiť dvakrát (pre cache aj pre browser)
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-                // console.log('[service-worker.js] Cached new resource:', event.request.url);
-              });
-            return networkResponse;
-          }
-        ).catch(error => {
-             console.error('[service-worker.js] Fetch failed; returning offline page instead.', error);
-             // Voliteľné: Vrátiť offline stránku alebo inú fallback odpoveď
-             // return caches.match('./offline.html');
-        });
-      })
-  );
+
+            if (matchingClient) {
+                return matchingClient.focus(); // Prepne sa na existujúce okno
+            } else {
+                return clients.openWindow(urlToOpen); // Otvorí nové okno
+            }
+        })
+    );
 });
