@@ -35,14 +35,14 @@ try {
 
             // Extrahujeme dáta pre notifikáciu
             const notificationTitle = payload.notification?.title || 'Nová správa';
+            // OPRAVA: Použitie správnej cesty k ikone
             const notificationOptions = {
                 body: payload.notification?.body || 'Máte novú správu.',
-                icon: payload.notification?.icon || './images/ikona.png', // --> UPRAVTE CESTU k vašej ikone (napr. 192x192 z manifestu)
-                data: payload.data // Pridá dáta k notifikácii pre prípadné spracovanie po kliknutí
+                icon: payload.notification?.icon || './icons/icon-192x192.png', // Použije ikonu z payloadu, inak defaultnú
+                data: payload.data
             };
 
             // Zobrazíme notifikáciu
-            // `self.registration` odkazuje na registráciu tohto service workera
             return self.registration.showNotification(notificationTitle, notificationOptions)
                 .then(() => console.log("[Service Worker] Background notification shown."))
                 .catch(err => console.error("[Service Worker] Error showing background notification:", err));
@@ -56,46 +56,38 @@ try {
 }
 
 
-// Základné event listenery pre Service Worker lifecycle (môžete rozšíriť pre PWA caching atď.)
+// Základné event listenery pre Service Worker lifecycle
 self.addEventListener('install', (event) => {
   console.log('[Service Worker] Installing.');
-  // Príklad: Preskočenie čakania, aby sa nový SW aktivoval hneď
-  // self.skipWaiting();
+  // self.skipWaiting(); // Odkomentujte, ak chcete okamžitú aktiváciu nového SW
 });
 
 self.addEventListener('activate', (event) => {
   console.log('[Service Worker] Activating.');
-  // Príklad: Odstránenie starých kešiek
-  // event.waitUntil(clients.claim()); // Prevzatie kontroly nad otvorenými stránkami
+  // event.waitUntil(clients.claim()); // Odkomentujte pre okamžité prevzatie kontroly
 });
 
-// (Voliteľné) Listener na kliknutie na notifikáciu
+// Listener na kliknutie na notifikáciu
 self.addEventListener('notificationclick', (event) => {
     console.log('[Service Worker] Notification click Received.', event.notification);
-
-    // Zatvorí notifikáciu
     event.notification.close();
 
-    // Príklad: Otvorí okno aplikácie alebo sa naň prepne, ak je už otvorené
-    // Môžete pridať logiku na základe event.notification.data
-    const urlToOpen = new URL('/', self.location.origin).href; // Otvorí koreňovú stránku
+    // Otvorí/prepne sa na hlavnú stránku aplikácie
+    // Predpokladáme, že index.html je v koreňovom adresári rozsahu SW (uuu/)
+    const urlToOpen = new URL('./index.html', self.location.origin).href;
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-            let matchingClient = null;
+            // Skontroluje, či už je nejaké okno s danou URL otvorené
             for (let i = 0; i < windowClients.length; i++) {
                 const windowClient = windowClients[i];
-                if (windowClient.url === urlToOpen) {
-                    matchingClient = windowClient;
-                    break;
+                // Porovnáme URL bez query parametrov a hashov pre väčšiu robustnosť
+                if (windowClient.url.split(/[?#]/)[0] === urlToOpen.split(/[?#]/)[0]) {
+                    return windowClient.focus(); // Prepne sa na existujúce okno
                 }
             }
-
-            if (matchingClient) {
-                return matchingClient.focus(); // Prepne sa na existujúce okno
-            } else {
-                return clients.openWindow(urlToOpen); // Otvorí nové okno
-            }
+            // Ak žiadne okno nie je otvorené, otvorí nové
+            return clients.openWindow(urlToOpen);
         })
     );
 });
