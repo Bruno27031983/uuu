@@ -22,6 +22,9 @@
       padding: 10px;
       background-color: #f4f4f4;
       color: #333;
+      /* Predvolená veľkosť písma - môže byť upravená JS */
+      font-size: 100%;
+      transition: font-size 0.2s ease-in-out; /* Plynulý prechod pri zmene zoomu */
     }
     .container {
       max-width: 1200px;
@@ -130,7 +133,7 @@
       padding: 8px;
       border: 1px solid #ddd;
       text-align: left;
-      font-size: 0.9em;
+      font-size: 0.9em; /* Relatívna veľkosť voči rodičovi (body) */
     }
     th {
       background-color: #f2f2f2;
@@ -152,7 +155,7 @@
       padding: 5px;
       box-sizing: border-box;
       background-color: #ffffd0;
-      font-size: 14px;
+      font-size: 1em; /* Relatívna veľkosť voči rodičovi (td) */
       border: 1px solid #ccc;
       border-radius: 3px;
       vertical-align: middle; /* Pomáha zarovnaniu s labelom */
@@ -175,7 +178,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
+      font-size: 1em; /* Relatívna veľkosť */
       margin: 5px;
       transition: background-color 0.3s ease;
     }
@@ -205,7 +208,7 @@
       border: 2px solid #ffcc00;
     }
     #totalSalary {
-      font-size: 18px;
+      font-size: 1.1em; /* Relatívna veľkosť */
       font-weight: bold;
       text-align: center;
       margin-top: 20px;
@@ -219,7 +222,7 @@
     }
     #dataSizeText {
       margin-bottom: 5px;
-      font-size: 14px;
+      font-size: 0.9em; /* Relatívna veľkosť */
       color: #555;
     }
     #dataSizeBar {
@@ -308,6 +311,8 @@
     @media (max-width: 768px) {
       body {
         padding: 5px;
+        /* Veľkosť písma na mobiloch môže byť menšia defaultne */
+        /* font-size: 90%; */
       }
       .container {
         padding: 10px;
@@ -365,7 +370,7 @@
       }
       .btn {
         flex: 1 1 auto;
-        font-size: 14px;
+        font-size: 0.9em; /* Relatívna veľkosť */
         padding: 8px 16px;
         margin: 5px 0;
       }
@@ -373,10 +378,10 @@
         padding: 15px 16px;
       }
       #totalSalary {
-        font-size: 16px;
+        font-size: 1em; /* Relatívna veľkosť */
       }
       #dataSizeContainer {
-        font-size: 12px;
+        font-size: 0.8em; /* Relatívna veľkosť */
       }
       .table-container {
         overflow-x: auto;
@@ -390,7 +395,7 @@
         font-size: 0.7em;
       }
       .btn {
-        font-size: 12px;
+        font-size: 0.8em; /* Relatívna veľkosť */
         padding: 6px 12px;
       }
       .backup-btn {
@@ -400,7 +405,7 @@
         font-size: 0.9em;
       }
       input[type="tel"], input[type="number"], input[type="text"], select { /* Pridaný select */
-        font-size: 12px;
+        font-size: 1em; /* Relatívna veľkosť */
       }
       table {
         min-width: 800px;
@@ -425,7 +430,7 @@
       right: 20px;
       padding: 10px 20px;
       border-radius: 5px;
-      font-size: 14px;
+      font-size: 0.9em; /* Relatívna veľkosť */
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
       z-index: 1000;
       opacity: 0;
@@ -472,6 +477,61 @@
     body.dark-mode #login-form a {
         color: #6bbaff; /* Svetlejšia modrá v tmavom režime */
     }
+
+    /* --- NOVÉ ŠTÝLY PRE OVLÁDANIE ZOOMU --- */
+    .zoom-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Centrovanie obsahu */
+        flex-wrap: wrap; /* Zalamovanie na menších obrazovkách */
+        padding: 5px 0; /* Malý padding */
+        margin-top: 15px;
+        border-top: 1px solid #ccc;
+        padding-top: 15px;
+    }
+    .zoom-controls button {
+        min-width: 45px; /* Menšia šírka pre +/- */
+        flex-grow: 0; /* Nechať tlačidlá zaberať len potrebnú šírku */
+        flex-basis: auto;
+        padding: 8px 12px; /* Menší padding */
+        font-size: 1.2em; /* Väčšie + / - */
+        line-height: 1;
+    }
+     .zoom-controls button.export-btn, .zoom-controls button.reset-btn {
+         min-width: 130px; /* Šírka pre textové tlačidlá */
+         font-size: 0.9em; /* Normálna veľkosť textu */
+     }
+
+    #zoom-level-display {
+        flex: 0 1 auto; /* Nezaberať zbytočne veľa miesta, ale môže sa zmenšiť */
+        min-width: 120px; /* Minimálna šírka pre zobrazenie */
+        text-align: center;
+        margin: 0 10px; /* Odstup od tlačidiel */
+        font-size: 0.9em; /* Veľkosť textu indikátora */
+        font-weight: bold;
+        color: #555;
+        padding: 8px 0; /* Vertikálny padding pre zarovnanie */
+    }
+    body.dark-mode #zoom-level-display {
+        color: #ccc; /* Svetlejšia farba v tmavom režime */
+    }
+    /* Na veľmi malých obrazovkách dať ovládanie pod seba */
+    @media (max-width: 480px) {
+      .zoom-controls {
+        flex-direction: column;
+      }
+      .zoom-controls > * { /* Všetky prvky v .zoom-controls */
+        margin: 3px auto; /* Odstup a centrovanie */
+        width: 90%; /* Väčšia šírka na mobiloch */
+        text-align: center; /* Centrovať text v tlačidlách */
+      }
+      #zoom-level-display {
+         width: auto; /* Reset šírky, prispôsobí sa textu */
+         margin: 5px 0;
+      }
+    }
+    /* --- KONIEC NOVÝCH ŠTÝLOV PRE OVLÁDANIE ZOOMU --- */
+
   </style>
 </head>
 <body>
@@ -580,7 +640,18 @@
       <button class="btn backup-btn" onclick="createBackup()">Vytvoriť zálohu</button>
       <button class="btn export-btn" onclick="loadFromFirestore()">Načítanie z Firebase</button>
     </div>
-  </div>
+
+    <!-- NOVÉ: Kontajner pre ovládanie priblíženia -->
+    <div class="zoom-controls">
+        <button class="btn highlight" onclick="zoomOut()" title="Oddialiť (zmenšiť)">-</button>
+        <span id="zoom-level-display">Priblíženie: 100%</span>
+        <button class="btn highlight" onclick="zoomIn()" title="Priblížiť (zväčšiť)">+</button>
+        <button class="btn export-btn" onclick="saveZoom()">Uložiť priblíženie</button>
+        <button class="btn reset-btn" onclick="resetZoom()">Resetovať priblíženie</button>
+    </div>
+    <!-- KONIEC NOVÉHO KÓDU -->
+
+  </div> <!-- Koniec .container -->
 
   <div id="saveNotification">Dáta boli úspešne uložené</div>
   <div id="errorNotification"></div>
@@ -606,6 +677,7 @@
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
 
     // ---------------------- KONFIGURÁCIA Firebase --------------------
+    // POZOR: API kľúče by nemali byť priamo v kóde vo verejných aplikáciách!
     const firebaseConfig = {
       apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // Pozor: Odporúča sa nenechávať API kľúč takto verejne v kóde
       authDomain: "uuuuu-f7ef9.firebaseapp.com",
@@ -638,6 +710,8 @@
     // --- NOVÉ / UPRAVENÉ: Referencie pre collapsible časť ---
     const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
     const settingsCollapsibleContent = document.getElementById('settings-collapsible-content');
+    // --- NOVÉ: Referencia pre zobrazenie úrovne zoomu ---
+    const zoomLevelDisplay = document.getElementById('zoom-level-display');
 
 
     const currentDate = new Date();
@@ -1325,7 +1399,7 @@
             value = value.substring(0, 2) + ':' + value.substring(2);
         }
          // Ak sú 3 číslice, žiadna dvojbodka a dĺžka sa zvýšila
-        else if (value.length === 3 && !value.includes(':') && value.length > originalValue.replace(/[^\d:]/g, '').length) {
+        else if (value.length === 3 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) {
              value = value.substring(0, 2) + ':' + value.substring(2);
         }
 
@@ -1855,6 +1929,74 @@
       return new Date(currentYear, month + 1, 0).getDate();
     }
 
+
+    // --- NOVÉ FUNKCIE PRE OVLÁDANIE ZOOMU ---
+    const ZOOM_STEP = 10; // Krok zmeny v percentách
+    const MIN_ZOOM = 70;  // Minimálne priblíženie v percentách
+    const MAX_ZOOM = 150; // Maximálne priblíženie v percentách
+    const DEFAULT_ZOOM = 100; // Predvolené priblíženie
+    const ZOOM_STORAGE_KEY = 'userZoomLevel'; // Kľúč pre localStorage
+    let currentZoomLevel = DEFAULT_ZOOM; // Aktuálna úroveň zoomu
+
+    // Funkcia na aplikovanie zoomu (zmenou font-size na body)
+    function applyZoom(level) {
+        // Orezanie na min/max hodnoty
+        level = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
+        currentZoomLevel = level; // Aktualizujeme globálnu premennú
+        document.body.style.fontSize = `${level}%`; // Aplikujeme štýl
+        // Aktualizujeme zobrazenie úrovne zoomu
+        if (zoomLevelDisplay) {
+            zoomLevelDisplay.textContent = `Priblíženie: ${level}%`;
+        }
+        console.log(`Zoom nastavený na: ${level}%`);
+    }
+
+    // Funkcia na načítanie uloženej úrovne zoomu
+    function loadZoom() {
+        const savedZoom = localStorage.getItem(ZOOM_STORAGE_KEY);
+        let initialZoom = DEFAULT_ZOOM;
+        if (savedZoom) {
+            const parsedZoom = parseInt(savedZoom, 10);
+            // Validácia uloženej hodnoty
+            if (!isNaN(parsedZoom) && parsedZoom >= MIN_ZOOM && parsedZoom <= MAX_ZOOM) {
+                 initialZoom = parsedZoom;
+                 console.log(`Načítané uložené priblíženie: ${initialZoom}%`);
+            } else {
+                 console.warn(`Neplatná uložená hodnota priblíženia (${savedZoom}), použije sa predvolená.`);
+                 localStorage.removeItem(ZOOM_STORAGE_KEY); // Odstránime neplatnú hodnotu
+            }
+        } else {
+             console.log('Žiadne uložené priblíženie nenájdené, použije sa predvolené.');
+        }
+        applyZoom(initialZoom); // Aplikujeme načítanú alebo predvolenú úroveň
+    }
+
+    // Funkcie pre tlačidlá
+    window.zoomIn = function() {
+        applyZoom(currentZoomLevel + ZOOM_STEP);
+        // Neukladáme automaticky, používateľ musí kliknúť "Uložiť"
+    }
+
+    window.zoomOut = function() {
+        applyZoom(currentZoomLevel - ZOOM_STEP);
+        // Neukladáme automaticky
+    }
+
+    window.saveZoom = function() {
+        localStorage.setItem(ZOOM_STORAGE_KEY, currentZoomLevel.toString());
+        showSaveNotification(`Priblíženie ${currentZoomLevel}% uložené.`); // Použijeme existujúcu notifikáciu
+        console.log(`Priblíženie ${currentZoomLevel}% uložené do localStorage.`);
+    }
+
+    window.resetZoom = function() {
+        applyZoom(DEFAULT_ZOOM);
+        localStorage.removeItem(ZOOM_STORAGE_KEY); // Odstránime uložené nastavenie
+        showSaveNotification('Priblíženie resetované na 100%.');
+        console.log('Priblíženie resetované na predvolené a odstránené z localStorage.');
+    }
+    // --- KONIEC NOVÝCH FUNKCIÍ PRE OVLÁDANIE ZOOMU ---
+
+
     // -------------------- INIT --------------------
     // Listener na zmeny stavu prihlásenia
     onAuthStateChanged(auth, (user) => {
@@ -1863,6 +2005,10 @@
       // updateUI() sa postará o všetko - zobrazenie UI a načítanie dát
       updateUI();
     });
+
+    // --- NOVÉ: Načítanie uloženého zoomu pri štarte ---
+    loadZoom();
+
 
     // -------------------- FUNKCIE PRE ZÁLOHU A OBNOVU DO EXCELU --------------------
     window.createBackup = function() {
