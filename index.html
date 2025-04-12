@@ -147,13 +147,13 @@
     th:nth-child(8), td:nth-child(8) {
       width: 8.33%;
     }
-    /* === ZMENA: Zväčšenie vstupných polí (inšpirované paddingom z druhého kódu) === */
+    /* === ZMENA: Vstupné polia presne podľa inšpirácie === */
     input[type="tel"], input[type="number"], input[type="text"], select { /* Pridaný select pre konzistenciu */
       width: 100%;
-      padding: 10px; /* Ešte zväčšený padding (bol 8px) */
+      padding: 5px; /* Presne ako v inšpirácii */
       box-sizing: border-box;
       background-color: #ffffd0;
-      font-size: 16px; /* Ponechané zväčšené písmo */
+      font-size: 14px; /* Presne ako v inšpirácii */
       border: 1px solid #ccc;
       border-radius: 3px;
       vertical-align: middle; /* Pomáha zarovnaniu s labelom */
@@ -402,10 +402,10 @@
       .settings label {
         font-size: 0.9em;
       }
-      /* === ZMENA: Úprava pre najmenšie obrazovky (zjednotenie) === */
+      /* === ZMENA: Úprava pre najmenšie obrazovky (podľa inšpirácie) === */
       input[type="tel"], input[type="number"], input[type="text"], select { /* Pridaný select */
-        font-size: 16px; /* Zjednotené písmo s desktopom (bolo 14px) */
-        padding: 10px; /* Zjednotený padding s desktopom */
+        font-size: 14px; /* Vrátené na 14px ako v inšpirácii */
+        /* Padding 5px sa dedí z hlavného pravidla */
       }
       /* === KONIEC ZMENY === */
       table {
