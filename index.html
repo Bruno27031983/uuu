@@ -147,18 +147,16 @@
     th:nth-child(8), td:nth-child(8) {
       width: 8.33%;
     }
-    /* === ZMENA: Vstupné polia presne podľa inšpirácie (z #auth-container) === */
     input[type="tel"], input[type="number"], input[type="text"], select { /* Pridaný select pre konzistenciu */
       width: 100%;
-      padding: 10px; /* Ako v #auth-container input */
+      padding: 5px;
       box-sizing: border-box;
       background-color: #ffffd0;
-      font-size: 14px; /* Ponechané 14px ako v hlavnom pravidle inšpirácie */
+      font-size: 14px;
       border: 1px solid #ccc;
       border-radius: 3px;
       vertical-align: middle; /* Pomáha zarovnaniu s labelom */
     }
-    /* === KONIEC ZMENY === */
     .result {
       font-weight: bold;
       margin-top: 20px;
@@ -278,7 +276,6 @@
       background-color: #666;
       color: white;
       border-color: #555; /* Trochu tmavší okraj pre kontrast */
-      /* Padding a font-size sa dedia z hlavného pravidla */
     }
     body.dark-mode .btn {
       color: #f4f4f4; /* Svetlejší text na tmavých tlačidlách */
@@ -402,12 +399,9 @@
       .settings label {
         font-size: 0.9em;
       }
-      /* === ZMENA: Konzistentnosť s hlavným pravidlom === */
       input[type="tel"], input[type="number"], input[type="text"], select { /* Pridaný select */
-        font-size: 14px; /* Zostáva 14px */
-        padding: 10px; /* Zostáva 10px */
+        font-size: 12px;
       }
-      /* === KONIEC ZMENY === */
       table {
         min-width: 800px;
       }
