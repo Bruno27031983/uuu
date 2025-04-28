@@ -131,9 +131,13 @@
       border: 1px solid #ddd;
       text-align: left;
       font-size: 0.9em;
+      /* --- ZMENA: Vertikálne zarovnanie na začiatok kvôli checkboxom --- */
+      vertical-align: top;
     }
     th {
       background-color: #f2f2f2;
+      /* --- ZMENA: Vertikálne zarovnanie pre hlavičku môže zostať na stred --- */
+      vertical-align: middle;
     }
     th:nth-child(6), td:nth-child(6),
     th:nth-child(7), td:nth-child(7) {
@@ -472,6 +476,34 @@
     body.dark-mode #login-form a {
         color: #6bbaff; /* Svetlejšia modrá v tmavom režime */
     }
+
+    /* --- NOVÉ: Štýly pre kontajner a checkbox automatického vyplňovania --- */
+    .time-input-container {
+        display: flex;
+        align-items: center; /* Vertikálne zarovnanie na stred */
+        gap: 4px; /* Malá medzera medzi inputom a checkboxom */
+    }
+
+    .time-input-container input[type="tel"] {
+        flex-grow: 1; /* Umožní textovému poľu roztiahnuť sa */
+        /* Odstránené width: 100%, pretože flex-grow sa o to postará v rámci .time-input-container */
+        /* min-width: 50px; /* Môže byť užitočné, ak sa bunka príliš zúži */
+    }
+
+    .autofill-toggle {
+        flex-shrink: 0; /* Zabráni zmenšovaniu checkboxu */
+        cursor: pointer;
+        /* Zmenšenie checkboxu pre kompaktnejší vzhľad */
+        transform: scale(0.9);
+        /* --- ZMENA: Pridaný margin na vycentrovanie v niektorých prehliadačoch --- */
+        margin-top: 2px;
+    }
+
+    /* V tmavom režime môžeme chcieť filter pre checkbox, ak je zle viditeľný */
+    body.dark-mode .autofill-toggle {
+       /* filter: invert(1) hue-rotate(180deg); */ /* Príklad možnej úpravy vzhľadu */
+    }
+    /* --- KONIEC NOVÝCH ŠTÝLOV --- */
   </style>
 </head>
 <body>
@@ -1220,13 +1252,61 @@
         }
     }
 
-
     // -------------------- Tvorba tabuľky a výpočty --------------------
     function getDayName(year, month, day) {
       const daysOfWeek = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"]; // Skrátené názvy
       const date = new Date(year, month, day);
       return daysOfWeek[date.getDay()];
     }
+
+    // --- ZMENA: Pridaná funkcia na prepínanie checkboxu ---
+    window.toggleAutoFillPreference = function(checkboxElement, inputId) {
+        const inputElement = document.getElementById(inputId);
+        if (inputElement) {
+            // Nastavíme data atribút podľa stavu checkboxu
+            inputElement.setAttribute('data-autofill-enabled', checkboxElement.checked);
+            // console.log(`Auto-fill for ${inputId} set to: ${checkboxElement.checked}`); // Log pre kontrolu
+        }
+    }
+    // --- KONIEC ZMENY ---
+
+    // --- ZMENA: Pridaná funkcia na auto-vyplnenie času (alebo upravená, ak už existovala) ---
+    window.autoFillTime = function(inputElement) {
+        // --- Kontrola preferencie ---
+        // Použijeme getAttribute, pretože vracia presne string 'true'/'false' alebo null
+        if (inputElement.getAttribute('data-autofill-enabled') !== 'true') {
+            return; // Ak nie je povolené, skončíme
+        }
+
+        // --- Zvyšok funkcie ---
+        if (inputElement.value === '') {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${hours}:${minutes}`;
+            inputElement.value = currentTime;
+
+            const idParts = inputElement.id.split('-');
+            if (idParts.length >= 4) {
+                const day = parseInt(idParts[3]);
+                if (!isNaN(day)) {
+                    // Po automatickom vyplnení chceme prepočítať a uložiť
+                    calculateAndUpdateTotals();
+                    // Voliteľne môžeme presunúť fokus na ďalšie pole, ak je to žiadúce
+                    // napr. ak je to 'start' pole, presuň na 'end' pole
+                    if (inputElement.id.startsWith('start-')) {
+                         const endInputId = inputElement.id.replace('start-', 'end-');
+                         const nextElement = document.getElementById(endInputId);
+                         if (nextElement) {
+                             // nextElement.focus(); // Len presunie fokus
+                             // nextElement.select(); // Presunie a označí text
+                         }
+                    }
+                }
+            }
+        }
+    }
+    // --- KONIEC ZMENY ---
 
     function createTable() {
       console.log(`Vytváram štruktúru tabuľky pre ${getMonthName(currentMonth)} ${currentYear}`);
@@ -1245,17 +1325,44 @@
         }
 
         const dayName = getDayName(currentYear, currentMonth, i);
-        // Vytvoríme riadok s prázdnymi inputmi
+        // --- ZMENA: Upravené generovanie HTML pre Príchod a Odchod ---
+        const startInputId = `start-${currentYear}-${currentMonth}-${i}`;
+        const endInputId = `end-${currentYear}-${currentMonth}-${i}`;
+        const breakInputId = `break-${currentYear}-${currentMonth}-${i}`; // ID pre break input
+        const startToggleId = `autofill-toggle-${startInputId}`; // ID pre checkbox pri príchode
+        const endToggleId = `autofill-toggle-${endInputId}`;     // ID pre checkbox pri odchode
+
         row.innerHTML = `
-          <td>${i}. ${dayName}</td> <!-- Zobrazíme číslo dňa a skratku -->
-          <td><input type="tel" id="start-${currentYear}-${currentMonth}-${i}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, 'end-${currentYear}-${currentMonth}-${i}')"></td>
-          <td><input type="tel" id="end-${currentYear}-${currentMonth}-${i}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, 'break-${currentYear}-${currentMonth}-${i}')"></td>
-          <td><input type="number" id="break-${currentYear}-${currentMonth}-${i}" min="0" step="0.5" placeholder="hod." oninput="handleBreakInput(${i})"></td>
+          <td>${i}. ${dayName}</td>
+          <td>
+              <div class="time-input-container">
+                  <input type="tel" id="${startInputId}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM"
+                         oninput="handleInput(this, '${endInputId}')"
+                         onfocus="autoFillTime(this)"
+                         data-autofill-enabled="true"> {/* Štandardne zapnuté */}
+                  <input type="checkbox" id="${startToggleId}" class="autofill-toggle" checked
+                         onchange="toggleAutoFillPreference(this, '${startInputId}')"
+                         title="Automaticky vyplniť čas pri kliknutí"> {/* Checkbox */}
+              </div>
+          </td>
+          <td>
+              <div class="time-input-container">
+                  <input type="tel" id="${endInputId}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM"
+                         oninput="handleInput(this, '${breakInputId}')"
+                         onfocus="autoFillTime(this)"
+                         data-autofill-enabled="true"> {/* Štandardne zapnuté */}
+                  <input type="checkbox" id="${endToggleId}" class="autofill-toggle" checked
+                         onchange="toggleAutoFillPreference(this, '${endInputId}')"
+                         title="Automaticky vyplniť čas pri kliknutí"> {/* Checkbox */}
+              </div>
+          </td>
+          <td><input type="number" id="${breakInputId}" min="0" step="0.5" placeholder="hod." oninput="handleBreakInput(${i})"></td>
           <td id="total-${currentYear}-${currentMonth}-${i}">0h 0m (${(0).toFixed(decimalPlaces)} h)</td>
           <td><input type="number" id="gross-${currentYear}-${currentMonth}-${i}" min="0" step="0.01" placeholder="0.00" readonly></td>
           <td><input type="number" id="net-${currentYear}-${currentMonth}-${i}" min="0" step="0.01" placeholder="0.00" readonly></td>
-          <td><button class="btn reset-btn" onclick="resetRow(${i})">X</button></td> <!-- Kratší text na tlačidle -->
+          <td><button class="btn reset-btn" onclick="resetRow(${i})">X</button></td>
         `;
+        // --- KONIEC ZMENY ---
         workDays.appendChild(row);
       }
       console.log('Štruktúra tabuľky vytvorená.');
@@ -1325,7 +1432,7 @@
             value = value.substring(0, 2) + ':' + value.substring(2);
         }
          // Ak sú 3 číslice, žiadna dvojbodka a dĺžka sa zvýšila
-        else if (value.length === 3 && !value.includes(':') && value.length > originalValue.replace(/[^\d:]/g, '').length) {
+        else if (value.length === 3 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) {
              value = value.substring(0, 2) + ':' + value.substring(2);
         }
 
@@ -1466,10 +1573,22 @@
       const startInput = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`);
       const endInput = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`);
       const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`);
+      // --- ZMENA: Vynulujeme aj stav checkboxov (na checked=true) ---
+      const startToggle = document.getElementById(`autofill-toggle-start-${currentYear}-${currentMonth}-${day}`);
+      const endToggle = document.getElementById(`autofill-toggle-end-${currentYear}-${currentMonth}-${day}`);
 
-      if(startInput) startInput.value = '';
-      if(endInput) endInput.value = '';
+      if(startInput) {
+        startInput.value = '';
+        startInput.setAttribute('data-autofill-enabled', 'true'); // Resetneme aj data atribút
+      }
+      if(endInput) {
+        endInput.value = '';
+        endInput.setAttribute('data-autofill-enabled', 'true'); // Resetneme aj data atribút
+      }
       if(breakInput) breakInput.value = '';
+      if(startToggle) startToggle.checked = true; // Zaškrtneme checkbox
+      if(endToggle) endToggle.checked = true;     // Zaškrtneme checkbox
+      // --- KONIEC ZMENY ---
 
       calculateRow(day); // Prepočíta riadok (výsledkom budú nuly)
 
