@@ -180,7 +180,7 @@
       border: none;
       border-radius: 4px;
       color: white;
-      background-color: #5c67f2;
+      background-color: #5c67f2; /* Základná modrá */
       cursor: pointer;
       font-size: 1.0em;
       transition: background-color 0.3s ease;
@@ -190,12 +190,12 @@
       box-sizing: border-box;
     }
     .btn:hover { background-color: #4a54e0; }
-    .reset-btn { background-color: #f44336; }
-    .reset-btn:hover { background-color: #d32f2f; }
-    .export-btn { background-color: #4CAF50; }
-    .export-btn:hover { background-color: #388e3c; }
-    .backup-btn { background-color: #8a2be2; padding: 18px 22px; }
-    .backup-btn:hover { background-color: #6a1bb2; }
+    .reset-btn { background-color: #f44336 !important; } /* Pridané !important pre špecificitu */
+    .reset-btn:hover { background-color: #d32f2f !important; }
+    .export-btn { background-color: #4CAF50 !important; } /* Pridané !important pre špecificitu */
+    .export-btn:hover { background-color: #388e3c !important; }
+    .backup-btn { background-color: #8a2be2 !important; padding: 18px 22px; } /* Pridané !important pre špecificitu */
+    .backup-btn:hover { background-color: #6a1bb2 !important; }
 
     /* Total Salary */
     #totalSalary {
@@ -232,7 +232,7 @@
       .clock-icon { font-size: 1.5em; }
       .btn-container { flex-direction: column; align-items: stretch; }
 
-      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU TLAČIDIEL (768px) --- */
+      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU A FARBU TLAČIDIEL (768px) --- */
       .btn {
           max-width: none;
           font-size: 1.05em;
@@ -244,6 +244,8 @@
           margin-top: 0;
           margin-bottom: 0;
           box-sizing: border-box;
+          background-color: orange !important; /* <<<--- TESTOVACIA FARBA */
+          color: black !important; /* Aby bol text viditeľný na oranžovej */
       }
       #totalSalary { font-size: 1.0em; padding: 15px; }
     }
@@ -261,12 +263,14 @@
       .settings label { font-size: 1.0em; }
       .clock-icon { font-size: 1.6em; }
 
-      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU TLAČIDIEL (480px) --- */
+      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU A FARBU TLAČIDIEL (480px) --- */
       .btn {
           font-size: 0.95em;
           padding: 5px 15px !important;   /* Test: Vynútený nízky padding */
           line-height: 1.2 !important;   /* Test: Vynútená nízka výška riadku */
           width: 95%;
+          background-color: orange !important; /* <<<--- TESTOVACIA FARBA */
+          color: black !important; /* Aby bol text viditeľný na oranžovej */
           /* marginy 0 a auto sa zdedia z pravidla pre 768px */
       }
       table { min-width: 500px; }
@@ -319,14 +323,19 @@
         box-sizing: border-box;
         font-size: 1em;
     }
-    #login-form .btn {
+    #login-form .btn { /* Login tlačidlá si zachovajú svoju farbu a padding */
         width: auto;
         max-width: 150px;
         padding: 10px 22px;
-        margin: 5px 0; /* Pridaný malý vertikálny margin späť pre login formu */
+        margin: 5px 0;
         font-size: 1em;
-        line-height: initial !important; /* Zrušenie vynúteného line-height z testu */
+        line-height: initial !important; /* Zrušenie testovacieho line-height */
+        background-color: #4CAF50 !important; /* Zachovanie zelenej pre login/register */
+        color: white !important; /* Biely text */
     }
+     #login-form .btn:hover {
+         background-color: #388e3c !important;
+     }
     #login-form a { color: #007bff; text-decoration: none; font-size: 0.9em; }
     #login-form a:hover { text-decoration: underline; }
 
@@ -426,6 +435,9 @@
   <div id="errorNotification"></div>
 
   <script type="module">
+    // --- Celý JavaScript kód zostáva rovnaký ako v predchádzajúcej verzii ---
+    // --- vrátane úprav v calculateRow a calculateTotal ---
+
     // Firebase Importy
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
