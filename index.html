@@ -176,7 +176,8 @@
        margin-top: 20px;
     }
     .btn {
-      padding: 12px 18px;
+      /* ----- ZMENA TU: Znížený vertikálny padding z 12px na 8px ----- */
+      padding: 8px 18px;
       border: none;
       border-radius: 4px;
       color: white;
@@ -194,7 +195,11 @@
     .reset-btn:hover { background-color: #d32f2f; }
     .export-btn { background-color: #4CAF50; }
     .export-btn:hover { background-color: #388e3c; }
-    .backup-btn { background-color: #8a2be2; padding: 18px 22px; }
+    .backup-btn {
+      background-color: #8a2be2;
+      /* ----- ZMENA TU: Odstránený špecifický padding, aby dedil z .btn ----- */
+      /* padding: 18px 22px; */
+    }
     .backup-btn:hover { background-color: #6a1bb2; }
 
     /* Total Salary */
@@ -233,15 +238,16 @@
       .btn-container { flex-direction: column; align-items: stretch; }
 
       /* --- UPRAVENÉ PRAVIDLO PRE MOBILNÉ TLAČIDLÁ (768px) --- */
+      /* Toto pravidlo už malo znížený padding, ponechané bezo zmeny */
       .btn {
           max-width: none;
           font-size: 1.05em;
-          padding: 6px 20px;  /* ZMENENÉ: Znížený vertikálny padding */
-          width: 95%;         /* ZMENENÉ: Širšie */
+          padding: 6px 20px;
+          width: 95%;
           margin-left: auto;
           margin-right: auto;
-          margin-top: 0;      /* ZMENENÉ: Bez horného okraja */
-          margin-bottom: 0;   /* ZMENENÉ: Bez dolného okraja */
+          margin-top: 0;
+          margin-bottom: 0;
           box-sizing: border-box;
       }
       #totalSalary { font-size: 1.0em; padding: 15px; }
@@ -261,11 +267,11 @@
       .clock-icon { font-size: 1.6em; }
 
       /* --- UPRAVENÉ PRAVIDLO PRE MOBILNÉ TLAČIDLÁ (480px) --- */
+      /* Toto pravidlo už malo znížený padding, ponechané bezo zmeny */
       .btn {
           font-size: 0.95em;
-          padding: 5px 15px;   /* ZMENENÉ: Znížený vertikálny padding */
-          width: 95%;          /* ZMENENÉ: Širšie (rovnako ako 768px) */
-          /* marginy 0 a auto sa zdedia z pravidla pre 768px */
+          padding: 5px 15px;
+          width: 95%;
       }
       table { min-width: 500px; }
       #totalSalary { font-size: 0.95em; padding: 12px; }
@@ -317,11 +323,12 @@
         box-sizing: border-box;
         font-size: 1em;
     }
-    #login-form .btn { /* Štýly pre tlačidlá v login forme - prepíšu mobilné */
+    /* Toto pravidlo pre tlačidlá v login forme zostáva, neovplyvňuje hlavné tlačidlá */
+    #login-form .btn {
         width: auto;
         max-width: 150px;
         padding: 10px 22px;
-        margin: 5px 0; /* Pridaný malý vertikálny margin */
+        margin: 5px 0;
         font-size: 1em;
     }
     #login-form a { color: #007bff; text-decoration: none; font-size: 0.9em; }
@@ -423,9 +430,7 @@
   <div id="errorNotification"></div>
 
   <script type="module">
-    // --- Celý JavaScript kód zostáva rovnaký ako v predchádzajúcej verzii ---
-    // --- vrátane úprav v calculateRow a calculateTotal ---
-
+    // --- Celý JavaScript kód zostáva rovnaký ---
     // Firebase Importy
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
@@ -645,7 +650,7 @@
 
      // Exporty a nastavenia
      function getMonthName(monthIndex) { return new Date(2000, monthIndex, 1).toLocaleDateString('sk-SK', { month: 'long' }); }
-     window.exportToPDF = () => { try { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf','Roboto','normal'); doc.setFont('Roboto'); doc.setFontSize(16); doc.text(`Výkaz práce - ${getMonthName(currentMonth)} ${currentYear}`, 14, 22); doc.setFontSize(12); doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30); const tableData = []; const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value||''; const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value||''; const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value||''; const totalCell = document.getElementById(`total-${currentYear}-${currentMonth}-${i}`); const totalTime = totalCell ? totalCell.textContent.trim() : '-'; const grossSalary = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`)?.value||''; const netSalary = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`)?.value||''; if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) { tableData.push([ `${i}. ${getDayName(currentYear, currentMonth, i)}`, startTime, endTime, breakTime || '0', totalTime, `${parseFloat(grossSalary).toFixed(decimalPlaces)} €`, `${parseFloat(netSalary).toFixed(decimalPlaces)} €` ]); } } doc.autoTable({ head:[['Deň','Príchod','Odchod','Prestávka (h)','Odpracované','Hrubá Mzda','Čistá Mzda']], body:tableData, startY:38, theme:'grid', styles:{font:'Roboto',fontSize:9,cellPadding:2,valign:'middle'}, headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontStyle:'bold',fontSize:10,halign:'center'}, alternateRowStyles:{fillColor:[245,245,245]}, columnStyles:{ 0:{cellWidth:25,halign:'left'}, 1:{cellWidth:18,halign:'center'}, 2:{cellWidth:18,halign:'center'}, 3:{cellWidth:22,halign:'center'}, 4:{cellWidth:35,halign:'center'}, 5:{cellWidth:27,halign:'right'}, 6:{cellWidth:27,halign:'right'} } }); const finalY = doc.lastAutoTable.finalY + 10; doc.setFontSize(11); const totalText = totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<\/?strong>/gi,'').replace(/&nbsp;/g,' ').replace(/€/g,' EUR'); doc.text(totalText, 14, finalY); const safeName = (employeeName||'Nezadane').replace(/[^a-zA-Z0-9]/g,'_'); doc.save(`Vykaz_prace_${safeName}_${getMonthName(currentMonth)}_${currentYear}.pdf`); } catch(err) { showErrorNotification(`Chyba pri exporte do PDF: ${err.message}`); console.error("PDF Export Error:", err); } };
+     window.exportToPDF = () => { try { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf','Roboto','normal'); doc.setFont('Roboto'); doc.setFontSize(16); doc.text(`Výkaz práce - ${getMonthName(currentMonth)} ${currentYear}`, 14, 22); doc.setFontSize(12); doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30); const tableData = []; const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value||''; const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value||''; const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value||''; const totalCell = document.getElementById(`total-${currentYear}-${currentMonth}-${i}`); const totalTime = totalCell ? totalCell.textContent.trim() : '-'; const grossSalary = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`)?.value||''; const netSalary = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`)?.value||''; if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) { tableData.push([ `${i}. ${getDayName(currentYear, currentMonth, i)}`, startTime, endTime, breakTime || '0', totalTime, `${parseFloat(grossSalary).toFixed(decimalPlaces)} €`, `${parseFloat(netSalary).toFixed(decimalPlaces)} €` ]); } } doc.autoTable({ head:[['Deň','Príchod','Odchod','Prestávka (h)','Odpracované','Hrubá Mzda','Čistá Mzda']], body:tableData, startY:38, theme:'grid', styles:{font:'Roboto',fontSize:9,cellPadding:2,valign:'middle'}, headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontStyle:'bold',fontSize:10,halign:'center'}, alternateRowStyles:{fillColor:[245,245,245]}, columnStyles:{ 0:{cellWidth:25,halign:'left'}, 1:{cellWidth:18,halign:'center'}, 2:{cellWidth:18,halign:'center'}, 3:{cellWidth:22,halign:'center'}, 4:{cellWidth:35,halign:'center'}, 5:{cellWidth:27,halign:'right'}, 6:{cellWidth:27,halign:'right'} } }); const finalY = doc.lastAutoTable.finalY + 10; doc.setFontSize(11); const totalText = totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi,'\n').replace(/<\/?strong>/gi,'').replace(/ /g,' ').replace(/€/g,' EUR'); doc.text(totalText, 14, finalY); const safeName = (employeeName||'Nezadane').replace(/[^a-zA-Z0-9]/g,'_'); doc.save(`Vykaz_prace_${safeName}_${getMonthName(currentMonth)}_${currentYear}.pdf`); } catch(err) { showErrorNotification(`Chyba pri exporte do PDF: ${err.message}`); console.error("PDF Export Error:", err); } };
      window.sendPDF = () => { try { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf','Roboto','normal'); doc.setFont('Roboto'); doc.setFontSize(16); doc.text(`Záznam dochádzky - ${getMonthName(currentMonth)} ${currentYear}`, 14, 22); doc.setFontSize(12); doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30); const tableData = []; const daysInMonth = getDaysInMonth(currentMonth); let daysWorkedCount = 0; for (let i = 1; i <= daysInMonth; i++) { const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value||''; const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value||''; const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value||''; if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) { tableData.push([ `${i}. ${getDayName(currentYear, currentMonth, i)}`, startTime, endTime, breakTime || '0' ]); daysWorkedCount++; } } doc.autoTable({ head:[['Deň','Príchod','Odchod','Prestávka (h)']], body:tableData, startY:38, theme:'grid', styles:{font:'Roboto',fontSize:10,cellPadding:3,valign:'middle'}, headStyles:{fillColor:[220,220,220],textColor:[0,0,0],fontStyle:'bold',fontSize:11,halign:'center'}, alternateRowStyles:{fillColor:[245,245,245]}, columnStyles:{ 0:{cellWidth:50,halign:'left'}, 1:{cellWidth:40,halign:'center'}, 2:{cellWidth:40,halign:'center'}, 3:{cellWidth:40,halign:'center'} } }); const finalY = doc.lastAutoTable.finalY + 10; doc.setFontSize(11); doc.text(`Počet započítaných dní: ${daysWorkedCount}`, 14, finalY); const pdfBlob = doc.output('blob'); const safeName = (employeeName||'Nezadane').replace(/[^a-zA-Z0-9]/g,'_'); const pdfFileName = `Dochadzka_${safeName}_${getMonthName(currentMonth)}_${currentYear}.pdf`; const pdfFile = new File([pdfBlob], pdfFileName, {type:'application/pdf'}); if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) { navigator.share({ files: [pdfFile], title: `Dochádzka ${getMonthName(currentMonth)} ${currentYear}`, text: `Záznam dochádzky pre ${employeeName || 'pracovníka'} za ${getMonthName(currentMonth)} ${currentYear}.` }).catch(error => { if (error.name !== 'AbortError') { console.error('Chyba zdieľania:', error); showErrorNotification(`Chyba zdieľania: ${error.message}`); } }); } else { showErrorNotification('Zdieľanie súborov nie je podporované vaším prehliadačom. Súbor bude stiahnutý.'); doc.save(pdfFileName); } } catch(err) { showErrorNotification(`Chyba pri príprave PDF na odoslanie: ${err.message}`); console.error("Send PDF Error:", err); } };
      window.changeDecimalPlaces = () => { if(!decimalPlacesSelect) return; decimalPlaces = parseInt(decimalPlacesSelect.value); localStorage.setItem('decimalPlaces', decimalPlaces); for (let i = 1; i <= getDaysInMonth(currentMonth); i++) { if(document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) { calculateRow(i); } } calculateAndUpdateTotals(); };
      window.updateEmployeeName = () => { if(!employeeNameInput) return; employeeName = employeeNameInput.value.trim(); localStorage.setItem('employeeName', employeeName); updateGreeting(); calculateAndUpdateTotals(); };
@@ -663,6 +668,7 @@
 
      // Inicializácia pri načítaní stránky
      document.addEventListener('DOMContentLoaded', () => {
+         // Ak je potrebné niečo inicializovať po načítaní DOM
      });
 
   </script>
