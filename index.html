@@ -436,7 +436,7 @@
     // Funkcia na aktualizáciu pozdravu
     function updateGreeting() {
         const nameToUse = employeeName || localStorage.getItem('employeeName') || '';
-        if (nameToUse) mainTitle.textContent = `Ahoj ${nameToUse.split(' ')[0]}`;
+        if (nameToUse) mainTitle.textContent = `Vitaj späť ${nameToUse.split(' ')[0]}👋`;
         else mainTitle.textContent = 'Vitaj späť 👋';
     }
 
