@@ -176,7 +176,7 @@
        margin-top: 20px;
     }
     .btn {
-      padding: 12px 18px;
+      padding: 12px 18px; /* Základný padding (vertikálny bude prepísaný v @media) */
       border: none;
       border-radius: 4px;
       color: white;
@@ -188,13 +188,17 @@
       flex: 1 1 150px;
       max-width: 200px;
       box-sizing: border-box;
+      display: inline-flex; /* Pomôže lepšie centrovať text vertikálne pri pevnej výške */
+      align-items: center; /* Centrovanie textu vertikálne */
+      justify-content: center; /* Centrovanie textu horizontálne */
     }
     .btn:hover { background-color: #4a54e0; }
-    .reset-btn { background-color: #f44336 !important; } /* Pridané !important pre špecificitu */
+    /* Farby pre špecifické tlačidlá - pridané !important pre istotu pri testovaní */
+    .reset-btn { background-color: #f44336 !important; }
     .reset-btn:hover { background-color: #d32f2f !important; }
-    .export-btn { background-color: #4CAF50 !important; } /* Pridané !important pre špecificitu */
+    .export-btn { background-color: #4CAF50 !important; }
     .export-btn:hover { background-color: #388e3c !important; }
-    .backup-btn { background-color: #8a2be2 !important; padding: 18px 22px; } /* Pridané !important pre špecificitu */
+    .backup-btn { background-color: #8a2be2 !important; padding: 18px 22px; } /* Backup môže mať iný padding */
     .backup-btn:hover { background-color: #6a1bb2 !important; }
 
     /* Total Salary */
@@ -232,21 +236,26 @@
       .clock-icon { font-size: 1.5em; }
       .btn-container { flex-direction: column; align-items: stretch; }
 
-      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU A FARBU TLAČIDIEL (768px) --- */
+      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU TLAČIDIEL (768px) --- */
       .btn {
           max-width: none;
           font-size: 1.05em;
-          padding: 6px 20px !important;  /* Test: Vynútený nízky padding */
-          line-height: 1.2 !important;  /* Test: Vynútená nízka výška riadku */
           width: 95%;
           margin-left: auto;
           margin-right: auto;
           margin-top: 0;
           margin-bottom: 0;
           box-sizing: border-box;
-          background-color: orange !important; /* <<<--- TESTOVACIA FARBA */
-          color: black !important; /* Aby bol text viditeľný na oranžovej */
+          /* Test: Explicitná výška a nulový vertikálny padding */
+          height: 30px !important;
+          padding: 0 20px !important; /* Len bočný padding */
+          /* Farba pozadia odstránená z testu */
+          /* line-height odstránený z testu, riadi to height a align-items */
       }
+       /* Špecifický padding pre backup tlačidlo aj na mobile */
+       .backup-btn {
+           padding: 0 22px !important; /* Len bočný padding, výšku riadi height */
+       }
       #totalSalary { font-size: 1.0em; padding: 15px; }
     }
 
@@ -263,15 +272,20 @@
       .settings label { font-size: 1.0em; }
       .clock-icon { font-size: 1.6em; }
 
-      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU A FARBU TLAČIDIEL (480px) --- */
+      /* --- TESTOVACIE PRAVIDLO PRE VÝŠKU TLAČIDIEL (480px) --- */
       .btn {
           font-size: 0.95em;
-          padding: 5px 15px !important;   /* Test: Vynútený nízky padding */
-          line-height: 1.2 !important;   /* Test: Vynútená nízka výška riadku */
           width: 95%;
-          background-color: orange !important; /* <<<--- TESTOVACIA FARBA */
-          color: black !important; /* Aby bol text viditeľný na oranžovej */
+          /* Test: Explicitná výška a nulový vertikálny padding */
+          height: 28px !important; /* Trochu menšia výška pre menšie písmo */
+          padding: 0 15px !important; /* Len bočný padding */
           /* marginy 0 a auto sa zdedia z pravidla pre 768px */
+          /* Farba pozadia odstránená z testu */
+          /* line-height odstránený z testu */
+      }
+      /* Špecifický padding pre backup tlačidlo aj na mobile */
+      .backup-btn {
+          padding: 0 15px !important; /* Len bočný padding, výšku riadi height */
       }
       table { min-width: 500px; }
       #totalSalary { font-size: 0.95em; padding: 12px; }
@@ -326,12 +340,13 @@
     #login-form .btn { /* Login tlačidlá si zachovajú svoju farbu a padding */
         width: auto;
         max-width: 150px;
-        padding: 10px 22px;
+        padding: 10px 22px !important; /* Návrat k pôvodnému paddingu, !important kvôli testu */
         margin: 5px 0;
         font-size: 1em;
+        height: auto !important; /* Zrušenie testovacej výšky */
         line-height: initial !important; /* Zrušenie testovacieho line-height */
-        background-color: #4CAF50 !important; /* Zachovanie zelenej pre login/register */
-        color: white !important; /* Biely text */
+        background-color: #4CAF50 !important; /* Zachovanie zelenej */
+        color: white !important;
     }
      #login-form .btn:hover {
          background-color: #388e3c !important;
@@ -435,9 +450,6 @@
   <div id="errorNotification"></div>
 
   <script type="module">
-    // --- Celý JavaScript kód zostáva rovnaký ako v predchádzajúcej verzii ---
-    // --- vrátane úprav v calculateRow a calculateTotal ---
-
     // Firebase Importy
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
