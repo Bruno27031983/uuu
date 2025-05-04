@@ -171,12 +171,12 @@
     .btn-container {
        display: flex;
        flex-wrap: wrap;
-       gap: 10px;
+       gap: 10px; /* Medzera medzi tlačidlami */
        justify-content: center;
        margin-top: 20px;
     }
     .btn {
-      /* ----- ZMENA TU: Znížený vertikálny padding z 12px na 8px ----- */
+      /* Predvolený padding pre desktop (znížený) */
       padding: 8px 18px;
       border: none;
       border-radius: 4px;
@@ -197,8 +197,7 @@
     .export-btn:hover { background-color: #388e3c; }
     .backup-btn {
       background-color: #8a2be2;
-      /* ----- ZMENA TU: Odstránený špecifický padding, aby dedil z .btn ----- */
-      /* padding: 18px 22px; */
+      /* Dedí padding z .btn */
     }
     .backup-btn:hover { background-color: #6a1bb2; }
 
@@ -235,14 +234,17 @@
            padding: 8px;
       }
       .clock-icon { font-size: 1.5em; }
-      .btn-container { flex-direction: column; align-items: stretch; }
+      .btn-container {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 5px; /* ----- ZMENA: Menšia medzera medzi tlačidlami na mobile ----- */
+      }
 
-      /* --- UPRAVENÉ PRAVIDLO PRE MOBILNÉ TLAČIDLÁ (768px) --- */
-      /* Toto pravidlo už malo znížený padding, ponechané bezo zmeny */
+      /* --- ZMENA TU: Pravidlo pre mobilné tlačidlá (768px) --- */
       .btn {
           max-width: none;
-          font-size: 1.05em;
-          padding: 6px 20px;
+          font-size: 1.0em; /* Trochu menšie písmo */
+          padding: 5px 15px; /* ----- ZMENA: Ešte menší vertikálny padding ----- */
           width: 95%;
           margin-left: auto;
           margin-right: auto;
@@ -266,12 +268,12 @@
       .settings label { font-size: 1.0em; }
       .clock-icon { font-size: 1.6em; }
 
-      /* --- UPRAVENÉ PRAVIDLO PRE MOBILNÉ TLAČIDLÁ (480px) --- */
-      /* Toto pravidlo už malo znížený padding, ponechané bezo zmeny */
+      /* --- ZMENA TU: Pravidlo pre mobilné tlačidlá (480px) --- */
+      /* Dedí zmeny z 768px, ale môžeme ešte upraviť, ak treba */
       .btn {
-          font-size: 0.95em;
-          padding: 5px 15px;
-          width: 95%;
+          font-size: 0.9em; /* Ešte menšie písmo pre najmenšie mobily */
+          padding: 4px 12px; /* ----- ZMENA: Najmenší vertikálny padding ----- */
+          /* Ostatné vlastnosti (width, margin) sa zdedia z pravidla pre 768px */
       }
       table { min-width: 500px; }
       #totalSalary { font-size: 0.95em; padding: 12px; }
@@ -327,9 +329,9 @@
     #login-form .btn {
         width: auto;
         max-width: 150px;
-        padding: 10px 22px;
+        padding: 10px 22px; /* Pôvodný padding pre login tlačidlá */
         margin: 5px 0;
-        font-size: 1em;
+        font-size: 1em; /* Pôvodná veľkosť písma */
     }
     #login-form a { color: #007bff; text-decoration: none; font-size: 0.9em; }
     #login-form a:hover { text-decoration: underline; }
@@ -551,7 +553,7 @@
      function formatAndMoveNext(input, nextId) { let value = input.value.replace(/[^\d:]/g, ''); let originalValue = input.value; let cursorPos = input.selectionStart; if (value.length === 2 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) { value += ':'; } else if (value.length === 4 && !value.includes(':')) { value = `${value.substring(0, 2)}:${value.substring(2)}`; } else if (value.length === 3 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) { value = `${value.substring(0, 2)}:${value.substring(2)}`; } value = value.replace(/^:/, ''); if ((value.match(/:/g) || []).length > 1) { const parts = value.split(':'); value = `${parts[0]}:${parts.slice(1).join('')}`; } if (value.length > 5) { value = value.slice(0, 5); } if (input.value !== value) { input.value = value; try { if (value.length === 3 && originalValue.length === 2 && value.endsWith(':')) { input.setSelectionRange(3, 3); } else { input.setSelectionRange(cursorPos, cursorPos); } } catch (e) { } } const day = parseInt(input.id.split('-')[3]); calculateRow(day); if (value.length === 5 && isValidTimeFormat(value)) { if (nextId) { moveNext(input, nextId); } } }
      function moveNext(currentElement, nextInputId) { const nextElement = document.getElementById(nextInputId); if (nextElement) { nextElement.focus(); if (nextElement.tagName === 'INPUT' && nextElement.type !== 'number') { nextElement.select(); } } }
 
-     // ----- calculateRow - UPRAVENÉ (Zmena 2) -----
+     // ----- calculateRow -----
      function calculateRow(day) {
          const startInput = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`);
          const endInput = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`);
@@ -566,15 +568,13 @@
          const endTime = endInput.value; // Hodnota Odchodu
          const breakTimeHours = parseFloat(breakInput.value) || 0;
 
-         // ZMENA: Výpočet sa vykoná len ak sú zadané a platné OBA časy (Príchod aj Odchod)
          if (!isValidTimeFormat(startTime) || !isValidTimeFormat(endTime)) {
-             totalCell.textContent = '-'; // Zobraz pomlčku namiesto 0h 0m
-             grossInput.value = '';     // Vymaž hrubú mzdu
-             netInput.value = '';       // Vymaž čistú mzdu
-             return; // Ukonči výpočet pre tento riadok
+             totalCell.textContent = '-';
+             grossInput.value = '';
+             netInput.value = '';
+             return;
          }
 
-         // Ak sú oba časy platné, pokračuj vo výpočte ako predtým
          const [startHours, startMinutes] = startTime.split(':').map(Number);
          const [endHours, endMinutes] = endTime.split(':').map(Number);
          const startDate = new Date(2000, 0, 1, startHours, startMinutes);
@@ -590,17 +590,17 @@
          totalCell.textContent = `${hours}h ${minutes}m (${decimalHours.toFixed(decimalPlaces)} h)`;
          const grossSalary = Math.max(0, decimalHours * hourlyWage);
          grossInput.value = grossSalary.toFixed(decimalPlaces);
-         updateNetSalary(day); // Vypočítaj a aktualizuj čistú mzdu
+         updateNetSalary(day);
      }
-     // ----- Koniec úpravy calculateRow -----
+     // ----- Koniec calculateRow -----
 
      function updateNetSalary(day) { const grossInput = document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`); const netInput = document.getElementById(`net-${currentYear}-${currentMonth}-${day}`); if (!grossInput || !netInput) return; const grossSalary = parseFloat(grossInput.value) || 0; const netSalary = Math.max(0, grossSalary * (1 - taxRate)); netInput.value = netSalary.toFixed(decimalPlaces); }
      window.resetRow = (day, save = true) => { const start = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`); const end = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`); const breakEl = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`); if(start) start.value = ''; if(end) end.value = ''; if(breakEl) breakEl.value = ''; calculateRow(day); if (save) { calculateAndUpdateTotals(); } };
 
-     // ----- calculateTotal - UPRAVENÉ (Zmena 3) -----
+     // ----- calculateTotal -----
      function calculateTotal() {
          let totalMinutes = 0; let totalGross = 0; let totalNet = 0;
-         let daysWorked = 0; // Premenná pre počet dní s príchodom aj odchodom
+         let daysWorked = 0;
 
          const daysInMonth = getDaysInMonth(currentMonth);
          for (let i = 1; i <= daysInMonth; i++) {
@@ -609,7 +609,6 @@
              const breakTime = parseFloat(document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value) || 0;
              let dailyMinutes = 0; let dailyGross = 0; let dailyNet = 0;
 
-             // Výpočet denných hodnôt
              if (isValidTimeFormat(start) && isValidTimeFormat(end)) {
                  const [sH, sM] = start.split(':').map(Number);
                  const [eH, eM] = end.split(':').map(Number);
@@ -622,8 +621,6 @@
                  const dailyHours = dailyMinutes / 60;
                  dailyGross = Math.max(0, dailyHours * hourlyWage);
                  dailyNet = Math.max(0, dailyGross * (1 - taxRate));
-
-                 // ZMENA: Započítaj deň iba ak má platný Príchod aj Odchod
                  daysWorked++;
              }
 
@@ -642,10 +639,9 @@
          const avgMinsRemainder = avgMinutesRounded % 60;
          const avgDecimalHours = avgMinutes / 60;
 
-         // ZMENA: Použije sa nová premenná daysWorked pre "Započítaných dní"
          totalSalaryDiv.innerHTML = `Započítaných dní: ${daysWorked}<br>Celkový čas: ${totalHours}h ${totalMinutesRemainder}m (${totalDecimalHours.toFixed(decimalPlaces)} h)<br>Hrubá mzda: ${totalGross.toFixed(decimalPlaces)} €<br>Čistá mzda: ${totalNet.toFixed(decimalPlaces)} €<br>Priem. čistá mzda/deň: ${avgNet.toFixed(decimalPlaces)} €<br><strong>Priem. čas/deň: ${avgHours}h ${avgMinsRemainder}m (${avgDecimalHours.toFixed(decimalPlaces)} h)</strong>`;
      }
-    // ----- Koniec úpravy calculateTotal -----
+    // ----- Koniec calculateTotal -----
 
 
      // Exporty a nastavenia
