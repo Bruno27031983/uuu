@@ -1,6 +1,6 @@
 {
   "name": "Bruno's Calculator",
-  "short_name": "Kalkulačka",
+  "short_name": "Dochádzka",
   "description": "Kalkulačka dochádzky a mzdy",
   "start_url": "./index.html",
   "scope": "./",
