@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-cache-v5'; // <-- ZVÝŠTE TÚTO VERZIU! (napr. v3, v4, atď.)
+const CACHE_NAME = 'bruno-calculator-cache-v6'; // <-- ZVÝŠTE TÚTO VERZIU! (napr. v3, v4, atď.)
 const urlsToCache = [
   // Základné súbory aplikácie
   './', // Koreňový adresár PWA (uuu/index.html alebo uuu/)
