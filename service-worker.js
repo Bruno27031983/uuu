@@ -1,5 +1,5 @@
 // service-worker.js
-const CACHE_NAME = 'bruno-calculator-cache-v8'; // <-- ZVÝŠTE TÚTO VERZIU PRI ZMENÁCH V CACHOVANÝCH SÚBOROCH ALEBO SW!
+const CACHE_NAME = 'bruno-calculator-cache-v9'; // <-- ZVÝŠTE TÚTO VERZIU PRI ZMENÁCH V CACHOVANÝCH SÚBOROCH ALEBO SW!
 const OFFLINE_FALLBACK_PAGE = './offline.html';
 
 const urlsToCache = [
