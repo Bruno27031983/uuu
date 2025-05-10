@@ -13,7 +13,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap&subset=latin-ext" rel="stylesheet">
 
   <style>
-    /* CSS zostáva nezmenené oproti poslednej verzii, okrem šírok stĺpcov */
     body {
       font-family: 'Roboto', sans-serif;
       line-height: 1.6;
@@ -24,7 +23,7 @@
       font-size: 16px;
     }
     .container {
-      max-width: 1200px; /* Zväčšené pre nový stĺpec */
+      max-width: 1200px; 
       margin: auto;
       background: white;
       padding: 15px;
@@ -95,7 +94,7 @@
       width: 100%;
       border-collapse: collapse;
       margin-bottom: 20px;
-      min-width: 950px; /* Zväčšené pre nový stĺpec */
+      min-width: 950px; 
       table-layout: fixed;
     }
     th, td {
@@ -121,7 +120,7 @@
     th:nth-child(8), td:nth-child(8) { width: 100px; text-align: right;} /* Čistá mzda */
     th:nth-child(9), td:nth-child(9) { width: 70px; text-align: center; } /* Akcia */
 
-    input[type="tel"], input[type="number"], input[type="text"], select {
+    input[type="tel"], input[type="number"], input[type="text"], select, textarea { /* PRIDANÁ TEXTAREA */
       width: 100%;
       padding: 7px;
       box-sizing: border-box;
@@ -131,6 +130,16 @@
       border-radius: 3px;
       vertical-align: middle;
     }
+    textarea { /* ŠPECIFICKÉ PRE TEXTAREA */
+        resize: vertical; /* Umožní užívateľovi meniť výšku */
+        min-height: 38px; /* Približne výška ostatných inputov */
+    }
+    td:nth-child(6) textarea { /* Textarea v stĺpci poznámok */
+        min-height: 38px; 
+        max-height: 100px; /* Maximálna výška pred zobrazením scrollbaru */
+        overflow-y: auto;  /* Scrollbar ak je potrebný */
+    }
+
      .time-input-wrapper {
         display: flex;
         align-items: center;
@@ -196,7 +205,10 @@
       text-align: center;
     }
     .current-day { background-color: #8a2be2; color: white; }
-    .current-day input, .current-day select { background-color: #9932cc; color: white; }
+    .current-day input, .current-day select, .current-day textarea { /* PRIDANÁ TEXTAREA */
+        background-color: #9932cc;
+        color: white;
+    }
     .logout-section {
         margin-top: 25px;
         padding-top: 15px;
@@ -232,7 +244,7 @@
       .collapsible-content > div { width: 100%; margin: 5px 0; flex-basis: auto; }
       table { min-width: 750px; } 
       th, td { padding: 8px; font-size: 1.0em; }
-      input[type="tel"], input[type="number"], input[type="text"], select {
+      input[type="tel"], input[type="number"], input[type="text"], select, textarea { /* PRIDANÁ TEXTAREA */
            font-size: 1.0em;
            padding: 8px;
       }
@@ -273,7 +285,7 @@
       h1 { font-size: 1.8em; }
       h2 { font-size: 1.0em; }
       th, td { font-size: 0.9em; padding: 7px; }
-      input[type="tel"], input[type="number"], input[type="text"], select {
+      input[type="tel"], input[type="number"], input[type="text"], select, textarea { /* PRIDANÁ TEXTAREA */
            font-size: 0.95em;
            padding: 8px;
       }
@@ -425,7 +437,7 @@
             <th>Odchod</th>
             <th>Prestávka</th>
             <th>Odpracované</th>
-            <th>Poznámky</th> <!-- OPRAVENÝ HTML KOMENTÁR (ak by tu mal byť) -->
+            <th>Poznámky</th>
             <th>Hrubá Mzda (€)</th>
             <th>Čistá Mzda (€)</th>
             <th>Akcia</th>
@@ -688,13 +700,22 @@
      // Vytvorenie tabuľky a výpočty
      function getDayName(year, month, day) { return new Date(year, month, day).toLocaleDateString('sk-SK', { weekday: 'short' }); }
      window.insertCurrentTime = (inputId) => { const inputElement = document.getElementById(inputId); if (inputElement) { const now = new Date(); const hours = String(now.getHours()).padStart(2, '0'); const minutes = String(now.getMinutes()).padStart(2, '0'); inputElement.value = `${hours}:${minutes}`; handleInput(inputElement, ''); } };
-     function createTable() { const daysInMonth = getDaysInMonth(currentMonth); workDays.innerHTML = ''; const today = new Date(); const todayDate = today.getDate(); const todayMonth = today.getMonth(); const todayYear = today.getFullYear(); if (isNaN(daysInMonth) || daysInMonth <= 0) { console.error("Neplatný počet dní v mesiaci:", daysInMonth); return; } for (let i = 1; i <= daysInMonth; i++) { const row = document.createElement('tr'); if (i === todayDate && currentMonth === todayMonth && currentYear === todayYear) { row.classList.add('current-day'); } const dayName = getDayName(currentYear, currentMonth, i); const startId = `start-${currentYear}-${currentMonth}-${i}`; const endId = `end-${currentYear}-${currentMonth}-${i}`; const breakId = `break-${currentYear}-${currentMonth}-${i}`; const noteId = `note-${currentYear}-${currentMonth}-${i}`; const totalId = `total-${currentYear}-${currentMonth}-${i}`; const grossId = `gross-${currentYear}-${currentMonth}-${i}`; const netId = `net-${currentYear}-${currentMonth}-${i}`; row.innerHTML = `<td>${i}. ${dayName}</td><td><div class="time-input-wrapper"><input type="tel" id="${startId}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, '${endId}')"><span class="clock-icon" onclick="insertCurrentTime('${startId}')" title="Vložiť aktuálny čas">🕒</span></div></td><td><div class="time-input-wrapper"><input type="tel" id="${endId}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, '${breakId}')"><span class="clock-icon" onclick="insertCurrentTime('${endId}')" title="Vložiť aktuálny čas">🕒</span></div></td><td><input type="number" id="${breakId}" min="0" step="0.5" placeholder="hod." oninput="handleBreakInput(${i})"></td><td id="${totalId}">-</td><td><input type="text" id="${noteId}" placeholder="Poznámka" oninput="calculateAndUpdateTotals()"></td><td><input type="number" id="${grossId}" min="0" step="0.01" placeholder="" readonly></td><td><input type="number" id="${netId}" min="0" step="0.01" placeholder="" readonly></td><td><button class="btn reset-btn" onclick="resetRow(${i})">X</button></td>`; workDays.appendChild(row); } }
+     function createTable() { const daysInMonth = getDaysInMonth(currentMonth); workDays.innerHTML = ''; const today = new Date(); const todayDate = today.getDate(); const todayMonth = today.getMonth(); const todayYear = today.getFullYear(); if (isNaN(daysInMonth) || daysInMonth <= 0) { console.error("Neplatný počet dní v mesiaci:", daysInMonth); return; } for (let i = 1; i <= daysInMonth; i++) { const row = document.createElement('tr'); if (i === todayDate && currentMonth === todayMonth && currentYear === todayYear) { row.classList.add('current-day'); } const dayName = getDayName(currentYear, currentMonth, i); const startId = `start-${currentYear}-${currentMonth}-${i}`; const endId = `end-${currentYear}-${currentMonth}-${i}`; const breakId = `break-${currentYear}-${currentMonth}-${i}`; const noteId = `note-${currentYear}-${currentMonth}-${i}`; const totalId = `total-${currentYear}-${currentMonth}-${i}`; const grossId = `gross-${currentYear}-${currentMonth}-${i}`; const netId = `net-${currentYear}-${currentMonth}-${i}`; row.innerHTML = `<td>${i}. ${dayName}</td><td><div class="time-input-wrapper"><input type="tel" id="${startId}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, '${endId}')"><span class="clock-icon" onclick="insertCurrentTime('${startId}')" title="Vložiť aktuálny čas">🕒</span></div></td><td><div class="time-input-wrapper"><input type="tel" id="${endId}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="handleInput(this, '${breakId}')"><span class="clock-icon" onclick="insertCurrentTime('${endId}')" title="Vložiť aktuálny čas">🕒</span></div></td><td><input type="number" id="${breakId}" min="0" step="0.5" placeholder="hod." oninput="handleBreakInput(${i})"></td><td id="${totalId}">-</td><td><textarea id="${noteId}" placeholder="Poznámka" oninput="calculateAndUpdateTotals()" rows="1"></textarea></td><td><input type="number" id="${grossId}" min="0" step="0.01" placeholder="" readonly></td><td><input type="number" id="${netId}" min="0" step="0.01" placeholder="" readonly></td><td><button class="btn reset-btn" onclick="resetRow(${i})">X</button></td>`; workDays.appendChild(row); } }
      window.handleInput = (input, nextId) => { formatAndMoveNext(input, nextId); calculateAndUpdateTotals(); };
      window.handleBreakInput = (day) => { const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`); if (breakInput) { let breakValue = parseFloat(breakInput.value); if (isNaN(breakValue) || breakValue < 0) { breakInput.value = ''; } } calculateRow(day); calculateAndUpdateTotals(); };
      function calculateAndUpdateTotals() { calculateTotal(); const saveData = collectCurrentData(); const localKey = `workData-${currentYear}-${currentMonth}`; localStorage.setItem(localKey, JSON.stringify(saveData)); debouncedSaveToFirestore(); }
      function isValidTimeFormat(timeString) { return /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeString); }
      function formatAndMoveNext(input, nextId) { let value = input.value.replace(/[^\d:]/g, ''); let originalValue = input.value; let cursorPos = input.selectionStart; if (value.length === 2 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) { value += ':'; } else if (value.length === 4 && !value.includes(':')) { value = `${value.substring(0, 2)}:${value.substring(2)}`; } else if (value.length === 3 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) { value = `${value.substring(0, 2)}:${value.substring(2)}`; } value = value.replace(/^:/, ''); if ((value.match(/:/g) || []).length > 1) { const parts = value.split(':'); value = `${parts[0]}:${parts.slice(1).join('')}`; } if (value.length > 5) { value = value.slice(0, 5); } if (input.value !== value) { input.value = value; try { if (value.length === 3 && originalValue.length === 2 && value.endsWith(':')) { input.setSelectionRange(3, 3); } else { input.setSelectionRange(cursorPos, cursorPos); } } catch (e) { } } const day = parseInt(input.id.split('-')[3]); calculateRow(day); if (value.length === 5 && isValidTimeFormat(value)) { if (nextId) { moveNext(input, nextId); } } }
-     function moveNext(currentElement, nextInputId) { const nextElement = document.getElementById(nextInputId); if (nextElement) { nextElement.focus(); if (nextElement.tagName === 'INPUT' && nextElement.type !== 'number' && nextElement.type !== 'text') { nextElement.select(); } } } 
+     function moveNext(currentElement, nextInputId) {
+         const nextElement = document.getElementById(nextInputId);
+         if (nextElement) {
+             nextElement.focus();
+             // Select text only if it's a time input (type="tel")
+             if (nextElement.tagName === 'INPUT' && nextElement.type === 'tel') {
+                 nextElement.select();
+             }
+         }
+     }
      function calculateRow(day) { const startInput = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`); const endInput = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`); const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`); const totalCell = document.getElementById(`total-${currentYear}-${currentMonth}-${day}`); const grossInput = document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`); const netInput = document.getElementById(`net-${currentYear}-${currentMonth}-${day}`); if (!startInput || !endInput || !breakInput || !totalCell || !grossInput || !netInput) return; const startTime = startInput.value; const endTime = endInput.value; const breakTimeHours = parseFloat(breakInput.value) || 0; if (!isValidTimeFormat(startTime) || !isValidTimeFormat(endTime)) { totalCell.textContent = '-'; grossInput.value = ''; netInput.value = ''; return; } const [startHours, startMinutes] = startTime.split(':').map(Number); const [endHours, endMinutes] = endTime.split(':').map(Number); const startDate = new Date(2000, 0, 1, startHours, startMinutes); let endDate = new Date(2000, 0, 1, endHours, endMinutes); if (endDate < startDate) { endDate.setDate(endDate.getDate() + 1); } let diffMinutes = (endDate.getTime() - startDate.getTime()) / 60000; diffMinutes -= (breakTimeHours * 60); if (diffMinutes < 0) { diffMinutes = 0; } const decimalHours = diffMinutes / 60; const totalMinutesRounded = Math.round(diffMinutes); const hours = Math.floor(totalMinutesRounded / 60); const minutes = totalMinutesRounded % 60; totalCell.textContent = `${hours}h ${minutes}m (${decimalHours.toFixed(decimalPlaces)} h)`; const grossSalary = Math.max(0, decimalHours * hourlyWage); grossInput.value = grossSalary.toFixed(decimalPlaces); updateNetSalary(day); }
      function updateNetSalary(day) { const grossInput = document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`); const netInput = document.getElementById(`net-${currentYear}-${currentMonth}-${day}`); if (!grossInput || !netInput) return; const grossSalary = parseFloat(grossInput.value) || 0; const netSalary = Math.max(0, grossSalary * (1 - taxRate)); netInput.value = netSalary.toFixed(decimalPlaces); }
 
