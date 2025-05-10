@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-cache-v2'; // Zvýšte verziu pri každej zmene v urlsToCache
+const CACHE_NAME = 'bruno-calculator-cache-v3'; // Zvýšte verziu pri každej zmene v urlsToCache
 const urlsToCache = [
   // Základné súbory aplikácie
   './', // Koreňový adresár (index.html)
