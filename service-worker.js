@@ -8,12 +8,12 @@ console.log("SW: Začínam vykonávať service-worker.js (verzia s IndexedDB syn
 
 // Firebase konfigurácia (MUSÍ BYŤ ROVNAKÁ AKO V index.html)
 const firebaseConfig = { // NAHRAĎTE TOTO VAŠOU REÁLNOU KONFIGURÁCIOU!
-    apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // Príklad, použite vlastný
-    authDomain: "uuuuu-f7ef9.firebaseapp.com",     // Príklad, použite vlastný
-    projectId: "uuuuu-f7ef9",               // Príklad, použite vlastný
-    storageBucket: "uuuuu-f7ef9.appspot.com",  // Príklad, použite vlastný
-    messagingSenderId: "456105865458",         // Príklad, použite vlastný
-    appId: "1:456105865458:web:101f0a4dcb455f174b606b" // Príklad, použite vlastný
+    apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
+    authDomain: "uuuuu-f7ef9.firebaseapp.com",
+    projectId: "uuuuu-f7ef9",
+    storageBucket: "uuuuu-f7ef9.appspot.com",
+    messagingSenderId: "456105865458",
+    appId: "1:456105865458:web:101f0a4dcb455f174b606b",
 };
 
 let firebaseAppInstanceSW;
@@ -39,13 +39,8 @@ const PENDING_STORE_NAME_SW = 'pendingSyncs';
 function openDBSW() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME_SW, DB_VERSION_SW);
-        request.onerror = (event) => {
-            console.error("SW: Chyba otvorenia IndexedDB:", event.target.error);
-            reject("SW: Chyba otvorenia IndexedDB: " + event.target.error);
-        };
-        request.onsuccess = (event) => {
-            resolve(event.target.result);
-        };
+        request.onerror = (event) => { console.error("SW: Chyba otvorenia IndexedDB:", event.target.error); reject("SW: Chyba otvorenia IndexedDB: " + event.target.error); };
+        request.onsuccess = (event) => resolve(event.target.result);
         request.onupgradeneeded = (event) => {
             console.log("SW: onupgradeneeded pre IndexedDB.");
             const db = event.target.result;
