@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');
 
-const SW_CACHE_VERSION = 'dochadzka-cache-v2.5'; // ZVÝŠTE TÚTO VERZIU!
+const SW_CACHE_VERSION = 'dochadzka-cache-v2.5'; // ZVÝŠTE TÚTO VERZIU PODĽA POTREBY!
 console.log(`SW (${SW_CACHE_VERSION}): Service Worker sa načítal.`);
 
 
@@ -30,9 +30,8 @@ function logToClients(message, type = 'log', alsoLogToSWConsole = true) {
     });
 }
 
-
 // Firebase konfigurácia (MUSÍ BYŤ ROVNAKÁ AKO V index.html)
-const firebaseConfig = { /* ... VAŠA KONFIGURÁCIA ... */ 
+const firebaseConfig = { // NAHRAĎTE TOTO VAŠOU REÁLNOU KONFIGURÁCIOU!
     apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
     authDomain: "uuuuu-f7ef9.firebaseapp.com",
     projectId: "uuuuu-f7ef9",
