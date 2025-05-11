@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');
 
-const SW_CACHE_VERSION = 'dochadzka-cache-v2.5'; // ZVÝŠTE TÚTO VERZIU PRI KAŽDEJ ZMENE SW!
+const SW_CACHE_VERSION = 'dochadzka-cache-v2.6'; // ZVÝŠTE TÚTO VERZIU PRI KAŽDEJ ZMENE SW!
 console.log(`SW (${SW_CACHE_VERSION}): Service Worker sa načítal.`);
 
 
@@ -29,7 +29,6 @@ function logToClients(message, type = 'log', alsoLogToSWConsole = true) {
         }
     });
 }
-
 
 // Firebase konfigurácia (MUSÍ BYŤ ROVNAKÁ AKO V index.html)
 const firebaseConfig = { // NAHRAĎTE TOTO VAŠOU REÁLNOU KONFIGURÁCIOU!
@@ -56,7 +55,7 @@ function getFirebaseAppSW() {
     return firebaseAppInstanceSW;
 }
 
-// IndexedDB Helpery (zostávajú rovnaké, ale používajú logToClients)
+// IndexedDB Helpery (používajú logToClients)
 const DB_NAME_SW = 'DochadzkaDB'; const DB_VERSION_SW = 1; const PENDING_STORE_NAME_SW = 'pendingSyncs';
 function openDBSW() { /* ... telo funkcie s logToClients ... */ return new Promise((resolve, reject) => { logToClients(`[DB/SW] Pokus o otvorenie DB: ${DB_NAME_SW} v${DB_VERSION_SW}`, 'debug', true); const request = indexedDB.open(DB_NAME_SW, DB_VERSION_SW); request.onerror = (event) => { logToClients("SW: Chyba otvorenia IndexedDB: " + event.target.error, 'error', true); reject("SW: Chyba otvorenia IndexedDB: " + event.target.error); }; request.onsuccess = (event) => { logToClients("[DB/SW] IndexedDB úspešne otvorená.", 'debug', true); resolve(event.target.result); }; request.onupgradeneeded = (event) => { logToClients("SW: onupgradeneeded pre IndexedDB.", 'info', true); const db = event.target.result; if (!db.objectStoreNames.contains(PENDING_STORE_NAME_SW)) { const store = db.createObjectStore(PENDING_STORE_NAME_SW, { keyPath: 'id', autoIncrement: true }); store.createIndex('userMonthYear', ['userId', 'year', 'month'], { unique: true }); logToClients("SW: Object store 'pendingSyncs' vytvorený s indexom 'userMonthYear'.", 'info', true); } }; }); }
 async function getAllPendingSyncsSW() { /* ... telo funkcie s logToClients ... */ logToClients("SW: getAllPendingSyncsSW - pokus o otvorenie DB.", 'debug', true); const db = await openDBSW(); logToClients("SW: getAllPendingSyncsSW - DB otvorená, vytváram transakciu.", 'debug', true); return new Promise((resolve, reject) => { const transaction = db.transaction(PENDING_STORE_NAME_SW, 'readonly'); const store = transaction.objectStore(PENDING_STORE_NAME_SW); const request = store.getAll(); request.onsuccess = () => { logToClients(`SW: getAllPendingSyncsSW - načítaných ${request.result ? request.result.length : 0} itemov.`, 'info', true); resolve(request.result || []); }; request.onerror = (event) => { logToClients("SW: Chyba čítania všetkých pending syncs z IDB: " + event.target.error, 'error', true); reject("SW: Chyba čítania všetkých pending syncs: " + event.target.error); }; }); }
@@ -138,10 +137,10 @@ async function performBackgroundSync() {
     });
 }
 
-const CACHE_NAME = 'dochadzka-cache-v2.6'; // ZVÝŠTE VERZIU!
+// Použite SW_CACHE_VERSION pre konzistentnosť
 const PRECACHE_ASSETS = [ './', './index.html', './offline.html', './manifest.json', './icons/icon-192x192.png', './icons/icon-512x512.png',];
-self.addEventListener('install', event => { logToClients('SW: Install event - verzia ' + CACHE_NAME, 'info', true); event.waitUntil( caches.open(CACHE_NAME) .then(cache => { logToClients('SW: Caching app shell: ' + PRECACHE_ASSETS.join(", "), 'info', true); return cache.addAll(PRECACHE_ASSETS.map(url => new Request(url, {cache: 'reload'}))); }) .then(() => { logToClients('SW: Precaching dokončený, volám skipWaiting.', 'info', true); return self.skipWaiting(); }) .catch(error => logToClients('SW: Precache failed: ' + error, 'error', true)) ); });
-self.addEventListener('activate', event => { logToClients('SW: Activate event - verzia ' + CACHE_NAME, 'info', true); event.waitUntil( caches.keys().then(cacheNames => { return Promise.all( cacheNames.map(cacheName => { if (cacheName !== CACHE_NAME) { logToClients('SW: Deleting old cache: ' + cacheName, 'info', true); return caches.delete(cacheName); } }) ); }).then(() => { logToClients('SW: Staré cache vymazané, volám clients.claim.', 'info', true); return self.clients.claim(); }) ); });
+self.addEventListener('install', event => { logToClients('SW: Install event - verzia ' + SW_CACHE_VERSION, 'info', true); event.waitUntil( caches.open(SW_CACHE_VERSION) .then(cache => { logToClients('SW: Caching app shell: ' + PRECACHE_ASSETS.join(", "), 'info', true); return cache.addAll(PRECACHE_ASSETS.map(url => new Request(url, {cache: 'reload'}))); }) .then(() => { logToClients('SW: Precaching dokončený, volám skipWaiting.', 'info', true); return self.skipWaiting(); }) .catch(error => logToClients('SW: Precache failed: ' + error, 'error', true)) ); });
+self.addEventListener('activate', event => { logToClients('SW: Activate event - verzia ' + SW_CACHE_VERSION, 'info', true); event.waitUntil( caches.keys().then(cacheNames => { return Promise.all( cacheNames.map(cacheName => { if (cacheName !== SW_CACHE_VERSION) { logToClients('SW: Deleting old cache: ' + cacheName, 'info', true); return caches.delete(cacheName); } }) ); }).then(() => { logToClients('SW: Staré cache vymazané, volám clients.claim.', 'info', true); return self.clients.claim(); }) ); });
 self.addEventListener('fetch', event => { const requestUrl = new URL(event.request.url); if (requestUrl.protocol === 'chrome-extension:') { return; } if (requestUrl.hostname.includes('firebase') || requestUrl.hostname.includes('gstatic.com') || requestUrl.hostname.includes('cloudflare.com') || requestUrl.hostname.includes('googleapis.com')) { event.respondWith(fetch(event.request)); return; } if (event.request.mode === 'navigate') { event.respondWith( fetch(event.request) .catch(() => { logToClients(`SW: Navigácia pre ${event.request.url} zlyhala, servírujem offline.html`, 'warn', true); return caches.match('./offline.html'); }) ); return; } event.respondWith( caches.match(event.request) .then(cachedResponse => { return cachedResponse || fetch(event.request).then(networkResponse => { return networkResponse; }); }) ); });
 
 self.addEventListener('sync', function(event) {
@@ -156,4 +155,4 @@ self.addEventListener('sync', function(event) {
 
 self.addEventListener('message', event => { if (event.data && event.data.type === 'SKIP_WAITING') { logToClients('SW: Prijatá správa SKIP_WAITING od klienta.', 'info', true); self.skipWaiting(); } });
 
-logToClients(`SW (${CACHE_NAME}): Service Worker načítaný a pripravený.`, 'info', true);
+logToClients(`SW (${SW_CACHE_VERSION}): Service Worker načítaný a pripravený.`, 'info', true);
