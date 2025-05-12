@@ -168,9 +168,9 @@
     th:nth-child(9), td:nth-child(9) { width: 55px; white-space: nowrap;}  /* Akcia */
 
     th:nth-child(6), td:nth-child(6) { /* Poznámka */
-        min-width: 250px; /* Ešte o trochu širšia minimálna šírka */
-        width: 40%;      /* Pokúsi sa zabrať väčší podiel */
-        white-space: normal; /* Umožní zalomenie textu */
+        min-width: 250px;
+        width: 40%;
+        white-space: normal;
     }
 
 
@@ -767,7 +767,7 @@
                              parseAndApplyData(firestoreDataString);
                          } else {
                              console.log("Firestore data matches local. Recalculating totals for safety.");
-                             calculateTotal(); // Esure totals are correct even if string matches (e.g. settings changed)
+                             calculateTotal();
                          }
                      } else {
                          console.log(`Document ${docId} does not exist in Firestore. Clearing local data if exists.`);
@@ -830,23 +830,32 @@
     }
 
     async function saveToFirestore() {
-        console.log("saveToFirestore called. CurrentUser:", currentUser ? currentUser.email : "null", "isOnline:", isOnline());
+        console.log("saveToFirestore called. User online:", isOnline(), "User logged in:", !!currentUser);
         if (!currentUser) {
             console.log("Cannot save to Firestore: User not logged in.");
             return;
         }
-         const saveData = collectCurrentData();
+         const saveData = collectCurrentData(); // Vždy zober najaktuálnejšie dáta
          const localKey = `workData-${currentYear}-${currentMonth}`;
          const pendingSyncKey = `pendingSync-${currentYear}-${currentMonth}`;
 
         if (isOnline()) {
             try {
-                console.log(`Attempting to save/sync to Firestore: ${currentYear}-${currentMonth}. Data to save:`, JSON.parse(JSON.stringify(saveData)));
+                console.log(`Attempting to save/sync to Firestore for ${currentYear}-${currentMonth}. Data:`, JSON.parse(JSON.stringify(saveData)));
                 const userRef = doc(db, 'users', currentUser.uid);
                 const docRef = doc(userRef, 'workDays', `${currentYear}-${currentMonth}`);
+
+                const docSnap = await getDoc(docRef); // Kontrola existencie pre logovanie
+                if (docSnap.exists()) {
+                    console.log("Document exists in Firestore, merging data.");
+                } else {
+                    console.log("Document does not exist in Firestore, creating new.");
+                }
+
                 await setDoc(docRef, saveData, { merge: true });
                 localStorage.removeItem(pendingSyncKey);
-                console.log(`Data successfully saved to Firestore: ${currentYear}-${currentMonth}`);
+                console.log(`Data successfully saved/merged to Firestore for ${currentYear}-${currentMonth}`);
+                // showSaveNotification('Dáta synchronizované s cloudom.'); // Voliteľné
             } catch (error) {
                 console.error('Error saving to Firestore:', error);
                 showErrorNotification('Chyba pri ukladaní dát do cloudu: ' + error.message);
@@ -921,7 +930,7 @@
         const localKey = `workData-${currentYear}-${currentMonth}`;
         const localData = localStorage.getItem(localKey);
         console.log(`Loading from localStorage only for key: ${localKey}. Data found: ${!!localData}`);
-        parseAndApplyData(localData); // Táto funkcia už zahŕňa volanie calculateTotal()
+        parseAndApplyData(localData);
     }
 
     function parseAndApplyData(dataString) {
@@ -991,7 +1000,7 @@
                     }
                 }
             }
-            calculateTotal(); // Kľúčové: Prepočítaj súčty PO naplnení tabuľky
+            calculateTotal();
         } catch (error) {
             console.error('Chyba pri parsovaní alebo aplikovaní dát:', error, "Data string:", dataString);
             showErrorNotification('Chyba pri spracovaní uložených dát: ' + error.message);
@@ -1075,22 +1084,21 @@
 
     window.handleInput = function(input, nextId) {
         formatAndMoveNext(input, nextId);
-        calculateAndUpdateTotals(); // Toto volá calculateTotal() na konci
+        calculateAndUpdateTotals();
     }
     window.handleBreakInput = function(day) {
         const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`);
         calculateRow(day);
-        calculateAndUpdateTotals(); // Toto volá calculateTotal() na konci
+        calculateAndUpdateTotals();
     }
 
     function calculateAndUpdateTotals() {
-        // Zbieranie dát a ukladanie sa deje ako prvé
         const saveData = collectCurrentData();
         const localKey = `workData-${currentYear}-${currentMonth}`;
         localStorage.setItem(localKey, JSON.stringify(saveData));
+        console.log("Data saved to localStorage due to input/change:", JSON.parse(JSON.stringify(saveData)));
+        console.log("Calling debouncedSaveToFirestore from calculateAndUpdateTotals");
         debouncedSaveToFirestore();
-
-        // Až potom prepočítame a zobrazíme súčty na základe aktuálneho stavu UI
         calculateTotal();
     }
 
@@ -1120,7 +1128,7 @@
         }
 
         const day = parseInt(input.id.split('-')[3]);
-        calculateRow(day); // calculateRow aktualizuje len daný riadok
+        calculateRow(day);
         if (value.length === 5 && isValidTimeFormat(value)) {
              moveNext(input, nextId);
         }
@@ -1220,15 +1228,15 @@
         if(breakInput) breakInput.value = '';
         if(noteInput) noteInput.value = '';
 
-        calculateRow(day); // Prepočíta hodnoty v riadku na nuly
+        calculateRow(day);
 
         if (saveChanges) {
-            calculateAndUpdateTotals(); // Toto uloží zmeny a prepočíta celkové súčty
+            calculateAndUpdateTotals();
         }
     }
 
     function calculateTotal() {
-        console.log("Calculating totals..."); // Logovanie začiatku výpočtu
+        console.log("Calculating totals...");
         let totalMinutesPrecise = 0;
         let totalGrossSalaryPrecise = 0;
         let totalNetSalaryPrecise = 0;
@@ -1244,7 +1252,6 @@
             const netInput = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`);
 
             if (!startInput || !endInput || !breakInput || !noteInput || !grossInput || !netInput ) {
-                 // console.warn(`Skipping day ${i} in calculateTotal due to missing elements.`);
                  continue;
             }
 
@@ -1256,8 +1263,8 @@
             let dayMinutes = 0;
             let dayGrossSalary = 0;
             let dayNetSalary = 0;
-            let hasWorkRecord = false; // Či má deň pracovný záznam (čas alebo prestávka)
-            let hasNote = !!noteValue; // Či má deň poznámku
+            let hasWorkRecord = false;
+            let hasNote = !!noteValue;
 
             if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) {
                 const [startHours, startMinutes] = startTime.split(':').map(Number);
@@ -1275,18 +1282,17 @@
                     hasWorkRecord = true;
                 }
             }
-            if (breakTime > 0) { // Aj samotná prestávka je pracovný záznam pre účely započítania dňa
+            if (breakTime > 0) {
                 hasWorkRecord = true;
             }
 
             dayGrossSalary = parseFloat(grossInput.value) || 0;
             dayNetSalary = parseFloat(netInput.value) || 0;
 
-            // Deň sa započíta, ak má pracovný záznam (čas/prestávka) ALEBO poznámku
-            if (hasWorkRecord || hasNote) {
+            if (hasWorkRecord || hasNote) { // Ak má pracovný záznam ALEBO poznámku, započíta sa deň
                 daysWithEntries++;
             }
-
+            // Sčítavame vždy, aj keď nie je započítaný deň (napr. mzda bez času)
             totalMinutesPrecise += dayMinutes;
             totalGrossSalaryPrecise += dayGrossSalary;
             totalNetSalaryPrecise += dayNetSalary;
@@ -1312,7 +1318,7 @@
            Priem. čistá mzda/deň: ${averageNetSalaryPrecise.toFixed(decimalPlaces)} €<br>
            <strong>Priem. čas/deň: ${averageHours}h ${averageMinutes}m (${averageDecimalHoursPrecise.toFixed(decimalPlaces)} h)</strong>
          `;
-        console.log("Totals calculation finished. Days with entries:", daysWithEntries); // Logovanie konca
+        console.log("Totals calculation finished. Days with entries:", daysWithEntries);
      }
 
     function getMonthName(month) {
