@@ -4,16 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dochádzka</title>
+
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="icons/icon-192x192.png" type="image/png">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <meta name="theme-color" content="#5c67f2">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap&subset=latin-ext" rel="stylesheet">
+
   <style>
-    /* VŠETKY VAŠE CSS ŠTÝLY SEM - SKOPÍRUJTE ICH Z VAŠEJ FUNKČNEJ VERZIE */
+    /* VŠETKY VAŠE CSS ŠTÝLY ZOSTÁVAJÚ ROVNAKÉ - SKOPÍRUJTE ICH SEM Z VAŠEJ FUNKČNEJ VERZIE */
     body { font-family: 'Roboto', sans-serif; line-height: 1.6; margin: 0; padding: 10px; background-color: #f4f4f4; color: #333; font-size: 16px; }
     #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(244,244,244,0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; font-size: 1.2em; color: #555; text-align: center; }
     .container { max-width: 1200px; margin: auto; background: white; padding: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); position: relative; }
@@ -102,28 +105,8 @@
     let dbModule;  
 
     // --- DEFINÍCIE VŠETKÝCH FUNKCIÍ ---
-    // (Presuňte sem VŠETKY vaše definície funkcií z poslednej kompletnej verzie index.html)
-    // Začína funkciou isOnline() a končí funkciou syncWithFirebase()
-    // vrátane initializeAppState() a všetkých funkcií, ktoré sú priradené k window objektu.
-    // Nasleduje len ukážka, MUSÍTE DOPLNIŤ VŠETKY funkcie z predchádzajúceho kódu.
-    
     function isOnline() { return navigator.onLine; }
-    // ...
-    // ... (VŠETKY VAŠE FUNKCIE, vrátane initializeAppState)
-    // ...
-    // Napríklad:
     function getMonthName(monthIndex) { const months = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"]; return months[monthIndex] || ''; }
-    // ... až po
-    // async function syncWithFirebase() { /* ... */ }
-    // A TAKTIEŽ SEM VLOŽTE DEFINÍCIU:
-    // function initializeAppState() { /* ... */ }
-    // A POTOM AJ:
-    // window.login = async () => { /* ... */ };
-    // ... (všetky ostatné window.funkcia = funkcia; priradenia) ...
-
-    // --- SKOPÍRUJTE SEM VŠETKY FUNKCIE Z PREDCHÁDZAJÚCEJ ODPOVEDE (blok "DEFINÍCIE VŠETKÝCH FUNKCIÍ" a "Priradenie funkcií k window objektu") ---
-    // --- Toto je kľúčové pre odstránenie chyby "is not defined" ---
-    // --- SKOPÍROVANÝ BLOK ZAČÍNA TU ---
     function getDaysInMonth(month) { if (month === undefined || month === null || currentYear === undefined || currentYear === null) { console.warn("getDaysInMonth: Mesiac alebo rok nie sú definované!"); return new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate(); } return new Date(currentYear, month + 1, 0).getDate(); }
     function getDayName(year, month, day) { return new Date(year, month, day).toLocaleDateString('sk-SK', { weekday: 'short' }); }
     function isValidTimeFormat(timeString) { return /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeString); }
@@ -135,96 +118,115 @@
     const DB_NAME = 'DochadzkaDB'; const DB_VERSION = 1; const PENDING_STORE_NAME = 'pendingSyncs';
     function openDB() { return new Promise((resolve, reject) => { console.log(`[DB] Pokus o otvorenie DB: ${DB_NAME} v${DB_VERSION}`); const request = indexedDB.open(DB_NAME, DB_VERSION); request.onerror = (event) => { console.error("[DB] Chyba otvorenia IndexedDB:", event.target.error); reject("Chyba otvorenia IndexedDB: " + event.target.error); }; request.onsuccess = (event) => { console.log("[DB] IndexedDB úspešne otvorená."); resolve(event.target.result); }; request.onupgradeneeded = (event) => { console.log("[DB] onupgradeneeded - vytváram/aktualizujem object store."); const dbInstance = event.target.result; if (!dbInstance.objectStoreNames.contains(PENDING_STORE_NAME)) { const store = dbInstance.createObjectStore(PENDING_STORE_NAME, { keyPath: 'id', autoIncrement: true }); store.createIndex('userMonthYear', ['userId', 'year', 'month'], { unique: true }); console.log(`[DB] Object store '${PENDING_STORE_NAME}' s indexom 'userMonthYear' vytvorený.`); } else { console.log(`[DB] Object store '${PENDING_STORE_NAME}' už existuje.`); } }; }); }
     async function addPendingSync(data) { const db = await openDB(); const transaction = db.transaction(PENDING_STORE_NAME, 'readwrite'); const store = transaction.objectStore(PENDING_STORE_NAME); const index = store.index('userMonthYear'); const keyRange = IDBKeyRange.only([data.userId, data.year, data.month]); return new Promise((resolve, reject) => { let existingRecordKey = null; const cursorRequest = index.openKeyCursor(keyRange); cursorRequest.onsuccess = (event) => { const cursor = event.target.result; if (cursor) { existingRecordKey = cursor.primaryKey; console.log(`[DB] Nájdený existujúci pending sync (ID: ${existingRecordKey}) pre ${data.userId}/${data.year}-${data.month}. Bude prepísaný.`); proceedWithDeleteAndAdd(); return; } proceedWithAddOnly(); }; cursorRequest.onerror = (event) => { console.error("[DB] Chyba pri hľadaní existujúcich pending sync (openKeyCursor):", event.target.error, "Pokúšam sa pridať dáta:", JSON.stringify(data)); reject("Chyba hľadania v IDB: " + event.target.error); }; function proceedWithDeleteAndAdd() { const deleteRequest = store.delete(existingRecordKey); deleteRequest.onsuccess = () => { console.log(`[DB] Starý pending sync (ID: ${existingRecordKey}) vymazaný.`); proceedWithAddOnly(); }; deleteRequest.onerror = (e) => { console.error(`[DB] Chyba mazania starého pending sync (ID: ${existingRecordKey}):`, e.target.error); proceedWithAddOnly(); }; } function proceedWithAddOnly() { const requestAdd = store.add(data); requestAdd.onsuccess = () => { console.log(`[DB] ÚSPECH: Nový pending sync pridaný/aktualizovaný s ID: ${requestAdd.result} pre ${data.userId}/${data.year}-${data.month}. Dáta (začiatok):`, JSON.stringify(data.dataToSync.data.slice(0,1)) + "..."); resolve(requestAdd.result); }; requestAdd.onerror = (e) => { console.error("[DB] CHYBA: Chyba pridania pending sync:", e.target.error, "Pokúšal som sa pridať dáta (začiatok):", JSON.stringify(data).substring(0, 200) + "..."); reject("Chyba pridania pending sync: " + e.target.error); }; } transaction.oncomplete = () => console.log("[DB] Transakcia (addPendingSync) dokončená."); transaction.onerror = (e) => console.error("[DB] Chyba transakcie (addPendingSync):", e.target.error); }); }
-    async function clearPendingSyncForMonth(userId, year, month) { console.log(`[DB] Pokus o vymazanie pending sync pre ${userId}/${year}-${month}`); try { const db = await openDB(); const transaction = db.transaction(PENDING_STORE_NAME, 'readwrite'); const store = transaction.objectStore(PENDING_STORE_NAME); const index = store.index('userMonthYear'); const keyRange = IDBKeyRange.only([userId, year, month]); const cursorRequest = index.openKeyCursor(keyRange); cursorRequest.onsuccess = (event) => { const cursor = event.target.result; if (cursor) { console.log(`[DB] Vymazávam pending sync (ID: ${cursor.primaryKey}) pre ${userId}/${year}-${month}`); store.delete(cursor.primaryKey); cursor.continue(); } else { console.log(`[DB] Pre ${userId}/${year}-${month} neboli nájdené žiadne pending syncs na vymazanie.`); } }; cursorRequest.onerror = (event) => { console.error(`[DB] Chyba pri hľadaní/mazaní pending sync pre mesiac (${userId}/${year}-${month}):`, event.target.error); }; transaction.oncomplete = () => { console.log(`[DB] Transakcia pre vymazanie pending sync pre ${userId}/${year}-${month} dokončená.`); }; transaction.onerror = (event) => { console.error(`[DB] Chyba transakcie pri mazaní pending sync pre ${userId}/${year}-${month}:`, event.target.error); } } catch (error) { console.error(`[DB] Všeobecná chyba v clearPendingSyncForMonth pre ${userId}/${year}-${month}:`, error); } }
+    async function getAllPendingSyncsClient() { const db = await openDB(); return new Promise((resolve, reject) => { const transaction = db.transaction(PENDING_STORE_NAME, 'readonly'); const store = transaction.objectStore(PENDING_STORE_NAME); const request = store.getAll(); request.onsuccess = () => resolve(request.result || []); request.onerror = (event) => { console.error("[DB Klient] Chyba čítania všetkých pending syncs:", event.target.error); reject(event.target.error); }; });}
+    async function deletePendingSyncClient(id) { const db = await openDB(); return new Promise((resolve, reject) => { const transaction = db.transaction(PENDING_STORE_NAME, 'readwrite'); const store = transaction.objectStore(PENDING_STORE_NAME); const request = store.delete(id); request.onsuccess = () => resolve(); request.onerror = (event) => { console.error(`[DB Klient] Chyba mazania pending sync s ID ${id}:`, event.target.error); reject(event.target.error); }; });}
+    async function clearPendingSyncForMonth(userId, year, month) { console.log(`[DB] Pokus o vymazanie pending sync pre ${userId}/${year}-${month}`); try { const db = await openDB(); const transaction = db.transaction(PENDING_STORE_NAME, 'readwrite'); const store = transaction.objectStore(PENDING_STORE_NAME); const index = store.index('userMonthYear'); const keyRange = IDBKeyRange.only([userId, year, month]); const cursorRequest = index.openKeyCursor(keyRange); cursorRequest.onsuccess = (event) => { const cursor = event.target.result; if (cursor) { console.log(`[DB] Vymazávam pending sync (ID: ${cursor.primaryKey}) pre ${userId}/${year}-${month}`); store.delete(cursor.primaryKey); cursor.continue(); } else { console.log(`[DB] Pre ${userId}/${year}-${month} neboli nájdené žiadne pending syncs na vymazanie (clearPendingSyncForMonth).`); } }; cursorRequest.onerror = (event) => { console.error(`[DB] Chyba pri hľadaní/mazaní pending sync pre mesiac (${userId}/${year}-${month}):`, event.target.error); }; transaction.oncomplete = () => { console.log(`[DB] Transakcia pre vymazanie pending sync pre ${userId}/${year}-${month} dokončená.`); }; transaction.onerror = (event) => { console.error(`[DB] Chyba transakcie pri mazaní pending sync pre ${userId}/${year}-${month}:`, event.target.error); } } catch (error) { console.error(`[DB] Všeobecná chyba v clearPendingSyncForMonth pre ${userId}/${year}-${month}:`, error); } }
     function updateGreeting() { if(!mainTitleElement || !subTitleElement) {console.warn("updateGreeting: DOM elementy pre titulky nie sú pripravené."); return;} const nameToUse = employeeName || localStorage.getItem('employeeName') || ''; if (nameToUse) { mainTitleElement.textContent = `Vitaj späť ${nameToUse.split(' ')[0]} 👋`; } else { mainTitleElement.textContent = 'Dochádzka 👋'; } subTitleElement.textContent = `${getMonthName(currentMonth)} ${currentYear}`; }
     function populateYearSelect() { if(!yearSelect) {console.warn("populateYearSelect: yearSelect DOM element nie je pripravený."); return;} const startYear = 2020; const endYear = new Date().getFullYear() + 2; yearSelect.innerHTML = ''; for (let y = startYear; y <= endYear; y++) { const option = document.createElement('option'); option.value = y; option.textContent = y; yearSelect.appendChild(option); } yearSelect.value = currentYear; }
     function loadInitialSettings() { hourlyWage = parseFloat(localStorage.getItem('hourlyWage')) || 10; taxRate = (parseFloat(localStorage.getItem('taxRatePercent')) || 2) / 100; decimalPlaces = parseInt(localStorage.getItem('decimalPlaces')) || 2; employeeName = localStorage.getItem('employeeName') || ''; currentMonth = parseInt(localStorage.getItem('currentMonth')) || new Date().getMonth(); currentYear = parseInt(localStorage.getItem('currentYear')) || new Date().getFullYear(); if(monthSelect) monthSelect.value = currentMonth; if(yearSelect) yearSelect.value = currentYear; if(decimalPlacesSelect) decimalPlacesSelect.value = decimalPlaces; if(employeeNameInput) employeeNameInput.value = employeeName; if(hourlyWageInput) hourlyWageInput.value = hourlyWage.toFixed(1); if(taxRateInput) taxRateInput.value = (taxRate * 100).toFixed(1); updateGreeting(); }
     async function createUserCollection() { if (!authModule || !authModule.currentUser) {console.warn("createUserCollection: authModule alebo currentUser nie je definovaný."); return;} const uRef = doc(dbModule, 'users', authModule.currentUser.uid); try { await setDoc(uRef, { email: authModule.currentUser.email, createdAt: new Date() }, { merge: true }); const iRef = doc(collection(uRef, 'workDays'), 'initial_setup'); await setDoc(iRef, { setupComplete: true }); } catch (err) { console.error('Chyba vytvorenia user kolekcie:', err); } }
-    function _resetRowInternal(day, save = true, promptUser = true) { if (promptUser && !confirm("Naozaj chcete vynulovať údaje pre tento deň?")) return; const start = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`); const end = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`); const breakEl = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`); const noteEl = document.getElementById(`note-${currentYear}-${currentMonth}-${day}`); if(start) start.value = ''; if(end) end.value = ''; if(breakEl) breakEl.value = ''; if(noteEl) noteEl.value = ''; calculateRow(day); if (save && typeof window.calculateAndUpdateTotals === 'function') { window.calculateAndUpdateTotals(); } else if (save) { console.warn("calculateAndUpdateTotals nie je ešte definovaná na window objekte pri volaní z _resetRowInternal"); } }
     function calculateRow(day) { const startInput = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`); const endInput = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`); const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`); const totalCell = document.getElementById(`total-${currentYear}-${currentMonth}-${day}`); const grossInput = document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`); const netInput = document.getElementById(`net-${currentYear}-${currentMonth}-${day}`); if (!startInput || !endInput || !breakInput || !totalCell || !grossInput || !netInput) return; const startTime = startInput.value; const endTime = endInput.value; const breakTimeHours = parseFloat(breakInput.value) || 0; if (!isValidTimeFormat(startTime) || !isValidTimeFormat(endTime)) { totalCell.textContent = '-'; grossInput.value = ''; netInput.value = ''; return; } const [startHours, startMinutes] = startTime.split(':').map(Number); const [endHours, endMinutes] = endTime.split(':').map(Number); const startDate = new Date(2000, 0, 1, startHours, startMinutes); let endDate = new Date(2000, 0, 1, endHours, endMinutes); if (endDate < startDate) { endDate.setDate(endDate.getDate() + 1); } let diffMinutes = (endDate.getTime() - startDate.getTime()) / 60000; diffMinutes -= (breakTimeHours * 60); if (diffMinutes < 0) { diffMinutes = 0; } const decimalHours = diffMinutes / 60; const totalMinutesRounded = Math.round(diffMinutes); const hours = Math.floor(totalMinutesRounded / 60); const minutes = totalMinutesRounded % 60; totalCell.textContent = `${hours}h ${minutes}m (${decimalHours.toFixed(decimalPlaces)} h)`; const grossSalary = Math.max(0, decimalHours * hourlyWage); grossInput.value = grossSalary.toFixed(decimalPlaces); updateNetSalary(day); }
     function updateNetSalary(day) { const grossInput = document.getElementById(`gross-${currentYear}-${currentMonth}-${day}`); const netInput = document.getElementById(`net-${currentYear}-${currentMonth}-${day}`); if (!grossInput || !netInput) return; const grossSalary = parseFloat(grossInput.value) || 0; const netSalary = Math.max(0, grossSalary * (1 - taxRate)); netInput.value = netSalary.toFixed(decimalPlaces); }
+    function _resetRowInternal(day, save = true, promptUser = true) { if (promptUser && !confirm("Naozaj chcete vynulovať údaje pre tento deň?")) return; const start = document.getElementById(`start-${currentYear}-${currentMonth}-${day}`); const end = document.getElementById(`end-${currentYear}-${currentMonth}-${day}`); const breakEl = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`); const noteEl = document.getElementById(`note-${currentYear}-${currentMonth}-${day}`); if(start) start.value = ''; if(end) end.value = ''; if(breakEl) breakEl.value = ''; if(noteEl) noteEl.value = ''; calculateRow(day); if (save && typeof window.calculateAndUpdateTotals === 'function') { window.calculateAndUpdateTotals(); } else if (save) { console.warn("calculateAndUpdateTotals nie je ešte definovaná na window objekte pri volaní z _resetRowInternal"); } }
     function calculateTotal() { let totalMinutes = 0; let totalGross = 0; let totalNet = 0; let daysWorked = 0; const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { const start = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value; const end = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value; const breakTime = parseFloat(document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value) || 0; let dailyMinutes = 0; let dailyGross = 0; let dailyNet = 0; if (isValidTimeFormat(start) && isValidTimeFormat(end)) { const [sH, sM] = start.split(':').map(Number); const [eH, eM] = end.split(':').map(Number); const sDate = new Date(2000, 0, 1, sH, sM); let eDate = new Date(2000, 0, 1, eH, eM); if (eDate < sDate) { eDate.setDate(eDate.getDate() + 1); } let diffM = (eDate.getTime() - sDate.getTime()) / 60000 - (breakTime * 60); if (diffM < 0) diffM = 0; dailyMinutes = diffM; const dailyHours = dailyMinutes / 60; dailyGross = Math.max(0, dailyHours * hourlyWage); dailyNet = Math.max(0, dailyGross * (1 - taxRate)); daysWorked++; } totalMinutes += dailyMinutes; totalGross += dailyGross; totalNet += dailyNet; } const totalMinutesRounded = Math.round(totalMinutes); const totalHours = Math.floor(totalMinutesRounded / 60); const totalMinutesRemainder = totalMinutesRounded % 60; const totalDecimalHours = totalMinutes / 60; const avgNet = daysWorked > 0 ? totalNet / daysWorked : 0; const avgMinutes = daysWorked > 0 ? totalMinutes / daysWorked : 0; const avgMinutesRounded = Math.round(avgMinutes); const avgHours = Math.floor(avgMinutesRounded / 60); const avgMinsRemainder = avgMinutesRounded % 60; const avgDecimalHours = avgMinutes / 60; if (totalSalaryDiv) totalSalaryDiv.innerHTML = `Započítaných dní: ${daysWorked}<br>Celkový čas: ${totalHours}h ${totalMinutesRemainder}m (${totalDecimalHours.toFixed(decimalPlaces)} h)<br>Hrubá mzda: ${totalGross.toFixed(decimalPlaces)} €<br>Čistá mzda: ${totalNet.toFixed(decimalPlaces)} €<br>Priem. čistá mzda/deň: ${avgNet.toFixed(decimalPlaces)} €<br><strong>Priem. čas/deň: ${avgHours}h ${avgMinsRemainder}m (${avgDecimalHours.toFixed(decimalPlaces)} h)</strong>`; }
     function createTable() { console.log(`Vytváram tabuľku pre ${getMonthName(currentMonth)} ${currentYear}`); if (!workDaysTableBody) { console.error("CHYBA v createTable: Element tbody#workDays nebol nájdený!"); return; } workDaysTableBody.innerHTML = ''; const daysInMonth = getDaysInMonth(currentMonth); const todayFull = new Date(); const todayDate = todayFull.getDate(); const todayMonth = todayFull.getMonth(); const todayYear = todayFull.getFullYear(); for (let i = 1; i <= daysInMonth; i++) { const row = workDaysTableBody.insertRow(); if (i === todayDate && currentMonth === todayMonth && currentYear === todayYear) { row.classList.add('current-day'); } const dayName = getDayName(currentYear, currentMonth, i); const ids = { start: `start-${currentYear}-${currentMonth}-${i}`, end: `end-${currentYear}-${currentMonth}-${i}`, break: `break-${currentYear}-${currentMonth}-${i}`, note: `note-${currentYear}-${currentMonth}-${i}`, total: `total-${currentYear}-${currentMonth}-${i}`, gross: `gross-${currentYear}-${currentMonth}-${i}`, net: `net-${currentYear}-${currentMonth}-${i}` }; row.innerHTML = `<td>${i}. ${dayName}</td><td><div class="time-input-wrapper"><input type="tel" id="${ids.start}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="window.handleInput(this, '${ids.end}')"><span class="clock-icon" onclick="window.insertCurrentTime('${ids.start}')" title="Vložiť aktuálny čas">🕒</span></div></td><td><div class="time-input-wrapper"><input type="tel" id="${ids.end}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" oninput="window.handleInput(this, '${ids.break}')"><span class="clock-icon" onclick="window.insertCurrentTime('${ids.end}')" title="Vložiť aktuálny čas">🕒</span></div></td><td><input type="number" id="${ids.break}" min="0" step="0.5" placeholder="hod." oninput="window.handleBreakInput(${i})"></td><td id="${ids.total}">-</td><td><textarea id="${ids.note}" placeholder="Poznámka" oninput="window.calculateAndUpdateTotals()" rows="1"></textarea></td><td><input type="number" id="${ids.gross}" readonly></td><td><input type="number" id="${ids.net}" readonly></td><td><button class="btn reset-btn" onclick="window.resetRow(${i})">X</button></td>`; } }
     function formatAndMoveNext(input, nextId) { let value = input.value.replace(/[^\d:]/g, ''); let originalValue = input.value; let cursorPos = input.selectionStart; if (value.length === 2 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) { value += ':'; } else if (value.length === 4 && !value.includes(':')) { value = `${value.substring(0, 2)}:${value.substring(2)}`; } else if (value.length === 3 && !value.includes(':') && value.length > originalValue.replace(/[^\d]/g, '').length) { value = `${value.substring(0, 2)}:${value.substring(2)}`; } value = value.replace(/^:/, ''); if ((value.match(/:/g) || []).length > 1) { const parts = value.split(':'); value = `${parts[0]}:${parts.slice(1).join('')}`; } if (value.length > 5) { value = value.slice(0, 5); } if (input.value !== value) { input.value = value; try { if (value.length === 3 && originalValue.length === 2 && value.endsWith(':')) { input.setSelectionRange(3, 3); } else { input.setSelectionRange(cursorPos, cursorPos); } } catch (e) { /*ignore*/ } } const day = parseInt(input.id.split('-')[3]); calculateRow(day); if (value.length === 5 && isValidTimeFormat(value)) { if (nextId) { moveNext(input, nextId); } } }
     function moveNext(currentElement, nextInputId) { const nextElement = document.getElementById(nextInputId); if (nextElement) { nextElement.focus(); if (nextElement.tagName === 'INPUT' && nextElement.type === 'tel') { nextElement.select(); } } }
     function parseAndApplyData(dataString) { try { const sData = JSON.parse(dataString); console.log("parseAndApplyData - prijaté dáta:", sData); hourlyWage = parseFloat(sData.hourlyWage) ?? hourlyWage; employeeName = String(sData.employeeName) ?? employeeName; decimalPlaces = parseInt(sData.decimalPlaces) ?? decimalPlaces; let loadedTaxRate = sData.taxRate; if (loadedTaxRate !== undefined && loadedTaxRate !== null) { taxRate = parseFloat(loadedTaxRate); } if(hourlyWageInput) hourlyWageInput.value = hourlyWage.toFixed(1); if(taxRateInput) taxRateInput.value = (taxRate * 100).toFixed(1); if(employeeNameInput) employeeNameInput.value = employeeName; if(decimalPlacesSelect) decimalPlacesSelect.value = decimalPlaces; localStorage.setItem('hourlyWage', hourlyWage.toString()); localStorage.setItem('taxRatePercent', (taxRate * 100).toFixed(1)); localStorage.setItem('employeeName', employeeName); localStorage.setItem('decimalPlaces', decimalPlaces.toString()); updateGreeting(); if (workDaysTableBody && !workDaysTableBody.hasChildNodes()) { console.warn("parseAndApplyData: Tabuľka nebola inicializovaná, vytváram ju."); createTable(); } const daysInMonth = getDaysInMonth(currentMonth); if (sData.data && Array.isArray(sData.data)) { const daysToProcess = Math.min(daysInMonth, sData.data.length); for (let i = 0; i < daysToProcess; i++) { const dayData = sData.data[i]; const dayIndex = i + 1; const startEl = document.getElementById(`start-${currentYear}-${currentMonth}-${dayIndex}`); const endEl = document.getElementById(`end-${currentYear}-${currentMonth}-${dayIndex}`); const breakEl = document.getElementById(`break-${currentYear}-${currentMonth}-${dayIndex}`); const noteEl = document.getElementById(`note-${currentYear}-${currentMonth}-${dayIndex}`); if (startEl && endEl && breakEl) { startEl.value = dayData.start || ''; endEl.value = dayData.end || ''; breakEl.value = dayData.breakTime || ''; if (noteEl) noteEl.value = dayData.note || ''; calculateRow(dayIndex); } } for (let i = daysToProcess + 1; i <= daysInMonth; i++) { if (document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) { _resetRowInternal(i, false, false); } } } else { console.log("parseAndApplyData: V dátach nie sú žiadne záznamy pre dni, resetujem tabuľku."); for (let i = 1; i <= daysInMonth; i++) { if (document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) { _resetRowInternal(i, false, false); } } } calculateTotal(); } catch (err) { showErrorNotification(`Chyba spracovania prijatých dát: ${err.message}`); console.error("Chyba v parseAndApplyData:", err, "Data string:", dataString); loadInitialSettings(); if (workDaysTableBody && workDaysTableBody.hasChildNodes()) { const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { if (document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) { _resetRowInternal(i, false, false); } } } else if (workDaysTableBody) { createTable(); } calculateTotal(); } }
     function loadFromLocalStorageOnly() { const localKey = `workData-${currentYear}-${currentMonth}`; const localData = localStorage.getItem(localKey); if (workDaysTableBody && !workDaysTableBody.hasChildNodes()) { createTable(); } if (localData) { console.log(`Načítavam dáta z lokálneho úložiska (workData) pre ${getMonthName(currentMonth)} ${currentYear}.`); parseAndApplyData(localData); } else { console.log(`V lokálnom úložisku (workData) sa nenašli žiadne dáta pre ${getMonthName(currentMonth)} ${currentYear}. Resetujem UI.`); const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { if (document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) { _resetRowInternal(i, false, false); } } calculateTotal(); } }
-    async function setupFirestoreListener() { if (firestoreListenerUnsubscribe) { console.log('Odhlasujem existujúci Firestore listener.'); firestoreListenerUnsubscribe(); firestoreListenerUnsubscribe = null; } if (!currentUser) { console.log('Nie je prihlásený používateľ, Firestore listener sa nenastavuje.'); loadFromLocalStorageOnly(); if (loaderElement) loaderElement.style.display = 'none'; return; } if (!isOnline()) { console.log('Aplikácia je offline, Firestore listener sa nenastavuje. Zobrazujem lokálne dáta.'); loadFromLocalStorageOnly(); showStatusNotification('Ste offline. Dáta sa zosynchronizujú po pripojení, ak sú nejaké čakajúce.', '#ffc107', 5000); if (loaderElement) loaderElement.style.display = 'none'; return; } const docPath = `users/${currentUser.uid}/workDays/${currentYear}-${currentMonth}`; const docRef = doc(dbModule, 'users', currentUser.uid, 'workDays', `${currentYear}-${currentMonth}`); console.log(`Nastavujem Firestore listener pre: ${docPath} (UID: ${currentUser.uid})`); if (workDaysTableBody && !workDaysTableBody.hasChildNodes()) { console.log("Tabuľka je prázdna, vytváram štruktúru pred nastavením listenera."); createTable(); } if (loaderElement) loaderElement.style.display = 'flex'; firestoreListenerUnsubscribe = onSnapshot(docRef, (docSnap) => { if (loaderElement) loaderElement.style.display = 'none'; console.log(`Firestore listener (${docRef.path}): Prijaté dáta pre:`, docSnap.id, '| Pending writes:', docSnap.metadata.hasPendingWrites); const currentLocalDataKey = `workData-${currentYear}-${currentMonth}`; if (docSnap.exists()) { const serverData = docSnap.data(); const serverDataString = JSON.stringify(serverData); console.log(`Firestore listener (${docRef.path}): Dokument existuje, aplikujem dáta.`); localStorage.setItem(currentLocalDataKey, serverDataString); parseAndApplyData(serverDataString); if (currentUser) { clearPendingSyncForMonth(currentUser.uid, currentYear, currentMonth).catch(err => console.error("Chyba pri čistení pending sync z listenera:", err)); } if (!docSnap.metadata.hasPendingWrites) { console.log(`Firestore listener (${docRef.path}): Dáta automaticky aktualizované zo servera.`); } } else { console.log(`Firestore listener (${docRef.path}): Dokument neexistuje. Čistím lokálne dáta.`); localStorage.removeItem(currentLocalDataKey); if (workDaysTableBody) { const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { if (document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) { _resetRowInternal(i, false, false); } } } loadInitialSettings(); calculateTotal(); updateGreeting(); if (!docSnap.metadata.hasPendingWrites) { showErrorNotification('Dáta pre tento mesiac boli na serveri odstránené alebo neexistujú.'); } } }, (error) => { if (loaderElement) loaderElement.style.display = 'none'; console.error(`Chyba vo Firestore listeneri (${docRef.path}): `, error); showErrorNotification(`Chyba pri počúvaní zmien z Firebase: ${error.message}`); if (firestoreListenerUnsubscribe) { firestoreListenerUnsubscribe(); firestoreListenerUnsubscribe = null; } loadFromLocalStorageOnly(); }); }
+    async function setupFirestoreListener() { if (firestoreListenerUnsubscribe) { console.log('Odhlasujem existujúci Firestore listener.'); firestoreListenerUnsubscribe(); firestoreListenerUnsubscribe = null; } if (!currentUser) { console.log('Nie je prihlásený používateľ, Firestore listener sa nenastavuje.'); loadFromLocalStorageOnly(); attemptClientSideSync(); // Aj pre neprihláseného, ak by boli dáta iného usera v IDB (aj keď by sa nemali synchronizovať) if (loaderElement) loaderElement.style.display = 'none'; return; } if (!isOnline()) { console.log('Aplikácia je offline, Firestore listener sa nenastavuje. Zobrazujem lokálne dáta.'); loadFromLocalStorageOnly(); showStatusNotification('Ste offline. Dáta sa zosynchronizujú po pripojení a otvorení aplikácie.', '#ffc107', 5000); if (loaderElement) loaderElement.style.display = 'none'; return; } const docPath = `users/${currentUser.uid}/workDays/${currentYear}-${currentMonth}`; const docRef = doc(dbModule, 'users', currentUser.uid, 'workDays', `${currentYear}-${currentMonth}`); console.log(`Nastavujem Firestore listener pre: ${docPath} (UID: ${currentUser.uid})`); if (workDaysTableBody && !workDaysTableBody.hasChildNodes()) { console.log("Tabuľka je prázdna, vytváram štruktúru pred nastavením listenera."); createTable(); } if (loaderElement) loaderElement.style.display = 'flex'; firestoreListenerUnsubscribe = onSnapshot(docRef, (docSnap) => { if (loaderElement) loaderElement.style.display = 'none'; console.log(`Firestore listener (${docRef.path}): Prijaté dáta pre:`, docSnap.id, '| Pending writes:', docSnap.metadata.hasPendingWrites); const currentLocalDataKey = `workData-${currentYear}-${currentMonth}`; if (docSnap.exists()) { const serverData = docSnap.data(); const serverDataString = JSON.stringify(serverData); console.log(`Firestore listener (${docRef.path}): Dokument existuje, aplikujem dáta.`); localStorage.setItem(currentLocalDataKey, serverDataString); parseAndApplyData(serverDataString); if (currentUser) { clearPendingSyncForMonth(currentUser.uid, currentYear, currentMonth).catch(err => console.error("Chyba pri čistení pending sync z listenera:", err)); } if (!docSnap.metadata.hasPendingWrites) { console.log(`Firestore listener (${docRef.path}): Dáta automaticky aktualizované zo servera.`); } } else { console.log(`Firestore listener (${docRef.path}): Dokument neexistuje. Čistím lokálne dáta.`); localStorage.removeItem(currentLocalDataKey); if (workDaysTableBody) { const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { if (document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)) { _resetRowInternal(i, false, false); } } } loadInitialSettings(); calculateTotal(); updateGreeting(); if (!docSnap.metadata.hasPendingWrites) { showErrorNotification('Dáta pre tento mesiac boli na serveri odstránené alebo neexistujú.'); } } }, (error) => { if (loaderElement) loaderElement.style.display = 'none'; console.error(`Chyba vo Firestore listeneri (${docRef.path}): `, error); showErrorNotification(`Chyba pri počúvaní zmien z Firebase: ${error.message}`); if (firestoreListenerUnsubscribe) { firestoreListenerUnsubscribe(); firestoreListenerUnsubscribe = null; } loadFromLocalStorageOnly(); }); }
     function collectCurrentData() { const sData = { data: [], hourlyWage: parseFloat(hourlyWage), taxRate: parseFloat(taxRate), employeeName: String(employeeName), decimalPlaces: parseInt(decimalPlaces), lastUpdated: new Date().toISOString() }; const daysInMonth = getDaysInMonth(currentMonth); for (let i = 1; i <= daysInMonth; i++) { const s = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value || ''; const e = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value || ''; const b = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value || ''; const note = document.getElementById(`note-${currentYear}-${currentMonth}-${i}`)?.value || ''; const g = document.getElementById(`gross-${currentYear}-${currentMonth}-${i}`)?.value || '0'; const n = document.getElementById(`net-${currentYear}-${currentMonth}-${i}`)?.value || '0'; sData.data.push({ start: s, end: e, breakTime: b, note: note, gross: g, net: n }); } return sData; }
-    async function saveToFirestore() { const saveDataFromUI = collectCurrentData(); const localWorkDataKey = `workData-${currentYear}-${currentMonth}`; localStorage.setItem(localWorkDataKey, JSON.stringify(saveDataFromUI)); if (!currentUser) { console.log('Používateľ nie je prihlásený. Dáta uložené iba lokálne (workData). Synchronizácia preskočená.'); return; } if (!isOnline()) { console.log('Aplikácia je offline. Ukladám dáta do IndexedDB pre synchronizáciu na pozadí.'); try { const pendingData = { userId: currentUser.uid, year: currentYear, month: currentMonth, dataToSync: saveDataFromUI }; await addPendingSync(pendingData); showErrorNotification('Ste offline. Dáta uložené lokálne, zosynchronizujú sa po pripojení.'); if ('serviceWorker' in navigator && 'SyncManager' in window) { navigator.serviceWorker.ready.then(swReg => swReg.sync.register('sync-pending-data-idb')) .then(() => console.log('Background sync (IDB) zaregistrovaný.')) .catch(err => console.error('Chyba registrácie background sync (IDB):', err)); } } catch (error) { console.error("Chyba pri ukladaní do IndexedDB:", error); showErrorNotification("Chyba pri lokálnom ukladaní dát pre offline synchronizáciu."); } return; } try { console.log(`Ukladám dáta do Firestore pre ${currentUser.uid}/${currentYear}-${currentMonth}`); const docRef = doc(dbModule, 'users', currentUser.uid, 'workDays', `${currentYear}-${currentMonth}`); await setDoc(docRef, saveDataFromUI, { merge: true }); await clearPendingSyncForMonth(currentUser.uid, currentYear, currentMonth); showSaveNotification('Dáta úspešne zosynchronizované s Firebase.'); } catch (err) { showErrorNotification(`Chyba ukladania do Firebase: ${err.message}. Dáta uložené lokálne.`); try { const pendingData = { userId: currentUser.uid, year: currentYear, month: currentMonth, dataToSync: saveDataFromUI }; await addPendingSync(pendingData); if ('serviceWorker' in navigator && 'SyncManager' in window) { navigator.serviceWorker.ready.then(swReg => swReg.sync.register('sync-pending-data-idb')) .catch(syncErr => console.error('Chyba registrácie background sync (IDB) po chybe ukladania:', syncErr)); } } catch (idbError) { console.error("Chyba pri ukladaní do IndexedDB po neúspešnom online zápise:", idbError); } } }
+    
+    async function saveToFirestore() {
+        const saveDataFromUI = collectCurrentData();
+        const localWorkDataKey = `workData-${currentYear}-${currentMonth}`;
+        localStorage.setItem(localWorkDataKey, JSON.stringify(saveDataFromUI)); 
+
+        if (!currentUser) {
+            console.log('Používateľ nie je prihlásený. Dáta uložené iba lokálne (workData).');
+            return;
+        }
+
+        if (!isOnline()) {
+            console.log('Klient: Aplikácia je offline. Ukladám dáta do IndexedDB pre neskoršiu synchronizáciu.');
+            try {
+                const pendingData = { 
+                    userId: currentUser.uid, 
+                    year: currentYear, 
+                    month: currentMonth, 
+                    dataToSync: saveDataFromUI
+                };
+                await addPendingSync(pendingData);
+                showErrorNotification('Ste offline. Dáta uložené lokálne, zosynchronizujú sa po pripojení a otvorení aplikácie.');
+                // ODSTRÁNENÁ REGISTRÁCIA Background Sync tagu
+            } catch (error) {
+                console.error("Klient: Chyba pri ukladaní do IndexedDB (offline):", error);
+                showErrorNotification("Chyba pri lokálnom ukladaní dát.");
+            }
+            return;
+        }
+
+        try {
+            console.log(`Klient ONLINE: Ukladám dáta priamo do Firestore pre ${currentUser.uid}/${currentYear}-${currentMonth}`);
+            const docRef = doc(dbModule, 'users', currentUser.uid, 'workDays', `${currentYear}-${currentMonth}`);
+            await setDoc(docRef, saveDataFromUI, { merge: true });
+            await clearPendingSyncForMonth(currentUser.uid, currentYear, currentMonth); // Vyčistí IDB, ak tam niečo bolo
+            showSaveNotification('Dáta úspešne zosynchronizované s Firebase.');
+        } catch (err) {
+            showErrorNotification(`Klient: Chyba priamom ukladaní do Firebase: ${err.message}. Dáta uložené lokálne (IDB).`);
+            console.error("Klient: Chyba priamom ukladaní do Firebase, ukladám do IDB:", err);
+            try {
+                const pendingData = { userId: currentUser.uid, year: currentYear, month: currentMonth, dataToSync: saveDataFromUI };
+                await addPendingSync(pendingData);
+            } catch (idbError) {
+                console.error("Klient: Chyba pri ukladaní do IndexedDB po neúspešnom online zápise:", idbError);
+            }
+        }
+    }
     const debouncedSaveToFirestore = debounce(saveToFirestore, 1500);
-    async function syncWithFirebase() { if (!currentUser || !isOnline()) { return; } console.warn("Funkcia syncWithFirebase (klient) je stále prítomná, ale pre IndexedDB by mal primárne fungovať Service Worker a jeho 'sync' event. Zvážte jej úpravu alebo odstránenie, ak SW funguje spoľahlivo."); }
+
+    async function attemptClientSideSync() {
+        if (!isOnline() || !currentUser || !dbModule) {
+            console.log("Klient: Nie je online, nie je prihlásený používateľ alebo dbModule nie je pripravený. Synchronizácia z IDB sa nekoná.");
+            return;
+        }
+        console.log("Klient: Pokus o synchronizáciu čakajúcich dát z IndexedDB...");
+        try {
+            const itemsToSync = await getAllPendingSyncsClient();
+            if (itemsToSync && itemsToSync.length > 0) {
+                showStatusNotification(`Synchronizujem ${itemsToSync.length} offline záznamov...`, '#007bff', 5000);
+                let allSucceeded = true;
+                let itemsProcessed = 0;
+                for (const item of itemsToSync) {
+                    if (!item || !item.userId || item.year === undefined || item.month === undefined || !item.dataToSync) { console.warn("Klient: Chybný item v IDB, preskakujem a mažem:", item); if (item && item.id) await deletePendingSyncClient(item.id); continue; }
+                    if (item.userId !== currentUser.uid) { console.warn(`Klient: Preskakujem item pre iného používateľa (IDB: ${item.userId}, Aktuálny: ${currentUser.uid})`); continue; }
+                    console.log(`Klient: Synchronizujem item ID ${item.id} pre ${item.userId}/${item.year}-${item.month}`);
+                    try {
+                        const docRef = doc(dbModule, 'users', item.userId, 'workDays', `${item.year}-${item.month}`);
+                        await setDoc(docRef, item.dataToSync, { merge: true });
+                        console.log(`Klient: Item ID ${item.id} úspešne zosynchronizovaný.`);
+                        await deletePendingSyncClient(item.id); itemsProcessed++;
+                    } catch (error) { console.error(`Klient: Chyba pri synchronizácii itemu ID ${item.id}:`, error); allSucceeded = false; }
+                }
+                if (itemsProcessed > 0 && allSucceeded) { showSaveNotification(`${itemsProcessed} offline záznamov bolo úspešne zosynchronizovaných.`); } 
+                else if (itemsProcessed > 0 && !allSucceeded) { showErrorNotification("Niektoré offline dáta sa nepodarilo zosynchronizovať. Skontrolujte konzolu."); }
+                else if (itemsToSync.length > 0 && itemsProcessed === 0 && !allSucceeded){ showErrorNotification("Žiadne offline dáta sa nepodarilo zosynchronizovať kvôli chybám.");}
+            } else { console.log("Klient: Žiadne dáta na synchronizáciu v IndexedDB."); }
+        } catch (error) { console.error("Klient: Všeobecná chyba pri pokuse o synchronizáciu z IDB:", error); showErrorNotification("Nastala chyba počas synchronizácie offline dát."); }
+    }
     // --- Koniec bloku funkcií ---
 
     // --- Hlavná inicializačná funkcia aplikácie ---
-    function initializeAppState() {
-        console.log("Spúšťam initializeAppState...");
-        // Priradenie DOM elementov sa už stalo v DOMContentLoaded
-
-        if (!loaderElement || !workDaysTableBody || !mainContainerElement ) {
-            console.error("KRITICKÁ CHYBA: Základné DOM elementy neboli priradené PRED initializeAppState!");
-            if (loaderElement) loaderElement.innerHTML = "Chyba UI elementov!";
-            return; 
-        }
-        if (!authModule || !dbModule) {
-            console.error("KRITICKÁ CHYBA: Firebase moduly (authModule, dbModule) nie sú inicializované PRED initializeAppState!");
-            if (loaderElement) loaderElement.innerHTML = "Chyba inicializácie Firebase služieb!";
-            return;
-        }
-        
-        console.log("Zobrazujem loader na začiatku initializeAppState.");
-        loaderElement.style.display = 'flex';
-        
-        populateYearSelect();
-        loadInitialSettings();
-
-        console.log("Nastavujem onAuthStateChanged listener. authModule je:", authModule ? "OK" : "NEDEFINOVANÝ!");
-        onAuthStateChanged(authModule, (user) => {
-            console.log("onAuthStateChanged - stav používateľa:", user ? user.uid : 'žiadny používateľ');
-            currentUser = user;
-
-            if (loginFormElement) loginFormElement.style.display = currentUser ? 'none' : 'flex';
-            if (userInfoElement) userInfoElement.style.display = currentUser ? 'flex' : 'none';
-            if (userEmailElement) userEmailElement.textContent = currentUser ? `Prihlásený: ${currentUser.email}` : '';
-
-            if (workDaysTableBody) { 
-                 workDaysTableBody.innerHTML = ''; 
-                 createTable(); 
-            } else {
-                 console.error("CHYBA v onAuthStateChanged: workDaysTableBody je stále null!");
-            }
-
-            if (currentUser) {
-                console.log("Používateľ je prihlásený, nastavujem Firestore listener.");
-                setupFirestoreListener();
-            } else {
-                if (firestoreListenerUnsubscribe) {
-                    console.log('Používateľ nie je prihlásený / odhlásil sa, odhlasujem Firestore listener.');
-                    firestoreListenerUnsubscribe();
-                    firestoreListenerUnsubscribe = null;
-                }
-                console.log("Používateľ nie je prihlásený, načítavam z localStorageOnly.");
-                loadFromLocalStorageOnly();
-                if (!isOnline()) {
-                     showErrorNotification('Ste offline. Niektoré funkcie môžu byť obmedzené.');
-                }
-                if (loaderElement) {
-                    console.log("Skrývam loader (žiadny používateľ, listener sa nenastavuje).");
-                    loaderElement.style.display = 'none';
-                }
-            }
-            updateGreeting();
-            if (mainContainerElement) mainContainerElement.style.display = 'block';
-        });
-    }
+    // (Definícia initializeAppState je už vyššie)
     
-    // --- Priradenie funkcií k window objektu (MUSÍ BYŤ PO ICH DEFINÍCII) ---
+    // --- Priradenie funkcií k window objektu ---
+    // (Všetky window.X = Y priradenia sem)
     window.login = async () => { if (!authModule) { console.error("Login: authModule nie je inicializované!"); return; } if (!isOnline()) return showErrorNotification('Ste offline.'); const e = document.getElementById('email').value, p = document.getElementById('password').value; if (!e || !p) return showErrorNotification('Zadajte email a heslo.'); try { await signInWithEmailAndPassword(authModule, e, p); } catch (err) { showErrorNotification(`Chyba prihlásenia: ${mapFirebaseAuthError(err.code)}`); } };
     window.register = async () => { if (!authModule) { console.error("Register: authModule nie je inicializované!"); return; } if (!isOnline()) return showErrorNotification('Ste offline.'); const e = document.getElementById('email').value, p = document.getElementById('password').value; if (!e || !p) return showErrorNotification('Zadajte email a heslo.'); if (p.length < 6) return showErrorNotification('Heslo musí mať aspoň 6 znakov.'); try { await createUserWithEmailAndPassword(authModule, e, p); await createUserCollection(); } catch (err) { showErrorNotification(`Chyba registrácie: ${mapFirebaseAuthError(err.code)}`); } };
     window.logout = async () => { if (!authModule) { console.error("Logout: authModule nie je inicializované!"); return; } if (!confirm("Ste si istí, že sa chcete odhlásiť?")) return; if (firestoreListenerUnsubscribe) { console.log('Odhlasujem Firestore listener pri odhlásení používateľa.'); firestoreListenerUnsubscribe(); firestoreListenerUnsubscribe = null; } try { await signOut(authModule); currentUser = null; if (workDaysTableBody) workDaysTableBody.innerHTML = ''; createTable(); loadInitialSettings(); calculateTotal(); updateGreeting(); if(loginFormElement) loginFormElement.style.display = 'flex'; if(userInfoElement) userInfoElement.style.display = 'none'; if(userEmailElement) userEmailElement.textContent = ''; } catch (err) { showErrorNotification(`Chyba odhlásenia: ${err.message}`); } };
     window.resetPassword = async () => { if (!authModule) { console.error("ResetPassword: authModule nie je inicializované!"); return; } if (!isOnline()) return showErrorNotification('Ste offline.'); const eInput = document.getElementById('email'), email = eInput.value; if (!email) { if(eInput) eInput.style.border = '1px solid red'; setTimeout(() => { if(eInput) eInput.style.border = '1px solid #ccc'; }, 3000); return showErrorNotification('Zadajte email.'); } if(eInput) eInput.style.border = '1px solid #ccc'; try { await sendPasswordResetEmail(authModule, email); showSaveNotification(`Email na obnovu hesla bol odoslaný na ${email}.`); } catch (err) { showErrorNotification(`Chyba obnovy hesla: ${mapFirebaseAuthError(err.code)}`); } };
-    window.changeMonth = () => { currentMonth = parseInt(monthSelect.value); localStorage.setItem('currentMonth', currentMonth.toString()); if (workDaysTableBody) workDaysTableBody.innerHTML = ''; createTable(); setupFirestoreListener(); updateGreeting(); };
-    window.changeYear = () => { currentYear = parseInt(yearSelect.value); localStorage.setItem('currentYear', currentYear.toString()); if (workDaysTableBody) workDaysTableBody.innerHTML = ''; createTable(); setupFirestoreListener(); updateGreeting(); };
+    window.changeMonth = () => { currentMonth = parseInt(monthSelect.value); localStorage.setItem('currentMonth', currentMonth.toString()); if (workDaysTableBody) workDaysTableBody.innerHTML = ''; createTable(); setupFirestoreListener(); updateGreeting(); attemptClientSideSync(); };
+    window.changeYear = () => { currentYear = parseInt(yearSelect.value); localStorage.setItem('currentYear', currentYear.toString()); if (workDaysTableBody) workDaysTableBody.innerHTML = ''; createTable(); setupFirestoreListener(); updateGreeting(); attemptClientSideSync(); };
     window.insertCurrentTime = (inputId) => { const inputElement = document.getElementById(inputId); if (inputElement) { const now = new Date(); const hours = String(now.getHours()).padStart(2, '0'); const minutes = String(now.getMinutes()).padStart(2, '0'); inputElement.value = `${hours}:${minutes}`; window.handleInput(inputElement, ''); } };
     window.handleInput = (input, nextId) => { formatAndMoveNext(input, nextId); window.calculateAndUpdateTotals(); };
     window.handleBreakInput = (day) => { const breakInput = document.getElementById(`break-${currentYear}-${currentMonth}-${day}`); if (breakInput) { let breakValue = parseFloat(breakInput.value); if (isNaN(breakValue) || breakValue < 0) { breakInput.value = ''; } } calculateRow(day); window.calculateAndUpdateTotals(); };
@@ -277,20 +279,20 @@
         
         try {
             // Firebase Inicializácia
-            const firebaseConfigLocal = { /* ... VAŠA KONFIGURÁCIA ... */ 
-                apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // NAHRAĎTE
-                authDomain: "uuuuu-f7ef9.firebaseapp.com",     // NAHRAĎTE
-                projectId: "uuuuu-f7ef9",               // NAHRAĎTE
-                storageBucket: "uuuuu-f7ef9.appspot.com",  // NAHRAĎTE
-                messagingSenderId: "456105865458",         // NAHRAĎTE
-                appId: "1:456105865458:web:101f0a4dcb455f174b606b", // NAHRAĎTE
+            const firebaseConfigLocal = { // NAHRAĎTE VAŠIMI ÚDAJMI
+                apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
+                authDomain: "uuuuu-f7ef9.firebaseapp.com",
+                projectId: "uuuuu-f7ef9",
+                storageBucket: "uuuuu-f7ef9.appspot.com",
+                messagingSenderId: "456105865458",
+                appId: "1:456105865458:web:101f0a4dcb455f174b606b",
             };
             app = initializeApp(firebaseConfigLocal);
             authModule = getAuth(app); 
             dbModule = getFirestore(app); 
             console.log("Firebase app, authModule, dbModule inicializované v DOMContentLoaded. authModule je:", authModule ? "OK" : "NEDEFINOVANÝ!");
 
-            if (!authModule || !dbModule) { 
+            if (!authModule || !dbModule) {
                  throw new Error("Firebase authModule alebo dbModule sa nepodarilo správne inicializovať.");
             }
 
@@ -300,7 +302,7 @@
             });
             console.log("Firebase App Check inicializácia zavolaná (asynchrónne na pozadí) v DOMContentLoaded.");
 
-            initializeAppState(); // Volanie hlavnej logiky aplikácie
+            initializeAppState(); // Toto je teraz definované vyššie
 
         } catch (error) {
             console.error("KRITICKÁ CHYBA počas inicializácie Firebase v DOMContentLoaded:", error);
@@ -322,7 +324,6 @@
                     }
                 });
             }
-
             if (navigator.serviceWorker.controller) {
                 setupMessageListener();
             } else {
@@ -334,15 +335,13 @@
             }
         }
 
-        setTimeout(() => { 
-            if (loaderElement && getComputedStyle(loaderElement).display !== 'none' && !loaderElement.textContent.startsWith("Chyba")) { 
-                console.warn("Fallback Timeout: Loader bol stále viditeľný po 7 sekundách (a nie je chyba Firebase), nútene skrývam a zobrazujem kontajner.");
-                loaderElement.style.display = 'none'; 
-                if (mainContainerElement) mainContainerElement.style.display = 'block'; 
-            } else if (loaderElement && getComputedStyle(loaderElement).display !== 'none' && loaderElement.textContent.startsWith("Chyba")) {
-                console.warn("Fallback Timeout: Loader zobrazuje chybu, nechávam ho viditeľný.");
-            }
-        }, 7000);
+        // Listener pre online stav na spustenie klientskej synchronizácie
+        window.addEventListener('online', () => {
+            console.log("Klient: Zistené online pripojenie. Pokus o synchronizáciu offline dát.");
+            attemptClientSideSync();
+        });
+        
+        setTimeout(() => { if (loaderElement && getComputedStyle(loaderElement).display !== 'none' && !loaderElement.textContent.startsWith("Chyba")) { console.warn("Fallback Timeout: Loader bol stále viditeľný po 7 sekundách (a nie je chyba Firebase), nútene skrývam a zobrazujem kontajner."); loaderElement.style.display = 'none'; if (mainContainerElement) mainContainerElement.style.display = 'block'; } }, 7000);
     });
 
     // PWA inštalačná logika
