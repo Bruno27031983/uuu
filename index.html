@@ -18,55 +18,55 @@
     }
     body {
       font-family: Arial, sans-serif;
-      line-height: 1.6;
+      line-height: 1.5; /* Mierne zmenšené */
       margin: 0;
-      padding: 10px;
+      padding: 8px; /* Mierne zmenšené */
       background-color: #f4f4f4;
       color: #333;
-      font-size: 0.95rem; /* Mierne zmenšené */
+      font-size: 0.9rem; /* Mierne zmenšené */
     }
     .container {
       max-width: 1400px;
       margin: auto;
       background: white;
-      padding: 14px; /* Mierne zmenšené */
+      padding: 12px; /* Mierne zmenšené */
       border-radius: 5px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       position: relative;
     }
     h1 {
       text-align: center;
-      font-size: 2rem; /* Mierne zmenšené */
+      font-size: 1.9rem; /* Mierne zmenšené */
       color: black;
-      margin-bottom: 10px;
+      margin-bottom: 8px; /* Mierne zmenšené */
     }
      h2 {
        text-align: center;
        color: #555;
-       margin-top: -10px;
-       font-size: 1rem; /* Mierne zmenšené */
+       margin-top: -8px; /* Mierne zmenšené */
+       font-size: 0.95rem; /* Mierne zmenšené */
      }
      .settings {
-       margin-bottom: 18px; /* Mierne zmenšené */
+       margin-bottom: 15px; /* Mierne zmenšené */
        display: flex;
        flex-wrap: wrap;
        align-items: flex-start;
      }
      .settings > div, .settings > button#toggleSettingsBtn, .settings > button.highlight {
-       margin: 3px 4px; /* Mierne zmenšené */
+       margin: 2px 4px; /* Mierne zmenšené */
      }
      .settings > div {
-       flex: 1 1 205px; /* Mierne zmenšené */
+       flex: 1 1 200px; /* Mierne zmenšené */
      }
      .settings > button#toggleSettingsBtn {
        flex-basis: 100%;
-       margin-bottom: 9px; /* Mierne zmenšené */
+       margin-bottom: 8px; /* Mierne zmenšené */
        background-color: #eee;
        color: #333;
        border: 1px solid #ccc;
        text-align: left;
-       padding: 8px 12px; /* Mierne zmenšené */
-       font-size: 0.9rem; /* Mierne zmenšené */
+       padding: 7px 11px; /* Mierne zmenšené */
+       font-size: 0.88rem; /* Mierne zmenšené */
      }
      body.dark-mode .settings > button#toggleSettingsBtn {
         background-color: #555;
@@ -74,12 +74,12 @@
         border-color: #666;
      }
       .settings > button.highlight {
-        flex: 1 1 150px; /* Mierne zmenšené */
+        flex: 1 1 145px; /* Mierne zmenšené */
       }
      .settings label {
        display: block;
-       margin-bottom: 2px; /* Mierne zmenšené */
-       font-size: 0.88rem; /* Mierne zmenšené */
+       margin-bottom: 2px;
+       font-size: 0.85rem; /* Mierne zmenšené */
      }
      #settings-collapsible-content {
         display: flex;
@@ -91,19 +91,19 @@
         transition: max-height 0.4s ease-out, opacity 0.3s ease-out;
      }
      #settings-collapsible-content.visible {
-        max-height: 480px; /* Mierne zmenšené */
+        max-height: 450px; /* Mierne zmenšené */
         opacity: 1;
-        margin-top: 5px;
+        margin-top: 4px; /* Mierne zmenšené */
      }
      #settings-collapsible-content > div {
-        flex: 1 1 205px; /* Mierne zmenšené */
-        margin: 3px 4px; /* Mierne zmenšené */
+        flex: 1 1 200px; /* Mierne zmenšené */
+        margin: 2px 4px; /* Mierne zmenšené */
      }
     /* Kontajner pre tabuľku zabezpečuje horizontálne posúvanie */
     .table-container {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      margin-bottom: 18px; /* Mierne zmenšené */
+      margin-bottom: 15px; /* Mierne zmenšené */
       border: 1px solid #ccc;
     }
     table {
@@ -111,10 +111,10 @@
       border-collapse: collapse;
     }
     th, td {
-      padding: 8px; /* Mierne zmenšené */
+      padding: 7px; /* Mierne zmenšené */
       border: 1px solid #ddd;
       text-align: left;
-      font-size: 0.9rem; /* Mierne zmenšené */
+      font-size: 0.85rem; /* Mierne zmenšené */
       vertical-align: middle;
       white-space: nowrap;
     }
@@ -127,20 +127,20 @@
     td .time-input-wrapper {
         display: flex;
         align-items: center;
-        gap: 4px; /* Mierne zmenšené */
+        gap: 4px;
     }
      td .time-input-wrapper input[type="tel"] {
         flex-grow: 1;
-        min-width: 65px; /* Mierne zmenšené */
-        padding: 6px 4px; /* Mierne zmenšené */
-        font-size: 0.9rem; /* Mierne zmenšené */
+        min-width: 60px; /* Mierne zmenšené */
+        padding: 5px 4px; /* Mierne zmenšené */
+        font-size: 0.85rem; /* Mierne zmenšené */
      }
      td .time-input-wrapper .time-btn {
-        font-size: 1.1rem; /* Mierne zmenšené */
+        font-size: 1rem; /* Mierne zmenšené */
         cursor: pointer;
-        padding: 3px 4px; /* Mierne zmenšené */
+        padding: 2px 3px; /* Mierne zmenšené */
         border: 1px solid transparent;
-        border-radius: 3px; /* Mierne zmenšené */
+        border-radius: 3px;
         line-height: 1;
         background: none;
         color: #555;
@@ -159,31 +159,31 @@
          color: #fff;
       }
 
-    /* --- Šírky stĺpcov (mierne upravené) --- */
-    th:nth-child(1), td:nth-child(1) { width: 90px; }
-    th:nth-child(2), td:nth-child(2) { width: 115px; }
-    th:nth-child(3), td:nth-child(3) { width: 115px; }
-    th:nth-child(4), td:nth-child(4) { width: 90px; }
-    th:nth-child(5), td:nth-child(5) { width: 145px; }
-    th:nth-child(6), td:nth-child(6) { width: 200px; white-space: normal; }
-    th:nth-child(7), td:nth-child(7) { width: 115px; }
-    th:nth-child(8), td:nth-child(8) { width: 115px; }
-    th:nth-child(9), td:nth-child(9) { width: 60px; }
+    /* --- Šírky stĺpcov (UPRAVENÉ podľa požiadavky) --- */
+    th:nth-child(1), td:nth-child(1) { width: 85px; }  /* Deň */
+    th:nth-child(2), td:nth-child(2) { width: 105px; } /* Príchod */
+    th:nth-child(3), td:nth-child(3) { width: 105px; } /* Odchod */
+    th:nth-child(4), td:nth-child(4) { width: 85px; }  /* Prestávka */
+    th:nth-child(5), td:nth-child(5) { width: 120px; } /* Odpracované (zmenšené) */
+    th:nth-child(6), td:nth-child(6) { width: 250px; white-space: normal; } /* Poznámka (rozšírené, môže sa lámať) */
+    th:nth-child(7), td:nth-child(7) { width: 100px; } /* Hrubá Mzda (zmenšené) */
+    th:nth-child(8), td:nth-child(8) { width: 100px; } /* Čistá Mzda (zmenšené) */
+    th:nth-child(9), td:nth-child(9) { width: 55px; }  /* Akcia */
 
     /* --- Spoločné štýly pre input, select a textarea --- */
     input[type="tel"], input[type="number"], input[type="text"], select, textarea {
       width: 100%;
-      padding: 6px; /* Mierne zmenšené */
+      padding: 5px; /* Mierne zmenšené */
       box-sizing: border-box;
       background-color: #ffffd0;
-      font-size: 0.9rem; /* Mierne zmenšené */
+      font-size: 0.85rem; /* Mierne zmenšené */
       border: 1px solid #ccc;
-      border-radius: 3px; /* Mierne zmenšené */
+      border-radius: 3px;
       vertical-align: middle;
       font-family: Arial, sans-serif;
     }
     td input[type="number"] {
-        min-width: 60px; /* Mierne zmenšené */
+        min-width: 55px; /* Mierne zmenšené */
     }
     td input[type="number"][readonly] {
         background-color: #f0f0f0;
@@ -196,42 +196,42 @@
     textarea[id^="note-"] {
        background-color: #e6faff;
        resize: vertical;
-       min-height: 32px; /* Mierne zmenšené */
-       height: 36px; /* Mierne zmenšené */
-       line-height: 1.4;
+       min-height: 30px; /* Mierne zmenšené */
+       height: 34px; /* Mierne zmenšené */
+       line-height: 1.3; /* Mierne zmenšené */
        overflow-y: auto;
        white-space: normal;
     }
 
     .result {
       font-weight: bold;
-      margin-top: 18px; /* Mierne zmenšené */
+      margin-top: 15px; /* Mierne zmenšené */
       text-align: center;
     }
     .btn-container {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      margin-top: 20px; /* Mierne zmenšené */
+      margin-top: 18px; /* Mierne zmenšené */
     }
     .btn {
-      flex: 1 1 150px; /* Mierne zmenšené */
-      padding: 10px 18px; /* Mierne zmenšené */
+      flex: 1 1 145px; /* Mierne zmenšené */
+      padding: 9px 16px; /* Mierne zmenšené */
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px; /* Mierne zmenšené */
       cursor: pointer;
-      font-size: 0.95rem; /* Mierne zmenšené */
-      margin: 5px;
+      font-size: 0.9rem; /* Mierne zmenšené */
+      margin: 4px; /* Mierne zmenšené */
       transition: background-color 0.3s ease;
       text-align: center;
     }
     .reset-btn {
       background-color: #f44336;
-      padding: 6px 10px; /* Mierne zmenšené */
-      font-size: 0.9rem; /* Mierne zmenšené */
+      padding: 5px 9px; /* Mierne zmenšené */
+      font-size: 0.85rem; /* Mierne zmenšené */
       flex: 0 0 auto;
-      min-width: 40px; /* Mierne zmenšené */
+      min-width: 38px; /* Mierne zmenšené */
     }
     .reset-btn:hover {
       background-color: #d32f2f;
@@ -244,7 +244,7 @@
     }
     .backup-btn {
       background-color: #8a2be2;
-      padding: 14px 18px; /* Mierne zmenšené */
+      padding: 13px 16px; /* Mierne zmenšené */
     }
     .backup-btn:hover {
       background-color: #6a1bb2;
@@ -256,14 +256,14 @@
       border: 2px solid #ffcc00;
     }
     #totalSalary {
-      font-size: 1rem; /* Mierne zmenšené */
+      font-size: 0.95rem; /* Mierne zmenšené */
       font-weight: bold;
       text-align: center;
-      margin-top: 20px; /* Mierne zmenšené */
-      padding: 10px; /* Mierne zmenšené */
+      margin-top: 18px; /* Mierne zmenšené */
+      padding: 9px; /* Mierne zmenšené */
       background-color: #e6f3ff;
-      border-radius: 5px;
-      line-height: 1.6;
+      border-radius: 4px; /* Mierne zmenšené */
+      line-height: 1.5; /* Mierne zmenšené */
     }
      #dataSizeContainer { }
      #dataSizeText { }
@@ -362,65 +362,65 @@
 
     /* --- Responzivita (Media Queries - upravené hodnoty) --- */
     @media (max-width: 768px) {
-      html { font-size: 16px; } /* Ponechané, meníme rem hodnoty */
-      body { padding: 6px; font-size: 1rem; } /* Vrátené na 1rem */
-      .container { padding: 10px; }
-      h1 { font-size: 1.8rem; } /* Upravené */
-      h2 { font-size: 0.95rem; } /* Upravené */
+      html { font-size: 16px; }
+      body { padding: 6px; font-size: 0.95rem; } /* Mierne zmenšené */
+      .container { padding: 9px; } /* Mierne zmenšené */
+      h1 { font-size: 1.7rem; } /* Mierne zmenšené */
+      h2 { font-size: 0.9rem; } /* Mierne zmenšené */
 
       .settings { flex-direction: column; align-items: stretch; }
-      .settings > div { flex-basis: auto; width: 100%; margin: 4px 0; }
-      .settings > button#toggleSettingsBtn { flex-basis: auto; width: 100%; margin-bottom: 10px; padding: 10px 13px; font-size: 0.95rem; } /* Upravené */
-      .settings > button.highlight { flex-basis: auto; width: 100%; margin: 4px 0; }
+      .settings > div { flex-basis: auto; width: 100%; margin: 3px 0; } /* Mierne zmenšené */
+      .settings > button#toggleSettingsBtn { flex-basis: auto; width: 100%; margin-bottom: 9px; padding: 9px 12px; font-size: 0.9rem; } /* Mierne zmenšené */
+      .settings > button.highlight { flex-basis: auto; width: 100%; margin: 3px 0; }
       #settings-collapsible-content { flex-direction: column; align-items: stretch; }
-      #settings-collapsible-content > div { flex-basis: auto; width: 100%; margin: 4px 0; }
-      #settings-collapsible-content.visible { max-height: 600px; }
+      #settings-collapsible-content > div { flex-basis: auto; width: 100%; margin: 3px 0; }
+      #settings-collapsible-content.visible { max-height: 580px; } /* Mierne zmenšené */
 
       /* Tabuľka */
-      th, td { padding: 9px; font-size: 0.95rem; } /* Upravené */
-      td .time-input-wrapper input[type="tel"] { min-width: 70px; font-size: 0.95rem; padding: 7px 5px;} /* Upravené */
-      td .time-input-wrapper .time-btn { font-size: 1.2rem; padding: 3px 5px; } /* Upravené */
-      textarea[id^="note-"] { min-height: 38px; height: 42px; font-size: 0.95rem;} /* Upravené */
-      input[type="tel"], input[type="number"], input[type="text"], select, textarea { font-size: 0.95rem; padding: 7px; } /* Upravené */
-      td input[type="number"] { min-width: 65px; }
-      .settings label { font-size: 0.9rem; } /* Upravené */
+      th, td { padding: 8px; font-size: 0.9rem; } /* Mierne zmenšené */
+      td .time-input-wrapper input[type="tel"] { min-width: 65px; font-size: 0.9rem; padding: 6px 5px;} /* Mierne zmenšené */
+      td .time-input-wrapper .time-btn { font-size: 1.1rem; padding: 3px 4px; } /* Mierne zmenšené */
+      textarea[id^="note-"] { min-height: 35px; height: 38px; font-size: 0.9rem;} /* Mierne zmenšené */
+      input[type="tel"], input[type="number"], input[type="text"], select, textarea { font-size: 0.9rem; padding: 6px; } /* Mierne zmenšené */
+      td input[type="number"] { min-width: 60px; }
+      .settings label { font-size: 0.88rem; } /* Mierne zmenšené */
 
       .btn-container { flex-direction: column; align-items: stretch; }
-      .btn { flex: 1 1 auto; font-size: 1rem; padding: 11px 15px; margin: 6px 0; } /* Upravené */
-      .reset-btn { padding: 7px 11px; font-size: 0.95rem; min-width: 45px; } /* Upravené */
-      .backup-btn { padding: 15px 16px; }
-      #totalSalary { font-size: 1.05rem; padding: 11px; line-height: 1.7; } /* Upravené */
-      #dataSizeContainer { font-size: 0.8rem; }
+      .btn { flex: 1 1 auto; font-size: 0.95rem; padding: 10px 14px; margin: 5px 0; } /* Mierne zmenšené */
+      .reset-btn { padding: 6px 10px; font-size: 0.9rem; min-width: 42px; } /* Mierne zmenšené */
+      .backup-btn { padding: 14px 15px; } /* Mierne zmenšené */
+      #totalSalary { font-size: 1rem; padding: 10px; line-height: 1.6; } /* Mierne zmenšené */
+      #dataSizeContainer { font-size: 0.75rem; } /* Mierne zmenšené */
     }
 
     @media (max-width: 480px) {
-      html { font-size: 16px; } /* Ponechané, meníme rem hodnoty */
+      html { font-size: 16px; }
       body { padding: 5px; }
-      .container { padding: 8px; } /* Mierne zmenšené */
-      h1 { font-size: 1.6rem; } /* Upravené */
-      h2 { font-size: 0.9rem; } /* Upravené */
+      .container { padding: 7px; } /* Mierne zmenšené */
+      h1 { font-size: 1.5rem; } /* Mierne zmenšené */
+      h2 { font-size: 0.85rem; } /* Mierne zmenšené */
 
       /* Tabuľka */
-      th, td { padding: 10px; font-size: 1rem; } /* Upravené */
-      td .time-input-wrapper input[type="tel"] { min-width: 75px; font-size: 1rem; padding: 8px 6px;} /* Upravené */
-      td .time-input-wrapper .time-btn { font-size: 1.3rem; padding: 4px 6px; } /* Upravené */
-      textarea[id^="note-"] { min-height: 40px; height: 45px; font-size: 1rem;} /* Upravené */
-      input[type="tel"], input[type="number"], input[type="text"], select, textarea { font-size: 1rem; padding: 8px; } /* Upravené */
-      td input[type="number"] { min-width: 70px; }
-      .settings label { font-size: 0.95rem; } /* Upravené */
+      th, td { padding: 9px; font-size: 0.95rem; } /* Mierne zmenšené */
+      td .time-input-wrapper input[type="tel"] { min-width: 70px; font-size: 0.95rem; padding: 7px 5px;} /* Mierne zmenšené */
+      td .time-input-wrapper .time-btn { font-size: 1.2rem; padding: 3px 5px; } /* Mierne zmenšené */
+      textarea[id^="note-"] { min-height: 38px; height: 42px; font-size: 0.95rem;} /* Mierne zmenšené */
+      input[type="tel"], input[type="number"], input[type="text"], select, textarea { font-size: 0.95rem; padding: 7px; } /* Mierne zmenšené */
+      td input[type="number"] { min-width: 65px; }
+      .settings label { font-size: 0.9rem; } /* Mierne zmenšené */
 
-      .btn { font-size: 1.05rem; padding: 12px 16px; } /* Upravené */
-      .reset-btn { padding: 9px 12px; font-size: 1rem; min-width: 50px; } /* Upravené */
-      .backup-btn { padding: 16px 18px; } /* Upravené */
-      #settings-collapsible-content.visible { max-height: 680px; } /* Upravené */
-      #totalSalary { font-size: 1.1rem; padding: 12px; line-height: 1.8; } /* Upravené */
+      .btn { font-size: 1rem; padding: 11px 15px; } /* Mierne zmenšené */
+      .reset-btn { padding: 8px 11px; font-size: 0.95rem; min-width: 48px; } /* Mierne zmenšené */
+      .backup-btn { padding: 15px 16px; } /* Mierne zmenšené */
+      #settings-collapsible-content.visible { max-height: 650px; } /* Mierne zmenšené */
+      #totalSalary { font-size: 1.05rem; padding: 11px; line-height: 1.7; } /* Mierne zmenšené */
     }
 
     /* --- Notifikácie --- */
     #saveNotification, #errorNotification {
         display: none; position: fixed; bottom: 20px; right: 20px;
-        padding: 10px 20px; /* Vrátil som na pôvodné */
-        border-radius: 5px; font-size: 0.9rem; /* Mierne zmenšené */
+        padding: 10px 18px; /* Mierne zmenšené */
+        border-radius: 4px; font-size: 0.88rem; /* Mierne zmenšené */
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); z-index: 1000;
         opacity: 0; transition: opacity 0.5s ease-in-out;
     }
@@ -431,14 +431,14 @@
     /* --- Prihlasovanie --- */
     #login-form { display: flex; flex-direction: column; align-items: center; }
     #login-form input[type="email"], #login-form input[type="password"] {
-        width: 210px; /* Mierne zmenšené */
-        margin: 6px auto; /* Mierne zmenšené */
+        width: 200px; /* Mierne zmenšené */
+        margin: 5px auto; /* Mierne zmenšené */
         display: block;
-        padding: 8px; /* Mierne zmenšené */
-        font-size: 0.9rem; /* Mierne zmenšené */
+        padding: 7px; /* Mierne zmenšené */
+        font-size: 0.88rem; /* Mierne zmenšené */
     }
-    #login-form .btn { width: 130px; margin: 6px 2px; } /* Mierne zmenšené */
-    #login-form a { margin-top: 10px; display: block; font-size: 0.9rem; color: #007bff; text-decoration: none; } /* Mierne zmenšené */
+    #login-form .btn { width: 125px; margin: 5px 2px; } /* Mierne zmenšené */
+    #login-form a { margin-top: 9px; display: block; font-size: 0.88rem; color: #007bff; text-decoration: none; } /* Mierne zmenšené */
     #login-form a:hover { text-decoration: underline; }
     body.dark-mode #login-form a { color: #6bbaff; }
   </style>
@@ -525,7 +525,8 @@
 
     <div class="btn-container">
         <button class="btn export-btn" onclick="exportToPDF()">Exportovať do PDF</button>
-        <button class="btn export-btn" onclick="sendPDF()">Odoslať PDF</button>
+        <!-- UPRAVENÉ: sendPDF teraz zahŕňa poznámky -->
+        <button class="btn export-btn" onclick="sendPDF()">Odoslať PDF (s pozn.)</button>
         <button class="btn export-btn" onclick="restoreBackup()">Obnoviť zálohu</button>
         <button class="btn backup-btn" onclick="createBackup()">Vytvoriť zálohu</button>
         <button class="btn export-btn" onclick="loadFromFirestore()">Načítanie z Firebase</button>
@@ -1389,32 +1390,37 @@
             endTime,
             breakTime || '0',
             totalTimeText,
-            note,
+            note, // Poznámka je už zahrnutá
             `${parseFloat(grossSalary).toFixed(decimalPlaces)} €`,
             `${parseFloat(netSalary).toFixed(decimalPlaces)} €`
           ]);
         }
       }
 
+      // Šírky stĺpcov pre export PDF (môžu byť iné ako v HTML)
       doc.autoTable({
         head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Odpracované', 'Poznámka', 'Hrubá Mzda', 'Čistá Mzda']],
         body: tableData,
         startY: 38,
         theme: 'grid',
-        styles: { font: doc.getFont().fontName, fontSize: 9, cellPadding: 2, valign: 'middle' },
-        headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 10, halign: 'center' },
+        styles: { font: doc.getFont().fontName, fontSize: 8, cellPadding: 2, valign: 'middle' }, // Menší font pre PDF
+        headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 9, halign: 'center' },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         columnStyles: {
-           0: { cellWidth: 18, halign: 'left' }, 1: { cellWidth: 15, halign: 'center' },
-           2: { cellWidth: 15, halign: 'center' }, 3: { cellWidth: 18, halign: 'center' },
-           4: { cellWidth: 25, halign: 'center' }, 5: { cellWidth: 35, halign: 'left' },
-           6: { cellWidth: 23, halign: 'right' }, 7: { cellWidth: 23, halign: 'right' }
+           0: { cellWidth: 16, halign: 'left' },   // Deň
+           1: { cellWidth: 14, halign: 'center' },// Príchod
+           2: { cellWidth: 14, halign: 'center' },// Odchod
+           3: { cellWidth: 16, halign: 'center' },// Prestávka
+           4: { cellWidth: 22, halign: 'center' },// Odpracované
+           5: { cellWidth: 45, halign: 'left' },  // Poznámka (rozšírené)
+           6: { cellWidth: 20, halign: 'right' }, // Hrubá Mzda
+           7: { cellWidth: 20, halign: 'right' }  // Čistá Mzda
         },
         didDrawPage: function (data) { /* Pätička */ }
       });
 
       const totalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(11);
+      doc.setFontSize(10); // Menší font pre súhrn
       const totalTextContent = totalSalaryDiv.innerHTML
         .replace(/<br\s*\/?>/gi, '\n').replace(/<\/?strong>/gi, '')
         .replace(/ /g, ' ').replace(/€/g, ' EUR');
@@ -1424,6 +1430,7 @@
       doc.save(`Vykaz_prace_${safeEmployeeName}_${getMonthName(currentMonth)}_${currentYear}.pdf`);
     }
 
+    // ***** UPRAVENÁ FUNKCIA sendPDF *****
     window.sendPDF = function() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -1435,21 +1442,48 @@
         doc.setFontSize(16); doc.text(`Záznam dochádzky - ${getMonthName(currentMonth)} ${currentYear}`, 14, 22);
         doc.setFontSize(12); doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30);
         const tableData = []; const daysInMonth = getDaysInMonth(currentMonth);
+
         for (let i = 1; i <= daysInMonth; i++) {
             const dayName = getDayName(currentYear, currentMonth, i);
-            const startTime = document.getElementById(`start-${currentYear}-${currentMonth}-${i}`)?.value || '';
-            const endTime = document.getElementById(`end-${currentYear}-${currentMonth}-${i}`)?.value || '';
-            const breakTime = document.getElementById(`break-${currentYear}-${currentMonth}-${i}`)?.value || '';
-            if (startTime || endTime || (breakTime && parseFloat(breakTime) > 0)) {
-                tableData.push([`${i}. ${dayName}`, startTime, endTime, breakTime || '0']);
+            const startId = `start-${currentYear}-${currentMonth}-${i}`;
+            const endId = `end-${currentYear}-${currentMonth}-${i}`;
+            const breakId = `break-${currentYear}-${currentMonth}-${i}`;
+            const noteId = `note-${currentYear}-${currentMonth}-${i}`; // ID poznámky
+
+            const startTime = document.getElementById(startId)?.value || '';
+            const endTime = document.getElementById(endId)?.value || '';
+            const breakTime = document.getElementById(breakId)?.value || '';
+            const note = document.getElementById(noteId)?.value || ''; // Získanie hodnoty poznámky
+
+            // Zahrň len riadky s časovými údajmi, prestávkou ALEBO poznámkou
+            if (startTime || endTime || (breakTime && parseFloat(breakTime) > 0) || note) {
+                // Pridaná poznámka do dát pre tabuľku
+                tableData.push([`${i}. ${dayName}`, startTime, endTime, breakTime || '0', note]);
             }
         }
+
+        // Pridaná hlavička a štýly stĺpcov pre poznámku
         doc.autoTable({
-            head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)']], body: tableData, startY: 38, theme: 'grid',
-            styles: { font: doc.getFont().fontName, fontSize: 10, cellPadding: 3, valign: 'middle' },
-            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 11, halign: 'center' },
+            head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Poznámka']], // Hlavička s poznámkou
+            body: tableData,
+            startY: 38,
+            theme: 'grid',
+            styles: { font: doc.getFont().fontName, fontSize: 9, cellPadding: 2, valign: 'middle' }, // Font a veľkosť pre PDF
+            headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 10, halign: 'center' },
             alternateRowStyles: { fillColor: [245, 245, 245] },
-            columnStyles: { 0: { cellWidth: 50, halign: 'left' }, 1: { cellWidth: 40, halign: 'center' }, 2: { cellWidth: 40, halign: 'center' }, 3: { cellWidth: 40, halign: 'center' } }
+            columnStyles: {
+                0: { cellWidth: 30, halign: 'left' },     // Deň
+                1: { cellWidth: 25, halign: 'center' },  // Príchod
+                2: { cellWidth: 25, halign: 'center' },  // Odchod
+                3: { cellWidth: 25, halign: 'center' },  // Prestávka (h)
+                4: { cellWidth: 70, halign: 'left' }    // Poznámka (šírka upravená)
+            },
+             didParseCell: function (data) {
+                // Umožní zalomenie textu v bunke poznámky
+                 if (data.column.index === 4) { // Index stĺpca Poznámka
+                     data.cell.styles.cellWidth = 'wrap';
+                 }
+             }
         });
         try {
             const pdfBlob = doc.output('blob');
@@ -1457,12 +1491,14 @@
             const pdfFileName = `Dochadzka_${safeEmployeeName}_${getMonthName(currentMonth)}_${currentYear}.pdf`;
             const pdfFile = new File([pdfBlob], pdfFileName, { type: 'application/pdf' });
             if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-                navigator.share({ files: [pdfFile], title: `Dochádzka ${getMonthName(currentMonth)} ${currentYear}`, text: `Záznam dochádzky pre ${employeeName} za ${getMonthName(currentMonth)} ${currentYear}.` })
-                .then(() => console.log('PDF (dochádzka) zdieľané'))
+                navigator.share({ files: [pdfFile], title: `Dochádzka ${getMonthName(currentMonth)} ${currentYear}`, text: `Záznam dochádzky pre ${employeeName} za ${getMonthName(currentMonth)} ${currentYear} (s poznámkami).` }) // Upravený text
+                .then(() => console.log('PDF (dochádzka s pozn.) zdieľané'))
                 .catch(error => { if (error.name !== 'AbortError') { console.error('Chyba zdieľania:', error); showErrorNotification('Chyba pri zdieľaní PDF: ' + error.message); } else { console.log('Zdieľanie zrušené'); } });
             } else { showErrorNotification('Zdieľanie súborov nie je podporované.'); doc.save(pdfFileName); }
         } catch (error) { console.error('Chyba generovania PDF na zdieľanie:', error); showErrorNotification('Chyba pri príprave PDF: ' + error.message); }
     }
+    // ***** KONIEC UPRAVENEJ FUNKCIE sendPDF *****
+
 
     window.createBackup = function() {
       const backupData = collectCurrentData();
@@ -1502,7 +1538,7 @@
                   if(ws[XLSX.utils.encode_cell({c:2, r:R})]) ws[XLSX.utils.encode_cell({c:2, r:R})].z = timeFormat;
                   if(ws[XLSX.utils.encode_cell({c:3, r:R})]) ws[XLSX.utils.encode_cell({c:3, r:R})].z = breakFormat;
               }
-              ws['!cols'] = [ { wch: 13 }, { wch: 8 }, { wch: 8 }, { wch: 10 }, { wch: 25 } ]; // Upravené
+              ws['!cols'] = [ { wch: 12 }, { wch: 8 }, { wch: 8 }, { wch: 10 }, { wch: 30 } ]; // Poznámka širšia
               const settingsRowIndex = ws_data.findIndex(row => row[0] === "Nastavenia:");
               if (settingsRowIndex !== -1) { ws['!cols'][0].wch = Math.max(ws['!cols'][0].wch, 25); }
 
