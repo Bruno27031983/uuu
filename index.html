@@ -717,7 +717,6 @@
             userEmail.textContent = currentUser.email;
 
             // 4. IHNEĎ NAČÍTAJ A ZOBRAZ DÁTA Z LOCALSTORAGE
-            // Toto zabezpečí, že používateľ vidí dáta okamžite, aj keď je offline alebo listener ešte neodpovedal.
             console.log("Loading initial data from localStorage (while potentially connecting listener)...");
             loadFromLocalStorageOnly();
 
@@ -726,64 +725,51 @@
                 // ----- Prihlásený a ONLINE -----
                 console.log("User is Online. Attaching Firestore listener and syncing.");
 
-                // Pripoj listener - aktualizuje UI, ak FS dáta > LS dáta
                 const docId = `${currentYear}-${currentMonth}`;
                 const docRef = doc(db, 'users', currentUser.uid, 'workDays', docId);
                 currentListenerUnsubscribe = onSnapshot(docRef, (docSnap) => {
                     console.log(`Firestore snapshot received for ${docId}. Exists: ${docSnap.exists()}`);
                     const localKey = `workData-${currentYear}-${currentMonth}`;
-                    const localDataString = localStorage.getItem(localKey); // Získaj aktuálny LS stav
+                    const localDataString = localStorage.getItem(localKey);
 
                     if (docSnap.exists()) {
                         const firestoreData = docSnap.data();
                         const firestoreDataString = JSON.stringify(firestoreData);
 
-                        // Porovnaj FS dáta s aktuálnym LS stavom
                         if (firestoreDataString !== localDataString) {
                             console.log("Firestore data differs from current localStorage, applying update.");
-                            localStorage.setItem(localKey, firestoreDataString); // Aktualizuj LS
-                            parseAndApplyData(firestoreDataString); // Aplikuj na UI
+                            localStorage.setItem(localKey, firestoreDataString);
+                            parseAndApplyData(firestoreDataString);
                         } else {
                             console.log("Firestore data matches current localStorage, skipping UI update from listener.");
-                            // Aj keď sa dáta zhodujú, prepočítaj súčty pre prípad zmeny nastavení
                             calculateTotal();
                         }
                     } else {
-                        // Dokument neexistuje vo Firestore, vyčisti LS a UI, ak nie sú už prázdne
                         console.log(`Document ${docId} does not exist in Firestore. Clearing local data if present.`);
-                        if (localDataString) { // Vyčisti len ak LS nebol už prázdny
+                        if (localDataString) {
                             localStorage.removeItem(localKey);
-                            parseAndApplyData(null); // Vyčisti UI
+                            parseAndApplyData(null);
                         } else {
-                            calculateTotal(); // Vynuluj súčty
+                            calculateTotal();
                         }
                     }
                 }, (error) => {
                     console.error(`Firestore listener error for ${docId}:`, error);
                     showErrorNotification(`Chyba pri počúvaní zmien: ${error.message}. Zobrazujem lokálne dáta.`);
-                    // Pri chybe listenera sa spoliehame na dáta z LS, ktoré už boli načítané v kroku 4.
                 });
-
-                // Skús synchronizovať čakajúce offline dáta
                 syncWithFirebase();
-
             } else {
                 // ----- Prihlásený a OFFLINE -----
                 console.log("User is Offline. Data loaded from localStorage.");
                 showErrorNotification('Ste offline. Zobrazujú sa lokálne uložené dáta. Zmeny sa synchronizujú po pripojení.');
-                // Dáta z LS už boli načítané v kroku 4. Listener nie je pripojený.
             }
-
         } else {
             // ----- POUŽÍVATEĽ NIE JE PRIHLÁSENÝ -----
             console.log("User is not logged in. Loading from localStorage only.");
             loginForm.style.display = 'flex';
             userInfo.style.display = 'none';
             userEmail.textContent = '';
-
-            // Načítaj dáta len z lokálneho úložiska
             loadFromLocalStorageOnly();
-            // Listener nie je pripojený.
         }
     }
 
@@ -864,9 +850,8 @@
                 const docRef = doc(userRef, 'workDays', `${currentYear}-${currentMonth}`);
                 await setDoc(docRef, dataToSync, { merge: true });
                 console.log('Pending data synced to Firestore.');
-                localStorage.removeItem(pendingSyncKey); // Odstránime až po úspešnom odoslaní
+                localStorage.removeItem(pendingSyncKey);
                 showSaveNotification('Offline dáta boli synchronizované.');
-                 // Listener by mal automaticky dostať túto zmenu a aktualizovať LS/UI
             } catch (error) {
                 console.error('Error syncing pending data:', error);
                 showErrorNotification('Chyba pri synchronizácii offline dát: ' + error.message);
@@ -911,7 +896,7 @@
         const localKey = `workData-${currentYear}-${currentMonth}`;
         const localData = localStorage.getItem(localKey);
         console.log(`Loading from localStorage only for key: ${localKey}. Data found: ${!!localData}`);
-        parseAndApplyData(localData); // parseAndApplyData zvládne null, ak dáta nie sú
+        parseAndApplyData(localData);
     }
 
     function parseAndApplyData(dataString) {
@@ -965,14 +950,14 @@
                         } else {
                             startElement.value = ''; endElement.value = ''; breakElement.value = ''; noteElement.value = '';
                         }
-                        calculateRow(i); // Prepočítaj riadok hneď po naplnení
+                        calculateRow(i);
                     }
                 }
             } else {
                 console.warn("Stored data is missing or has incorrect format (.data array). Clearing table.");
                 for (let i = 1; i <= daysInMonth; i++) { resetRow(i, false); }
             }
-            calculateTotal(); // Prepočítaj celkové súčty po naplnení všetkých riadkov
+            calculateTotal();
         } catch (error) {
             console.error('Chyba pri parsovaní alebo aplikovaní dát:', error, "Data string:", dataString);
             showErrorNotification('Chyba pri spracovaní uložených dát: ' + error.message);
@@ -998,7 +983,7 @@
       const daysInMonth = getDaysInMonth(currentMonth);
       if(daysInMonth <= 0){
            console.error(`Invalid number of days in month: ${daysInMonth} for ${currentMonth}/${currentYear}`);
-           return; // Nerob nič, ak je počet dní neplatný
+           return;
       }
       console.log(`Creating table structure for ${daysInMonth} days...`);
       for (let i = 1; i <= daysInMonth; i++) {
@@ -1058,23 +1043,22 @@
     window.updateSettings = function() { const nHW=parseFloat(hourlyWageInput.value); const nTRP=parseFloat(taxRateInput.value); if(!isNaN(nHW)&&nHW>=0)hourlyWage=nHW; else hourlyWageInput.value=hourlyWage; if(!isNaN(nTRP)&&nTRP>=0)taxRate=nTRP/100; else taxRateInput.value=(taxRate*100).toFixed(1); localStorage.setItem('hourlyWage',hourlyWage); localStorage.setItem('taxRate',taxRate); for(let i=1;i<=getDaysInMonth(currentMonth);i++){if(document.getElementById(`start-${currentYear}-${currentMonth}-${i}`))calculateRow(i);} calculateAndUpdateTotals(); }
     window.changeMonth = function() { const oM=currentMonth; currentMonth=parseInt(monthSelect.value); console.log(`Changing month from ${getMonthName(oM)} to ${getMonthName(currentMonth)}`); updateUI(); }
     window.changeYear = function() { const oY=currentYear; currentYear=parseInt(yearSelect.value); console.log(`Changing year from ${oY} to ${currentYear}`); updateUI(); }
-    function getDaysInMonth(month) { if(month<0||month>11){console.error(`Invalid month index: ${month}`); return 0;} const days=new Date(currentYear,month+1,0).getDate(); console.log(`getDaysInMonth(${month}) for year ${currentYear} returned: ${days}`); return days||0; } // Vráti 0 ak je výsledok neplatný
+    function getDaysInMonth(month) { if(month<0||month>11){console.error(`Invalid month index: ${month}`); return 0;} const days=new Date(currentYear,month+1,0).getDate(); /* console.log(`getDaysInMonth(${month}) for year ${currentYear} returned: ${days}`); */ return days||0; }
 
     // --- Inicializácia a Listener pre Auth State ---
     onAuthStateChanged(auth, (user) => {
         console.log('Auth state changed. User:', user ? user.email : 'None');
-        const previousUserUid = currentUser?.uid; // Ulož UID predchádzajúceho používateľa
+        const previousUserUid = currentUser?.uid;
         currentUser = user;
-        // Zavolaj updateUI len ak sa stav používateľa skutočne zmenil (prihlásenie/odhlásenie)
-        // Tým sa predíde zbytočnému odpájaniu/pripájaniu listenera pri obnove tokenu.
         if (previousUserUid !== currentUser?.uid) {
              console.log("User UID changed, calling updateUI.");
              updateUI();
         } else {
-             console.log("User UID did not change, skipping updateUI call from onAuthStateChanged.");
-             // Aj keď sa UID nezmenilo, stav siete sa mohol zmeniť, skontrolujme synchronizáciu
-             if(isOnline()) {
+             console.log("User UID did not change, skipping updateUI call from onAuthStateChanged (unless network changed).");
+             if(isOnline() && currentUser) { // Ak je stále ten istý user a je online, skús synchronizovať
                  syncWithFirebase();
+             } else if (!isOnline() && currentUser) { // Ak je stále ten istý user, ale prešiel do offline
+                 updateUI(); // Aby sa UI správne nastavilo pre offline
              }
         }
     });
