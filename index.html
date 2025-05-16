@@ -625,20 +625,20 @@
 
 
     // Firebase Konfigurácia
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY", // VLOŽTE VLASTNÚ HODNOTU
-        authDomain: "YOUR_AUTH_DOMAIN", // VLOŽTE VLASTNÚ HODNOTU
-        projectId: "YOUR_PROJECT_ID", // VLOŽTE VLASTNÚ HODNOTU
-        storageBucket: "YOUR_STORAGE_BUCKET", // VLOŽTE VLASTNÚ HODNOTU
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // VLOŽTE VLASTNÚ HODNOTU
-        appId: "YOUR_APP_ID", // VLOŽTE VLASTNÚ HODNOTU
+   const firebaseConfig = {
+        apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
+        authDomain: "uuuuu-f7ef9.firebaseapp.com",
+        projectId: "uuuuu-f7ef9",
+        storageBucket: "uuuuu-f7ef9.appspot.com",
+        messagingSenderId: "456105865458",
+        appId: "1:456105865458:web:101f0a4dcb455f174b606b",
     };
 
     // Inicializácia Firebase
     const app = initializeApp(firebaseConfig);
     try {
-        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_SITE_KEY'), // VLOŽTE VLASTNÚ HODNOTU
+       const appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'),
             isTokenAutoRefreshEnabled: true
         });
         console.log("Firebase App Check initialized.");
