@@ -1229,8 +1229,8 @@
 
     // ----- FUNKCIA formatTimeAndMoveNext -----
     function formatTimeAndMoveNext(input, nextId) {
-        const rawValue = input.value; 
-        const selectionStartOriginal = input.selectionStart; 
+        const rawValue = input.value;
+        const selectionStartOriginal = input.selectionStart;
 
         let digits = rawValue.replace(/[^\d]/g, '');
 
@@ -1240,19 +1240,19 @@
         if (digits.length === 0) {
             formattedValue = "";
             newCursorPos = 0;
-        } else if (digits.length === 1) { 
+        } else if (digits.length === 1) {
             formattedValue = digits;
             newCursorPos = 1;
-        } else if (digits.length === 2) { 
+        } else if (digits.length === 2) {
             formattedValue = digits;
             newCursorPos = 2;
-        } else if (digits.length === 3) { 
+        } else if (digits.length === 3) {
             formattedValue = digits.substring(0, 2) + ':' + digits.substring(2);
-            newCursorPos = formattedValue.length; 
-        } else { 
-            digits = digits.substring(0, 4); 
+            newCursorPos = formattedValue.length;
+        } else {
+            digits = digits.substring(0, 4);
             formattedValue = digits.substring(0, 2) + ':' + digits.substring(2, 4);
-            newCursorPos = formattedValue.length; 
+            newCursorPos = formattedValue.length;
         }
 
         if (input.value !== formattedValue) {
@@ -1260,7 +1260,7 @@
         }
 
         if (rawValue.length > 5 && formattedValue.length === 5) {
-            newCursorPos = 5; 
+            newCursorPos = 5;
         }
         try {
             input.setSelectionRange(newCursorPos, newCursorPos);
@@ -1269,7 +1269,7 @@
         if (formattedValue.length === 5 && isValidTimeFormat(formattedValue)) {
             const justCompleted = (rawValue !== formattedValue && rawValue.length <= 5) ||
                                   (rawValue.length < 5 && selectionStartOriginal === rawValue.length && digits.length >=4) ||
-                                  (digits.length === 4 && rawValue.length === 4); 
+                                  (digits.length === 4 && rawValue.length === 4);
 
             if (justCompleted) {
                 const nextElement = document.getElementById(nextId);
@@ -1572,66 +1572,108 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         try {
-            doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
-            doc.setFont('Roboto');
-        } catch (e) { doc.setFont('helvetica', 'normal'); }
-
-        doc.setFontSize(16); doc.text(`Záznam dochádzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
-        doc.setFontSize(12); doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30);
-        const tableData = []; const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-
-        for (let i = 1; i <= daysInMonth; i++) {
-            const dayName = getDayName(currentYear, currentMonth, i);
-            const startTime = document.getElementById(`start-${i}`)?.value || '';
-            const endTime = document.getElementById(`end-${i}`)?.value || '';
-            const breakTime = document.getElementById(`break-${i}`)?.value || '';
-            const note = document.getElementById(`note-${i}`)?.value || '';
-
-            if (startTime || endTime || (breakTime && parseFloat(breakTime) > 0) || note.trim() !== "") {
-                tableData.push([`${i}. ${dayName}`, startTime, endTime, breakTime || '0', note]);
+            // Pokus o pridanie Roboto fontu, fallback na helvetica
+            try {
+                doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal');
+                doc.setFont('Roboto');
+            } catch (e) {
+                console.warn("Roboto font not found for PDF, using helvetica.");
+                doc.setFont('helvetica', 'normal');
             }
+
+            doc.setFontSize(16);
+            doc.text(`Záznam dochádzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
+            doc.setFontSize(12);
+            doc.text(`Pracovník: ${employeeName || 'Nezadané'}`, 14, 30);
+
+            // --- ZAČIATOK PRIDANÉHO KÓDU (zmena oproti pôvodnej verzii) ---
+            // Získanie počtu odpracovaných dní z totalSalaryDiv
+            let workedDaysCount = 0;
+            const totalSalaryText = totalSalaryDiv.textContent || ""; // Bezpečnejší prístup k textovému obsahu
+            const workedDaysMatch = totalSalaryText.match(/Započítaných dní:\s*(\d+)/i);
+            if (workedDaysMatch && workedDaysMatch[1]) {
+                workedDaysCount = parseInt(workedDaysMatch[1]);
+            }
+
+            // Zobrazenie počtu odpracovaných dní
+            doc.setFontSize(10);
+            doc.text(`Celkový počet odpracovaných dní: ${workedDaysCount}`, 14, 36);
+            // --- KONIEC PRIDANÉHO KÓDU ---
+
+            const tableData = [];
+            const daysInMonth = getDaysInMonth(currentMonth, currentYear);
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayName = getDayName(currentYear, currentMonth, i);
+                const startTime = document.getElementById(`start-${i}`)?.value || '';
+                const endTime = document.getElementById(`end-${i}`)?.value || '';
+                const breakTime = document.getElementById(`break-${i}`)?.value || '';
+                const note = document.getElementById(`note-${i}`)?.value || '';
+
+                // Zahrnúť riadok, len ak je nejaký údaj vyplnený
+                if (startTime || endTime || (breakTime && parseFloat(breakTime) > 0) || note.trim() !== "") {
+                    tableData.push([`${i}. ${dayName}`, startTime, endTime, breakTime || '0', note]);
+                }
+            }
+
+            doc.autoTable({
+                head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Poznámka']],
+                body: tableData,
+                startY: 42, // Upravená startY z 38 na 42, aby bol priestor pre nový text
+                theme: 'grid',
+                styles: { font: doc.getFont().fontName || 'helvetica', fontSize: 9, cellPadding: 2, valign: 'middle' },
+                headStyles: { fillColor: [220,220,220], textColor: [0,0,0], fontStyle: 'bold', fontSize: 10, halign: 'center'},
+                columnStyles: {
+                    0: { cellWidth: 30 }, // Deň
+                    1: { cellWidth: 25, halign: 'center' }, // Príchod
+                    2: { cellWidth: 25, halign: 'center' }, // Odchod
+                    3: { cellWidth: 25, halign: 'center' }, // Prestávka
+                    4: { cellWidth: 'auto' } // Poznámka - automatická šírka
+                },
+                didParseCell: (data) => {
+                    // Pre stĺpec Poznámka povoliť zalamovanie textu
+                    if (data.column.index === 4) {
+                        data.cell.styles.cellWidth = 'wrap';
+                    }
+                }
+            });
+
+            // Zvyšok funkcie pre zdieľanie/stiahnutie PDF zostáva nezmenený...
+            try {
+                const pdfBlob = doc.output('blob');
+                const safeEmployeeName = (employeeName || 'Pracovnik').replace(/[^a-zA-Z0-9]/g, '_');
+                const pdfFileName = `Dochadzka_${safeEmployeeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`;
+                const pdfFile = new File([pdfBlob], pdfFileName, { type: 'application/pdf' });
+
+                if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                    await navigator.share({
+                        files: [pdfFile],
+                        title: `Dochádzka ${MONTH_NAMES[currentMonth]} ${currentYear}`,
+                        text: `Záznam dochádzky pre ${employeeName || 'pracovníka'} za ${MONTH_NAMES[currentMonth]} ${currentYear} (s poznámkami).`
+                    });
+                    console.log('PDF (dochádzka s pozn.) zdieľané.');
+                } else {
+                    showWarningNotification('Zdieľanie súborov nie je podporované vo vašom prehliadači. Súbor sa stiahne.');
+                    doc.save(pdfFileName); // Fallback na stiahnutie
+                }
+            } catch (error) {
+                // Ignorovať AbortError, ktorý nastane, ak používateľ zruší dialóg zdieľania
+                if (error.name !== 'AbortError') {
+                    console.error('Chyba zdieľania alebo generovania PDF:', error);
+                    showErrorNotification('Chyba pri príprave alebo zdieľaní PDF: ' + error.message);
+                } else {
+                    console.log('Zdieľanie PDF zrušené používateľom.');
+                }
+            }
+        } catch (error) { // Hlavný try-catch pre generovanie PDF
+            console.error("Error generating PDF for sending:", error);
+            showErrorNotification("Chyba pri generovaní PDF na odoslanie: " + error.message);
         }
-
-        doc.autoTable({
-            head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Poznámka']],
-            body: tableData, startY: 38, theme: 'grid',
-            styles: { font: doc.getFont().fontName || 'helvetica', fontSize: 9, cellPadding: 2, valign: 'middle' },
-            headStyles: { fillColor: [220,220,220], textColor: [0,0,0], fontStyle: 'bold', fontSize: 10, halign: 'center'},
-            columnStyles: {
-                0: { cellWidth: 30 }, 1: { cellWidth: 25, halign: 'center' }, 2: { cellWidth: 25, halign: 'center' },
-                3: { cellWidth: 25, halign: 'center' }, 4: { cellWidth: 'auto' }
-            },
-            didParseCell: (data) => { if (data.column.index === 4) data.cell.styles.cellWidth = 'wrap'; }
-        });
-
-        try {
-            const pdfBlob = doc.output('blob');
-            const safeEmployeeName = (employeeName || 'Pracovnik').replace(/[^a-zA-Z0-9]/g, '_');
-            const pdfFileName = `Dochadzka_${safeEmployeeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`;
-            const pdfFile = new File([pdfBlob], pdfFileName, { type: 'application/pdf' });
-
-            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-                await navigator.share({
-                    files: [pdfFile],
-                    title: `Dochádzka ${MONTH_NAMES[currentMonth]} ${currentYear}`,
-                    text: `Záznam dochádzky pre ${employeeName || 'pracovníka'} za ${MONTH_NAMES[currentMonth]} ${currentYear} (s poznámkami).`
-                });
-                console.log('PDF (dochádzka s pozn.) zdieľané.');
-            } else {
-                showWarningNotification('Zdieľanie súborov nie je podporované vo vašom prehliadači. Súbor sa stiahne.');
-                doc.save(pdfFileName);
-            }
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                console.error('Chyba zdieľania alebo generovania PDF:', error);
-                showErrorNotification('Chyba pri príprave alebo zdieľaní PDF: ' + error.message);
-            } else {
-                console.log('Zdieľanie PDF zrušené používateľom.');
-            }
-        } finally {
+        finally {
             setLoadingState(btn, false, "Odoslať PDF (s pozn.)");
         }
     }
+
 
     window.createBackup = function() {
         const btn = event.target;
