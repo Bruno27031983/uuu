@@ -86,16 +86,6 @@
       margin-bottom: 10px;
       font-weight: 700;
     }
-    /* Gradient pre hlavný nadpis */
-    h1#mainTitle {
-      background: linear-gradient(45deg, #7c3aed, #db2777, #f59e0b);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      display: inline-block; /* Pre správne orezanie na text */
-      padding-bottom: 3px; /* Malý padding, ak by gradient orezával príliš tesne */
-    }
-
     h2 {
       text-align: center;
       color: var(--secondary-text-color);
@@ -426,7 +416,7 @@
       h1 { font-size: 1.8rem; } h2 { font-size: 0.95rem; }
       .settings { flex-direction: column; align-items: stretch; }
       .settings > div { flex-basis: auto; width: 100%; }
-      #settings-collapsible-content.visible { max-height: 700px; }
+      #settings-collapsible-content.visible { max-height: 700px; } /* Upravené pre menej fieldsetov */
       th, td { padding: 8px; font-size: 0.85rem; }
       textarea[id^="note-"] { min-height: 40px; }
 
@@ -484,8 +474,7 @@
       body { padding: 0; font-size: 10pt; color: #000; background-color: #fff; font-family: Arial, sans-serif;}
       .container { max-width: 100%; margin: 0; padding: 10px; box-shadow: none; border: none;}
       #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn { display: none !important; }
-      h1 { font-size: 18pt; margin-bottom: 5mm; background: none !important; -webkit-background-clip: unset !important; background-clip: unset !important; color: black !important;} /* Reset gradientu pre tlač */
-      h2 { font-size: 12pt; margin-bottom: 8mm; }
+      h1 { font-size: 18pt; margin-bottom: 5mm; } h2 { font-size: 12pt; margin-bottom: 8mm; }
       .table-container { overflow: visible; border: 1px solid #ccc; }
       table { width: 100%; page-break-inside: auto; border-collapse: collapse;}
       tr { page-break-inside: avoid; page-break-after: auto; }
@@ -522,7 +511,7 @@
 <body>
   <div class="container">
     <div id="auth-container" style="margin-bottom: 20px;">
-      <fieldset id="login-fieldset">
+      <fieldset>
         <legend>Prihlásenie / Registrácia</legend>
         <div id="login-form" style="display: none;">
           <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email">
@@ -565,6 +554,7 @@
                     </select>
                 </div>
             </fieldset>
+            <!-- ODSTRÁNENÝ FIELDSET PRE PREDVOLENÉ HODNOTY DŇA -->
              <fieldset>
                 <legend>Navigácia v čase</legend>
                 <div>
@@ -621,14 +611,10 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
     import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-    import { initializeAppCheck, ReCaptchaV3Provider, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js'; // enableIndexedDbPersistence pridané pre AppCheck, malo by byť z firebase/firestore
-
-    // Správny import pre enableIndexedDbPersistence
-    import { enableIndexedDbPersistence as enableFirestorePersistence } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
 
     // Firebase Konfigurácia
-  const firebaseConfig = {
+   const firebaseConfig = {
         apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
         authDomain: "uuuuu-f7ef9.firebaseapp.com",
         projectId: "uuuuu-f7ef9",
@@ -651,20 +637,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Povolenie Firestore Offline Persistence
-    enableFirestorePersistence(db)
-      .then(() => {
-        console.log("Firestore offline persistence enabled.");
-      })
-      .catch((err) => {
-        if (err.code == 'failed-precondition') {
-          console.warn("Firestore offline persistence failed (multiple tabs open?):", err);
-        } else if (err.code == 'unimplemented') {
-          console.warn("Firestore offline persistence not available in this browser:", err);
-        }
-      });
-
-
     // Globálne Premenné
     let currentUser = null;
     let currentListenerUnsubscribe = null;
@@ -675,6 +647,7 @@
         subTitle: document.getElementById('subTitle'),
         hourlyWageInput: document.getElementById('hourlyWageInput'),
         taxRateInput: document.getElementById('taxRateInput'),
+        // defaultBreakInput, defaultStartTimeInput, defaultEndTimeInput odstránené z uiRefs
         monthSelect: document.getElementById('monthSelect'),
         yearSelect: document.getElementById('yearSelect'),
         decimalPlacesSelect: document.getElementById('decimalPlacesSelect'),
@@ -683,7 +656,6 @@
         settingsCollapsibleContent: document.getElementById('settings-collapsible-content'),
         localStorageIndicator: document.getElementById('localStorageIndicator'),
         loginForm: document.getElementById('login-form'),
-        loginFieldset: document.getElementById('login-fieldset'),
         userInfo: document.getElementById('user-info'),
         userEmailSpan: document.getElementById('user-email'),
     };
@@ -694,6 +666,7 @@
 
     let appSettings = {
         decimalPlaces: 2, employeeName: '', hourlyWage: 10, taxRate: 0.02,
+        // defaultBreakTime, defaultStartTime, defaultEndTime odstránené z appSettings
     };
 
     const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
@@ -743,6 +716,7 @@
         appSettings.employeeName = localStorage.getItem('employeeName') || '';
         appSettings.hourlyWage = parseFloat(localStorage.getItem('hourlyWage')) || 10;
         appSettings.taxRate = parseFloat(localStorage.getItem('taxRate')) || 0.02;
+        // defaultBreakTime, defaultStartTime, defaultEndTime odstránené
     }
     function saveAppSettingToLocalStorage(key, value) {
         localStorage.setItem(key, value);
@@ -766,13 +740,14 @@
             if (docSnap.exists() && docSnap.data().appSettings) {
                 console.log("Loading app settings from Firestore.");
                 const fsSettings = docSnap.data().appSettings;
-                Object.keys(appSettings).forEach(key => {
+                Object.keys(appSettings).forEach(key => { // Iterujeme len cez kľúče, ktoré appSettings aktuálne pozná
                     if (fsSettings.hasOwnProperty(key) && fsSettings[key] !== undefined) {
                          appSettings[key] = fsSettings[key];
                     }
                 });
+                // Po načítaní z FS, uložiť aj do LS, aby boli konzistentné
                 Object.entries(appSettings).forEach(([key, value]) => {
-                    if (value !== undefined) localStorage.setItem(key, value);
+                    if (value !== undefined) localStorage.setItem(key, value); // Ukladáme len definované hodnoty
                 });
                 updateSettingsUIInputs();
                 return true;
@@ -787,6 +762,7 @@
         uiRefs.employeeNameInput.value = appSettings.employeeName;
         uiRefs.hourlyWageInput.value = appSettings.hourlyWage.toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1);
         uiRefs.taxRateInput.value = (appSettings.taxRate * 100).toFixed(1);
+        // defaultBreakInput, defaultStartTimeInput, defaultEndTimeInput odstránené
     }
 
     function initializeUI() {
@@ -854,6 +830,7 @@
             debouncedSaveAppSettingsToFirestore();
         }
     }
+    // Funkcia updateDefaultDaySettings odstránená
 
     window.changeDecimalPlaces = function() {
         saveAppSettingToLocalStorage('decimalPlaces', parseInt(uiRefs.decimalPlacesSelect.value));
@@ -939,11 +916,8 @@
     // --- Správa Mesačných Dát a Synchronizácia ---
     function updateUIForAuthStateChange() {
         const isLoggedIn = !!currentUser;
-        if (uiRefs.loginFieldset) {
-            uiRefs.loginFieldset.style.display = isLoggedIn ? 'none' : 'block';
-        }
+        uiRefs.loginForm.style.display = isLoggedIn ? 'none' : 'flex';
         uiRefs.userInfo.style.display = isLoggedIn ? 'flex' : 'none';
-
         if (isLoggedIn && uiRefs.userEmailSpan) {
             uiRefs.userEmailSpan.textContent = `${currentUser.email}`;
         }
@@ -1131,7 +1105,7 @@
     window.handleTimeInput = function(input, nextId, day) {
         formatTimeInputOnly(input);
         if (input.value.length === 5 && isValidTimeFormat(input.value)) {
-            // checkAndApplyDefaultBreak(day); // Odstránené
+            // checkAndApplyDefaultBreak(day); // Odstránené, keďže default break sa už nerieši
             calculateRow(day);
             const nextElement = document.getElementById(nextId);
             if (nextElement && document.activeElement === input && !nextId.startsWith('break-')) {
@@ -1145,9 +1119,9 @@
     window.validateAndFormatTimeBlur = function(input, day) {
         formatTimeInputOnly(input);
         const isValid = isValidTimeFormat(input.value);
-        const isDefaultSettingInput = input.id.startsWith('default');
+        const isDefaultSettingInput = input.id.startsWith('default'); // Toto už nie je relevantné, ale nechávam pre prípadné budúce použitie
 
-        if (isDefaultSettingInput) {
+        if (isDefaultSettingInput) { // Táto vetva by sa už nemala vykonať
             input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
         } else {
             input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
@@ -1182,6 +1156,8 @@
     }
     window.handleNoteInput = function(textarea) { autoResizeTextarea(textarea); debouncedSaveWorkDataAndSync(); }
     function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px'; }
+
+    // Funkcia checkAndApplyDefaultBreak odstránená
 
     function calculateRow(day) {
         const startInput = document.getElementById(`start-${day}`); const endTimeInput = document.getElementById(`end-${day}`);
@@ -1418,12 +1394,11 @@
                     if (settingsSheetName) {
                         const ws = workbook.Sheets[settingsSheetName]; const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
                         for (let i = 1; i < jsonData.length; i++) {
-                            const row = jsonData[i]; if (row && row[0] && appSettings.hasOwnProperty(row[0])) { // Kontrolujeme, či kľúč existuje v našich appSettings
+                            const row = jsonData[i]; if (row && row[0] && appSettings.hasOwnProperty(row[0])) {
                                 const key = row[0]; let value = row[1];
-                                if (['hourlyWage', 'taxRate'].includes(key)) value = parseFloat(value) || appSettings[key]; // defaultBreakTime odstránené
+                                if (['hourlyWage', 'taxRate'].includes(key)) value = parseFloat(value) || appSettings[key]; // defaultBreakTime už nie je
                                 else if (key === 'decimalPlaces') value = parseInt(value) || appSettings[key];
-                                // defaultStartTime, defaultEndTime odstránené
-                                else if (key === 'employeeName') value = String(value); // Explicitne ako string
+                                // defaultStartTime, defaultEndTime už nie sú
                                 restoredAppSettings[key] = value;
                             }
                         }
