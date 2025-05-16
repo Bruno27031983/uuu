@@ -228,7 +228,7 @@
       padding: 8px 6px;
       font-size: 0.875rem;
     }
-    td .time-input-wrapper .time-btn, .copy-day-btn, .fill-default-btn {
+    td .time-input-wrapper .time-btn { /* Odstránené .copy-day-btn, .fill-default-btn */
       font-size: 1.1rem;
       cursor: pointer;
       padding: 4px 5px;
@@ -240,10 +240,8 @@
       user-select: none;
       transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
     }
-    .copy-day-btn { font-size: 0.85em; padding: 3px 4px; }
-    .fill-default-btn { font-size: 0.9em; padding: 3px 4px; }
 
-    td .time-input-wrapper .time-btn:hover, .copy-day-btn:hover, .fill-default-btn:hover {
+    td .time-input-wrapper .time-btn:hover { /* Odstránené .copy-day-btn:hover, .fill-default-btn:hover */
       background-color: #e5e7eb;
       border-color: #d1d5db;
       color: var(--primary-text-color);
@@ -256,7 +254,7 @@
     th:nth-child(5), td:nth-child(5) { width: 120px;}
     th:nth-child(7), td:nth-child(7) { width: 100px;}
     th:nth-child(8), td:nth-child(8) { width: 100px;}
-    th:nth-child(9), td:nth-child(9) { width: 90px; text-align: center;}
+    th:nth-child(9), td:nth-child(9) { width: 50px; text-align: center;} /* Zúžený stĺpec Akcia */
     th:nth-child(6), td:nth-child(6) { min-width: 250px; width: auto; }
 
 
@@ -383,8 +381,8 @@
     }
     .current-day input::placeholder, .current-day textarea::placeholder { color: rgba(255,255,255,0.7); }
     .current-day textarea[id^="note-"] { background-color: rgba(255,255,255,0.2) !important; }
-    .current-day .time-btn, .current-day .copy-day-btn, .current-day .fill-default-btn { color: var(--current-day-text-color) !important; }
-    .current-day .time-btn:hover, .current-day .copy-day-btn:hover, .current-day .fill-default-btn:hover {
+    .current-day .time-btn { color: var(--current-day-text-color) !important; } /* Odstránené .copy-day-btn, .fill-default-btn */
+    .current-day .time-btn:hover { /* Odstránené .copy-day-btn:hover, .fill-default-btn:hover */
         background-color: rgba(255,255,255,0.25) !important;
         border-color: rgba(255,255,255,0.5) !important;
     }
@@ -433,7 +431,6 @@
         max-width: 240px;
       }
 
-      /* Login form tlačidlá už majú width: 100% z desktopu, čo je OK pre mobil */
       #login-form input[type="email"], #login-form input[type="password"] { font-size: 0.9rem; padding: 10px;}
       #login-form .btn { font-size: 0.92rem !important; padding-top: 11px !important; padding-bottom: 11px !important;}
       #login-form a { margin-top: 18px !important; font-size: 0.88rem; }
@@ -476,7 +473,7 @@
     @media print {
       body { padding: 0; font-size: 10pt; color: #000; background-color: #fff; font-family: Arial, sans-serif;}
       .container { max-width: 100%; margin: 0; padding: 10px; box-shadow: none; border: none;}
-      #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .copy-day-btn, .fill-default-btn, .reset-btn { display: none !important; }
+      #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn { display: none !important; } /* .copy-day-btn, .fill-default-btn odstránené */
       h1 { font-size: 18pt; margin-bottom: 5mm; } h2 { font-size: 12pt; margin-bottom: 8mm; }
       .table-container { overflow: visible; border: 1px solid #ccc; }
       table { width: 100%; page-break-inside: auto; border-collapse: collapse;}
@@ -506,8 +503,8 @@
       .current-day, .current-day td, .current-day th, .current-day input, .current-day textarea {
           background-color: #fff !important; color: #000 !important; border-color: #ccc !important;
       }
-      .current-day span[aria-hidden="true"] { display: none !important; } /* Skryje hviezdičku pri tlači */
-      #workDays td:nth-child(1) span[aria-hidden="true"] { display: none !important; } /* Skryje hviezdičku z bunky dňa */
+      .current-day span[aria-hidden="true"] { display: none !important; }
+      #workDays td:nth-child(1) span[aria-hidden="true"] { display: none !important; }
     }
   </style>
 </head>
@@ -632,19 +629,19 @@
 
     // Firebase Konfigurácia
     const firebaseConfig = {
-        apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
-        authDomain: "uuuuu-f7ef9.firebaseapp.com",
-        projectId: "uuuuu-f7ef9",
-        storageBucket: "uuuuu-f7ef9.appspot.com",
-        messagingSenderId: "456105865458",
-        appId: "1:456105865458:web:101f0a4dcb455f174b606b",
+        apiKey: "YOUR_API_KEY", // VLOŽTE VLASTNÚ HODNOTU
+        authDomain: "YOUR_AUTH_DOMAIN", // VLOŽTE VLASTNÚ HODNOTU
+        projectId: "YOUR_PROJECT_ID", // VLOŽTE VLASTNÚ HODNOTU
+        storageBucket: "YOUR_STORAGE_BUCKET", // VLOŽTE VLASTNÚ HODNOTU
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // VLOŽTE VLASTNÚ HODNOTU
+        appId: "YOUR_APP_ID", // VLOŽTE VLASTNÚ HODNOTU
     };
 
     // Inicializácia Firebase
     const app = initializeApp(firebaseConfig);
     try {
         const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'),
+            provider: new ReCaptchaV3Provider('YOUR_RECAPTCHA_SITE_KEY'), // VLOŽTE VLASTNÚ HODNOTU
             isTokenAutoRefreshEnabled: true
         });
         console.log("Firebase App Check initialized.");
@@ -777,7 +774,7 @@
         uiRefs.employeeNameInput.value = appSettings.employeeName;
         uiRefs.hourlyWageInput.value = appSettings.hourlyWage.toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1);
         uiRefs.taxRateInput.value = (appSettings.taxRate * 100).toFixed(1);
-        uiRefs.defaultBreakInput.value = appSettings.defaultBreakTime.toFixed(1);
+        uiRefs.defaultBreakInput.value = typeof appSettings.defaultBreakTime === 'number' ? appSettings.defaultBreakTime.toString() : '0.5';
         uiRefs.defaultStartTimeInput.value = appSettings.defaultStartTime;
         uiRefs.defaultEndTimeInput.value = appSettings.defaultEndTime;
     }
@@ -817,7 +814,7 @@
         const id = inputElement.id;
         let validChange = true;
 
-        inputElement.classList.remove('invalid-value'); // Reset invalid class
+        inputElement.classList.remove('invalid-value');
 
         if (id === 'hourlyWageInput') {
             if (!isNaN(value) && value >= 0) {
@@ -848,18 +845,13 @@
         }
     }
 
-    window.updateSettings = function() {
-         console.warn("Funkcia updateSettings bola volaná, skontrolujte HTML, či nemá byť nahradená onblur handlermi pre dané pole.");
-    }
-
-
     window.updateDefaultDaySettings = function(inputElement) {
         const { id, value } = inputElement;
         let validChange = true;
         let keyToSave = '';
         let processedValue = value;
 
-        inputElement.classList.remove('invalid-time', 'invalid-value'); // Reset classes
+        inputElement.classList.remove('invalid-time', 'invalid-value');
 
         if (id === 'defaultStartTimeInput') keyToSave = 'defaultStartTime';
         else if (id === 'defaultEndTimeInput') keyToSave = 'defaultEndTime';
@@ -876,16 +868,14 @@
                 validChange = false;
             }
         } else if (keyToSave === 'defaultBreakTime') {
-            let breakVal = value.replace(',', '.');
-            // Ak je pole prázdne po odstránení desatinnej čiarky, aktualizujeme input, aby to používateľ videl
-            if (inputElement.value !== breakVal) inputElement.value = breakVal;
+            let breakValStr = value.replace(',', '.');
+            const newDefaultBreak = parseFloat(breakValStr);
 
-            const newDefaultBreak = parseFloat(breakVal);
-
-            if (value === '' || (!isNaN(newDefaultBreak) && newDefaultBreak >= 0)) { // Prázdna hodnota je tiež OK
-                processedValue = (value === '') ? 0 : newDefaultBreak; // Ak je prázdne, uložíme 0
-                 if (value === '') inputElement.value = '0.0'; // Ak bolo prázdne, vizuálne zobrazíme 0.0
-                 else inputElement.value = newDefaultBreak.toFixed(1); // Inak formátujeme na 1 des. miesto
+            if (value === '' || (!isNaN(newDefaultBreak) && newDefaultBreak >= 0)) {
+                processedValue = (value === '') ? 0 : newDefaultBreak;
+                inputElement.value = processedValue.toString();
+                if (value === '') inputElement.value = '0.0';
+                 else inputElement.value = newDefaultBreak.toFixed(1);
             } else {
                 showWarningNotification('Neplatná hodnota pre predvolenú prestávku. Musí byť číslo >= 0.');
                 inputElement.classList.add('invalid-value');
@@ -900,7 +890,6 @@
     }
     window.changeDecimalPlaces = function() {
         saveAppSettingToLocalStorage('decimalPlaces', parseInt(uiRefs.decimalPlacesSelect.value));
-        // Aktualizuj formát hodinovej mzdy v UI
         uiRefs.hourlyWageInput.value = appSettings.hourlyWage.toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1);
         recalculateAllRowsAndUpdateTotal();
         debouncedSaveAppSettingsToFirestore();
@@ -1023,7 +1012,7 @@
         syncPendingWorkData();
     }
 
-    const debouncedSaveWorkDataAndSync = debounce(() => {
+    const _debouncedSaveWorkDataAndSync = debounce(() => {
         const dataToSave = collectWorkDataForStorage();
         const localKey = getLocalStorageKeyForWorkData();
         localStorage.setItem(localKey, JSON.stringify(dataToSave));
@@ -1033,6 +1022,8 @@
         else if (currentUser) { localStorage.setItem(getPendingSyncKeyForWorkData(), JSON.stringify(dataToSave)); console.log("Work data marked for pending sync.");}
         calculateTotal();
     }, 1200);
+    window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync; // Priradenie k window
+
 
     function getFirestoreDocId() { return `${currentYear}-${String(currentMonth).padStart(2, '0')}`; }
     function getLocalStorageKeyForWorkData() { return currentUser ? `workData-${currentUser.uid}-${getFirestoreDocId()}` : `workData-guest-${getFirestoreDocId()}`; }
@@ -1150,18 +1141,15 @@
                 <td><textarea id="note-${dayStr}" placeholder="Poznámka..." aria-label="Poznámka ku dňu ${dayStr}" oninput="handleNoteInput(this)" onblur="debouncedSaveWorkDataAndSync()"></textarea></td>
                 <td><input type="number" id="gross-${dayStr}" readonly aria-label="Hrubá mzda dňa ${dayStr}"></td>
                 <td><input type="number" id="net-${dayStr}" readonly aria-label="Čistá mzda dňa ${dayStr}"></td>
-                <td style="text-align:center;"><div style="display: flex; align-items: center; justify-content: space-around; gap: 4px;">
-                    <button class="fill-default-btn" onclick="fillDefaultRowData(${dayStr})" title="Vyplniť predvolené" aria-label="Vyplniť predvolené pre deň ${dayStr}">⚙️</button>
-                    ${i > 1 ? `<button class="copy-day-btn" onclick="copyPreviousDayData(${dayStr})" title="Kopírovať z predch. dňa" aria-label="Kopírovať dáta z predchádzajúceho dňa do dňa ${dayStr}">📋</button>` : '<span style="width:20px; display:inline-block;"></span>'}
+                <td style="text-align:center;">
                     <button class="btn reset-btn" style="padding:4px 6px; font-size:0.8rem;" onclick="resetRow(${dayStr})" aria-label="Resetovať deň ${dayStr}">X</button>
-                </div></td>`;
+                </td>`;
              const startInput = row.querySelector(`#start-${dayStr}`);
              const endInput = row.querySelector(`#end-${dayStr}`);
              const noteTextarea = row.querySelector(`#note-${dayStr}`);
 
              if(startInput) startInput.oninput = (e) => handleTimeInput(e.target, `end-${dayStr}`, i);
              if(endInput) endInput.oninput = (e) => handleTimeInput(e.target, `break-${dayStr}`, i);
-             // oninput pre breakInput je už v HTML
              if(noteTextarea) noteTextarea.oninput = (e) => handleNoteInput(e.target);
         }
     }
@@ -1169,21 +1157,8 @@
         const now = new Date(); const hours = now.getHours().toString().padStart(2, '0'); const minutes = now.getMinutes().toString().padStart(2, '0');
         const targetInput = document.getElementById(inputId); if (targetInput) { targetInput.value = `${hours}:${minutes}`; targetInput.dispatchEvent(new Event('input', { bubbles: true })); }
     }
-    window.fillDefaultRowData = function(day) {
-        if (!appSettings.defaultStartTime && !appSettings.defaultEndTime && appSettings.defaultBreakTime === 0.5 && !appSettings.defaultBreakTime === 0) { // Pridaná kontrola pre defaultBreakTime === 0
-             showWarningNotification("Najprv nastavte predvolené časy v nastaveniach."); return;
-        }
-        const startInput = document.getElementById(`start-${day}`); const endInput = document.getElementById(`end-${day}`); const breakInput = document.getElementById(`break-${day}`);
-        if (startInput && appSettings.defaultStartTime) startInput.value = appSettings.defaultStartTime;
-        if (endInput && appSettings.defaultEndTime) endInput.value = appSettings.defaultEndTime;
-        if (breakInput) breakInput.value = appSettings.defaultBreakTime.toFixed(1);
+    // ODSTRÁNENÁ FUNKCIA: window.fillDefaultRowData
 
-        if (startInput) startInput.dispatchEvent(new Event('blur', { bubbles: true }));
-        if (endInput) endInput.dispatchEvent(new Event('blur', { bubbles: true }));
-        if (breakInput) breakInput.dispatchEvent(new Event('blur', { bubbles: true }));
-
-        showSaveNotification(`Predvolené hodnoty vyplnené pre ${day}. deň.`);
-    }
     window.handleTimeInput = function(input, nextId, day) {
         formatTimeInputOnly(input);
         if (input.value.length === 5 && isValidTimeFormat(input.value)) {
@@ -1220,12 +1195,12 @@
         else formattedValue = `${digits.substring(0,2)}:${digits.substring(2,4)}`;
         if (input.value !== formattedValue) input.value = formattedValue;
     }
-    window.handleBreakInput = function(day) { // Volané z onblur pre riadkovú prestávku
+    window.handleBreakInput = function(day) {
         const breakInput = document.getElementById(`break-${day}`);
         let value = breakInput.value.replace(',', '.');
         const numericValue = parseFloat(value);
 
-        breakInput.classList.remove('invalid-value'); // Reset class
+        breakInput.classList.remove('invalid-value');
 
         if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) {
             breakInput.value = value;
@@ -1298,20 +1273,8 @@
         const noteEl = document.getElementById(`note-${dayStr}`); noteEl.value = ''; autoResizeTextarea(noteEl);
         calculateRow(day); debouncedSaveWorkDataAndSync(); showSaveNotification(`Záznam pre ${day}. deň bol vymazaný.`);
     }
-    window.copyPreviousDayData = function(currentDay) {
-        if (currentDay <= 1) return; const prevDay = currentDay - 1;
-        const prevStart = document.getElementById(`start-${prevDay}`)?.value || ''; const prevEnd = document.getElementById(`end-${prevDay}`)?.value || '';
-        const prevBreak = document.getElementById(`break-${prevDay}`)?.value || ''; const prevNote = document.getElementById(`note-${prevDay}`)?.value || '';
-        if (!prevStart && !prevEnd && !prevBreak && !prevNote) { showWarningNotification(`Deň ${prevDay}. neobsahuje dáta.`); return; }
-        if (!confirm(`Skopírovať dáta z ${prevDay}. dňa do ${currentDay}. dňa?`)) return;
-        document.getElementById(`start-${currentDay}`).value = prevStart; document.getElementById(`end-${currentDay}`).value = prevEnd;
-        document.getElementById(`break-${currentDay}`).value = prevBreak; const noteEl = document.getElementById(`note-${currentDay}`); noteEl.value = prevNote; autoResizeTextarea(noteEl);
+    // ODSTRÁNENÁ FUNKCIA: window.copyPreviousDayData
 
-        document.getElementById(`start-${currentDay}`).dispatchEvent(new Event('blur', { bubbles: true }));
-        document.getElementById(`end-${currentDay}`).dispatchEvent(new Event('blur', { bubbles: true }));
-        document.getElementById(`break-${currentDay}`).dispatchEvent(new Event('blur', { bubbles: true }));
-        showSaveNotification(`Dáta z ${prevDay}. dňa skopírované.`);
-    }
     window.clearMonthData = async function() {
         const btn = event.target; if (!confirm(`Naozaj vymazať VŠETKY dáta pre ${MONTH_NAMES[currentMonth]} ${currentYear}?`)) return;
         setLoadingState(btn, true, "Mazanie..."); resetTableInputsOnly(); calculateTotal();
