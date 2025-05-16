@@ -91,7 +91,7 @@
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      display: inline-block;
+      /* display: inline-block; ODSTRÁNENÉ pre správne centrovanie */
       padding-bottom: 3px;
     }
 
@@ -176,7 +176,7 @@
       gap: 10px 12px;
     }
     #settings-collapsible-content.visible {
-      max-height: 700px; /* Znížené, keďže jeden fieldset je preč */
+      max-height: 700px;
       opacity: 1;
       margin-top: 10px;
     }
@@ -521,9 +521,10 @@
 <body>
   <div class="container">
     <div id="auth-container" style="margin-bottom: 20px;">
-      <fieldset id="login-fieldset">
+      <fieldset id="login-fieldset"> <!-- ID je tu správne -->
         <legend>Prihlásenie / Registrácia</legend>
-        <div id="login-form" style="display: none;">
+        <!-- Odstránené style="display: none;" z nasledujúceho divu -->
+        <div id="login-form">
           <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email">
           <input type="password" id="password" placeholder="Heslo" aria-label="Heslo" autocomplete="current-password">
           <button class="btn export-btn" onclick="loginUser()">Prihlásiť sa</button>
@@ -677,8 +678,8 @@
         toggleSettingsBtn: document.getElementById('toggleSettingsBtn'),
         settingsCollapsibleContent: document.getElementById('settings-collapsible-content'),
         localStorageIndicator: document.getElementById('localStorageIndicator'),
-        loginForm: document.getElementById('login-form'),
-        loginFieldset: document.getElementById('login-fieldset'),
+        loginForm: document.getElementById('login-form'), // Tento div stále existuje
+        loginFieldset: document.getElementById('login-fieldset'), // Kľúčový pre skrytie
         userInfo: document.getElementById('user-info'),
         userEmailSpan: document.getElementById('user-email'),
     };
