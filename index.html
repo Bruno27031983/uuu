@@ -368,34 +368,32 @@
         align-items: center; /* Centrovanie tlačidiel v kontajneri */
       }
       .btn-container .btn {
-        font-size: 0.95rem;  /* ZVÄČŠENÉ */
-        padding: 12px 18px; /* ZVÄČŠENÉ (výška a šírka) */
-        margin: 6px 0;      /* Mierne upravený margin */
+        font-size: 0.95rem;
+        padding: 12px 18px;
+        margin: 6px 0;
         flex-grow: 0;
         flex-shrink: 1;
         flex-basis: auto;
         width: auto;
-        min-width: 160px;   /* ZVÄČŠENÉ */
-        max-width: 290px;   /* ZVÄČŠENÉ */
+        min-width: 160px;
+        max-width: 290px;
       }
-      /* Špecifické pre tlačidlo "Vymazať mesiac", ak chceme inú veľkosť */
       .btn-container .btn[title*="Vymazať mesiac"] {
-        max-width: 230px;   /* ZVÄČŠENÉ */
+        max-width: 230px;
       }
 
       /* Úprava tlačidiel v prihlasovacom formulári pre mobilné zariadenia */
       #login-form .btn {
-        width: 220px;       /* Zhoda so šírkou input polí (email/heslo) */
-        margin-top: 10px;   /* Odsadenie od prvku nad (heslo alebo iné tlačidlo) */
-        margin-bottom: 5px;  /* Odsadenie k prvku pod (napr. odkaz "Zabudli ste heslo?") */
-        margin-left: auto;  /* Zabezpečí centrovanie, ak je rodič flex kontajner */
-        margin-right: auto; /* Zabezpečí centrovanie */
-        padding-top: 10px;    /* Vnútorné odsadenie pre lepšiu klikateľnosť */
-        padding-bottom: 10px; /* Vnútorné odsadenie pre lepšiu klikateľnosť */
+        width: 220px;            /* Zhoda so šírkou input polí (email/heslo) */
+        box-sizing: border-box;  /* Padding sa nebude pripočítavať k šírke */
+        padding-top: 11px;       /* Zvýšenie horného paddingu pre väčšiu výšku */
+        padding-bottom: 11px;    /* Zvýšenie dolného paddingu pre väčšiu výšku */
+        font-size: 0.9rem;       /* Zachovanie konzistentnej veľkosti písma */
+        margin: 0;               /* Najprv resetujeme všetky marginy */
+        margin-top: 12px;        /* Odsadenie od prvku nad (heslo alebo predchádzajúce tlačidlo) */
       }
-      /* Špecifické odsadenie pre druhé tlačidlo (Registrovať), aby bolo bližšie k prvému */
       #login-form .btn + .btn {
-        margin-top: 6px; /* Menšia medzera medzi tlačidlami "Prihlásiť sa" a "Registrovať" */
+        margin-top: 8px; /* Menšia medzera medzi tlačidlami "Prihlásiť sa" a "Registrovať" */
       }
     }
 
@@ -408,24 +406,18 @@
       #settings-collapsible-content.visible { max-height: 750px; }
 
       .btn-container .btn {
-        font-size: 0.92rem;  /* ZVÄČŠENÉ */
-        padding: 11px 16px; /* ZVÄČŠENÉ (výška a šírka) */
+        font-size: 0.92rem;
+        padding: 11px 16px;
         margin: 5px 0;
-        min-width: 150px;   /* ZVÄČŠENÉ */
-        max-width: 270px;   /* ZVÄČŠENÉ */
+        min-width: 150px;
+        max-width: 270px;
       }
       .btn-container .btn[title*="Vymazať mesiac"] {
-        max-width: 210px;   /* ZVÄČŠENÉ */
+        max-width: 210px;
       }
-      /* Ak by bolo potrebné špecificky upraviť tlačidlá login form na <480px,
-         mohli by sme sem pridať pravidlá. Zatiaľ dedia z 768px.
-         Napr. ak by input polia mali inú šírku na <480px:
-         #login-form input[type="email"],
-         #login-form input[type="password"],
-         #login-form .btn {
-           width: 200px; // Alebo iná hodnota
-         }
-      */
+      /* Štýly pre #login-form .btn sa zdedia z @media (max-width: 768px),
+         čo je v poriadku, ak input polia zostávajú 220px široké.
+         Ak by sa input polia menili, bolo by potrebné tu prepísať aj #login-form .btn width. */
     }
 
     /* --- Notifikácie --- */
@@ -448,10 +440,12 @@
     #login-form { display: flex; flex-direction: column; align-items: center; }
     #login-form input[type="email"], #login-form input[type="password"] {
       width: 220px; margin: 6px auto; display: block; padding: 8px; font-size: 0.9rem;
+      /* box-sizing: border-box; je už aplikovaný z globálnych štýlov pre inputy */
     }
-    #login-form .btn { /* Pôvodne: width: 130px; margin: 6px 2px; */
+    #login-form .btn {
       width: 130px; /* Šírka pre desktop, prepíše sa v media query pre mobil */
       margin: 6px 2px; /* Margin pre desktop, prepíše sa v media query pre mobil */
+      /* Ostatné vlastnosti ako padding, font-size sa dedia z .btn globálne */
     }
     #login-form a { margin-top: 10px; display: block; font-size: 0.88rem; color: var(--link-color); text-decoration: none; }
     #login-form a:hover { text-decoration: underline; color: var(--link-hover-color); }
@@ -510,7 +504,6 @@
                 </select>
             </div>
         </div>
-        <!-- Tlačidlo pre tmavý režim bolo tu -->
     </div>
 
     <div class="table-container">
@@ -529,7 +522,6 @@
           </tr>
         </thead>
         <tbody id="workDays">
-          <!-- Riadky sa generujú dynamicky -->
         </tbody>
       </table>
     </div>
