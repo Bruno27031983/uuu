@@ -350,6 +350,27 @@
     .current-day .time-btn, .current-day .copy-day-btn { color: var(--current-day-text-color) !important; }
     .current-day .time-btn:hover, .current-day .copy-day-btn:hover { background-color: #7a1fb4 !important; border-color: #9932cc !important; }
 
+    /* --- Login formulár --- */
+    #login-form { display: flex; flex-direction: column; align-items: center; }
+    #login-form input[type="email"], #login-form input[type="password"] {
+      width: 220px; margin: 6px auto; display: block; padding: 8px; font-size: 0.9rem;
+      box-sizing: border-box; /* Pridané pre konzistenciu */
+    }
+    #login-form .btn {
+      /* Desktop štýly - budú prebité v @media query */
+      width: 130px;
+      margin: 6px 2px;
+      /* Reset flex vlastností pre prípad, že by boli nechcene zdedené */
+      flex-grow: 0;
+      flex-shrink: 0;
+      flex-basis: auto;
+      min-width: auto;
+      max-width: none;
+    }
+    #login-form a { margin-top: 10px; display: block; font-size: 0.88rem; color: var(--link-color); text-decoration: none; }
+    #login-form a:hover { text-decoration: underline; color: var(--link-hover-color); }
+
+
     /* --- Responzivita --- */
     @media (max-width: 768px) {
       html { font-size: 15px; }
@@ -365,7 +386,7 @@
 
       .btn-container {
         flex-direction: column;
-        align-items: center; /* Centrovanie tlačidiel v kontajneri */
+        align-items: center;
       }
       .btn-container .btn {
         font-size: 0.95rem;
@@ -382,18 +403,26 @@
         max-width: 230px;
       }
 
-      /* Úprava tlačidiel v prihlasovacom formulári pre mobilné zariadenia */
+      /* Špecifické štýly pre tlačidlá v #login-form na mobiloch */
       #login-form .btn {
-        width: 220px;            /* Zhoda so šírkou input polí (email/heslo) */
-        box-sizing: border-box;  /* Padding sa nebude pripočítavať k šírke */
-        padding-top: 11px;       /* Zvýšenie horného paddingu pre väčšiu výšku */
-        padding-bottom: 11px;    /* Zvýšenie dolného paddingu pre väčšiu výšku */
-        font-size: 0.9rem;       /* Zachovanie konzistentnej veľkosti písma */
-        margin: 0;               /* Najprv resetujeme všetky marginy */
-        margin-top: 12px;        /* Odsadenie od prvku nad (heslo alebo predchádzajúce tlačidlo) */
+        width: 220px !important;
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        margin-top: 12px !important;
+        margin-bottom: 0 !important;
+        font-size: 0.9rem !important;
+        box-sizing: border-box !important;
+        flex: none !important;
       }
       #login-form .btn + .btn {
-        margin-top: 8px; /* Menšia medzera medzi tlačidlami "Prihlásiť sa" a "Registrovať" */
+        margin-top: 8px !important;
+      }
+      #login-form a {
+        margin-top: 15px !important;
       }
     }
 
@@ -415,9 +444,7 @@
       .btn-container .btn[title*="Vymazať mesiac"] {
         max-width: 210px;
       }
-      /* Štýly pre #login-form .btn sa zdedia z @media (max-width: 768px),
-         čo je v poriadku, ak input polia zostávajú 220px široké.
-         Ak by sa input polia menili, bolo by potrebné tu prepísať aj #login-form .btn width. */
+      /* Štýly pre #login-form .btn sa zdedia z @media (max-width: 768px) */
     }
 
     /* --- Notifikácie --- */
@@ -436,19 +463,6 @@
     #errorNotification { background-color: var(--btn-danger-bg); color: white; }
     #warningNotification { background-color: var(--btn-highlight-bg); color: #333; }
 
-    /* --- Login formulár --- */
-    #login-form { display: flex; flex-direction: column; align-items: center; }
-    #login-form input[type="email"], #login-form input[type="password"] {
-      width: 220px; margin: 6px auto; display: block; padding: 8px; font-size: 0.9rem;
-      /* box-sizing: border-box; je už aplikovaný z globálnych štýlov pre inputy */
-    }
-    #login-form .btn {
-      width: 130px; /* Šírka pre desktop, prepíše sa v media query pre mobil */
-      margin: 6px 2px; /* Margin pre desktop, prepíše sa v media query pre mobil */
-      /* Ostatné vlastnosti ako padding, font-size sa dedia z .btn globálne */
-    }
-    #login-form a { margin-top: 10px; display: block; font-size: 0.88rem; color: var(--link-color); text-decoration: none; }
-    #login-form a:hover { text-decoration: underline; color: var(--link-hover-color); }
   </style>
 </head>
 <body>
