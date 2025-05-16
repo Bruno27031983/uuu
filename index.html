@@ -351,7 +351,7 @@
     .current-day .time-btn:hover, .current-day .copy-day-btn:hover { background-color: #7a1fb4 !important; border-color: #9932cc !important; }
 
     /* --- Responzivita --- */
-        @media (max-width: 768px) {
+    @media (max-width: 768px) {
       html { font-size: 15px; }
       body { padding: 6px; font-size: 0.9rem; }
       .container { padding: 10px; }
@@ -382,6 +382,21 @@
       .btn-container .btn[title*="Vymazať mesiac"] {
         max-width: 230px;   /* ZVÄČŠENÉ */
       }
+
+      /* Úprava tlačidiel v prihlasovacom formulári pre mobilné zariadenia */
+      #login-form .btn {
+        width: 220px;       /* Zhoda so šírkou input polí (email/heslo) */
+        margin-top: 10px;   /* Odsadenie od prvku nad (heslo alebo iné tlačidlo) */
+        margin-bottom: 5px;  /* Odsadenie k prvku pod (napr. odkaz "Zabudli ste heslo?") */
+        margin-left: auto;  /* Zabezpečí centrovanie, ak je rodič flex kontajner */
+        margin-right: auto; /* Zabezpečí centrovanie */
+        padding-top: 10px;    /* Vnútorné odsadenie pre lepšiu klikateľnosť */
+        padding-bottom: 10px; /* Vnútorné odsadenie pre lepšiu klikateľnosť */
+      }
+      /* Špecifické odsadenie pre druhé tlačidlo (Registrovať), aby bolo bližšie k prvému */
+      #login-form .btn + .btn {
+        margin-top: 6px; /* Menšia medzera medzi tlačidlami "Prihlásiť sa" a "Registrovať" */
+      }
     }
 
     @media (max-width: 480px) {
@@ -402,6 +417,15 @@
       .btn-container .btn[title*="Vymazať mesiac"] {
         max-width: 210px;   /* ZVÄČŠENÉ */
       }
+      /* Ak by bolo potrebné špecificky upraviť tlačidlá login form na <480px,
+         mohli by sme sem pridať pravidlá. Zatiaľ dedia z 768px.
+         Napr. ak by input polia mali inú šírku na <480px:
+         #login-form input[type="email"],
+         #login-form input[type="password"],
+         #login-form .btn {
+           width: 200px; // Alebo iná hodnota
+         }
+      */
     }
 
     /* --- Notifikácie --- */
@@ -425,7 +449,10 @@
     #login-form input[type="email"], #login-form input[type="password"] {
       width: 220px; margin: 6px auto; display: block; padding: 8px; font-size: 0.9rem;
     }
-    #login-form .btn { width: 130px; margin: 6px 2px; }
+    #login-form .btn { /* Pôvodne: width: 130px; margin: 6px 2px; */
+      width: 130px; /* Šírka pre desktop, prepíše sa v media query pre mobil */
+      margin: 6px 2px; /* Margin pre desktop, prepíše sa v media query pre mobil */
+    }
     #login-form a { margin-top: 10px; display: block; font-size: 0.88rem; color: var(--link-color); text-decoration: none; }
     #login-form a:hover { text-decoration: underline; color: var(--link-hover-color); }
   </style>
