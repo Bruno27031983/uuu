@@ -1,5 +1,5 @@
 const CACHE_NAME_PREFIX = 'bruno-calc-cache-';
-const CACHE_VERSION = 'v1.3'; // Zvýšte verziu pri každej zmene v ASSETS_TO_CACHE alebo logike SW
+const CACHE_VERSION = 'v1.4'; // Zvýšte verziu pri každej zmene v ASSETS_TO_CACHE alebo logike SW
 const CACHE_NAME = `${CACHE_NAME_PREFIX}${CACHE_VERSION}`;
 
 // Zoznam súborov, ktoré sa majú uložiť do cache pri inštalácii
