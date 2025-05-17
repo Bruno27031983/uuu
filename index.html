@@ -7,13 +7,14 @@
 
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
-  <link rel="apple-touch-icon" href="./icons/icon-192x192.png"> <!-- Uistite sa, že tento súbor existuje -->
+  <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
   <style>
+    /* CSS štýly zostávajú rovnaké ako v predchádzajúcej "maximálne vylepšenej" verzii */
     :root {
       --primary-bg-color: #f0f2f5;
       --secondary-bg-color: #ffffff;
@@ -343,9 +344,7 @@
             <th>Akcie</th>
           </tr>
         </thead>
-        <tbody id="workDays">
-          <!-- Riadky budú generované JavaScriptom -->
-        </tbody>
+        <tbody id="workDays"></tbody>
       </table>
     </div>
 
@@ -367,19 +366,17 @@
   <div id="warningNotification" role="alert" aria-live="assertive">Upozornenie.</div>
 
   <script type="module">
-    // Importy Firebase
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+    // Importy Firebase - AKTUALIZOVANÉ NA VERZIU 9.22.1
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
     import {
-        initializeFirestore, // NOVÝ IMPORT
-        persistentLocalCache, // NOVÝ IMPORT
-        CACHE_SIZE_UNLIMITED, // NOVÝ IMPORT (voliteľný)
+        initializeFirestore, persistentLocalCache, CACHE_SIZE_UNLIMITED,
         collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch
-    } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js';
+    } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+    import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js';
 
    const firebaseConfig = {
-        apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
+        apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // Nahraďte vašimi skutočnými kľúčmi
         authDomain: "uuuuu-f7ef9.firebaseapp.com",
         projectId: "uuuuu-f7ef9",
         storageBucket: "uuuuu-f7ef9.appspot.com",
@@ -390,33 +387,31 @@
     const app = initializeApp(firebaseConfig);
     try {
        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'),
+            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), // Váš reCAPTCHA v3 site key
             isTokenAutoRefreshEnabled: true
         });
         console.log("Firebase App Check initialized.");
     } catch (e) {
-        console.warn("App Check initialization failed (Ensure reCAPTCHA v3 is set up in Firebase Console):", e);
+        console.warn("App Check initialization failed:", e);
     }
     const auth = getAuth(app);
 
-    // NOVÝ SPÔSOB INICIALIZÁCIE FIRESTORE S OFFLINE PERZISTENCIOU
     let db;
     try {
         db = initializeFirestore(app, {
-            localCache: persistentLocalCache({
-                 sizeBytes: CACHE_SIZE_UNLIMITED, // Voliteľné: neobmedzená veľkosť cache
-            })
+            localCache: persistentLocalCache({ sizeBytes: CACHE_SIZE_UNLIMITED })
         });
         console.log("Firestore initialized with persistent local cache enabled.");
     } catch (error) {
         console.error("Error initializing Firestore with persistent cache:", error);
-        db = initializeFirestore(app, {}); // Fallback bez perzistencie
+        db = initializeFirestore(app, {});
         showErrorNotification("Chyba pri inicializácii offline úložiska. Offline režim nemusí byť dostupný.");
     }
 
-    // Zvyšok JavaScriptu (funkcie, listenery, atď.) zostáva rovnaký ako v predchádzajúcej "maximálne vylepšenej" verzii
-    // ... (sem skopírujte všetok zvyšný JavaScript kód od "Globálne Premenné a Konštanty" až po koniec <script type="module">) ...
-    // Začína tu:
+    // Zvyšok JavaScript kódu (od "Globálne Premenné a Konštanty" ďalej) zostáva
+    // rovnaký ako v predchádzajúcej odpovedi, kde bol "kompletný kód".
+    // Sem skopírujte zvyšok JS.
+
     // Globálne Premenné a Konštanty
     let currentUser = null;
     let currentListenerUnsubscribe = null;
@@ -657,19 +652,20 @@
         const docId = getFirestoreDocId(); const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
         console.log(`Attaching Firestore listener for document: users/${currentUser.uid}/workData/${docId}`);
         currentListenerUnsubscribe = onSnapshot(docRef, (docSnap) => {
+            console.log(`LISTENER (${getFirestoreDocId()}): Snapshot received. HasPendingWrites: ${docSnap.metadata.hasPendingWrites}, FromCache: ${docSnap.metadata.fromCache}`);
             const localKey = getLocalStorageKeyForWorkData();
             if (docSnap.exists()) {
                 const firestoreData = docSnap.data(); const firestoreDataString = JSON.stringify(firestoreData);
                 if (!docSnap.metadata.hasPendingWrites || firestoreDataString !== localStorage.getItem(localKey)) {
-                    console.log("Applying Firestore work data to UI and LocalStorage.");
+                    console.log(`LISTENER (${getFirestoreDocId()}): Document exists. Applying data.`);
                     localStorage.setItem(localKey, firestoreDataString); parseAndApplyWorkData(firestoreDataString);
-                } else { console.log("Firestore work data is a local echo or matches LocalStorage."); calculateTotal(); }
+                } else { console.log(`LISTENER (${getFirestoreDocId()}): Firestore work data is a local echo or matches LocalStorage.`); calculateTotal(); }
             } else {
-                console.log(`Document ${docId} not found in Firestore. Clearing LocalStorage if it exists for this key.`);
+                console.log(`LISTENER (${getFirestoreDocId()}): Document does NOT exist. Clearing local data.`);
                 if (localStorage.getItem(localKey)) localStorage.removeItem(localKey); parseAndApplyWorkData(null);
             }
         }, (error) => {
-            console.error(`Firestore listener error for document ${docId}:`, error);
+            console.error(`LISTENER ERROR (${getFirestoreDocId()}):`, error);
             showErrorNotification(`Chyba synchronizácie dát s cloudom: ${error.message}. Zobrazujem lokálne uložené dáta.`);
             loadWorkDataFromLocalStorage();
         });
@@ -708,7 +704,9 @@
         }
     }
     async function syncPendingWorkData() {
-        if (!currentUser || !navigator.onLine) return; const pendingKey = getPendingSyncKeyForWorkData(); if (!pendingKey) return;
+        console.log("Attempting to sync pending work data..."); // Log
+        if (!currentUser || !navigator.onLine) { console.log("Sync aborted: No user or offline."); return; }
+        const pendingKey = getPendingSyncKeyForWorkData(); if (!pendingKey) { console.log("Sync aborted: No pending key."); return; }
         const pendingDataString = localStorage.getItem(pendingKey);
         if (pendingDataString) {
             console.log('Found pending work data in LocalStorage, attempting to sync to Firestore...');
@@ -961,7 +959,7 @@
                 didParseCell: (data) => { if (data.column.index === 5) data.cell.styles.cellWidth = 'wrap'; }
             });
             const totalY = doc.lastAutoTable.finalY + 8; doc.setFontSize(9);
-            const totalTextContent = uiRefs.totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/?strong>/gi, '').replace(/ /g, ' ').replace(/€/g, 'EUR');
+            const totalTextContent = uiRefs.totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/?strong>/g, '').replace(/ /g, ' ').replace(/€/g, 'EUR');
             doc.text(totalTextContent, 14, totalY);
             const safeName = (appSettings.employeeName || 'Pracovnik').replace(/[^a-zA-Z0-9]/g, '_');
             doc.save(`Vykaz_Prace_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`); showSaveNotification('PDF súbor bol úspešne vygenerovaný.');
@@ -1101,8 +1099,14 @@
         uiRefs.toggleSettingsBtn.textContent = isVisible ? 'Skryť nastavenia aplikácie ▲' : 'Zobraziť nastavenia aplikácie ▼';
         uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', isVisible);
     });
-    window.addEventListener('online', () => { handleOnlineStatusChange(true); syncPendingWorkData(); if(currentUser) saveAppSettingsToFirestore(); });
-    window.addEventListener('offline', () => handleOnlineStatusChange(false));
+    window.addEventListener('online', () => {
+        console.log("EVENT: Aplikácia je ONLINE");
+        handleOnlineStatusChange(true); syncPendingWorkData(); if(currentUser) saveAppSettingsToFirestore();
+    });
+    window.addEventListener('offline', () => {
+        console.log("EVENT: Aplikácia je OFFLINE");
+        handleOnlineStatusChange(false);
+    });
     function handleOnlineStatusChange(online) {
         const message = online ? 'Ste opäť online. Synchronizácia dát môže prebiehať.' : 'Ste offline. Zmeny sa budú ukladať lokálne a synchronizujú sa po pripojení.';
         showNotification(online ? 'saveNotification' : 'warningNotification', message, online ? 3000: 4000);
@@ -1119,11 +1123,9 @@
     });
 
     initializeUI();
-    // Koniec JavaScript kódu, ktorý sa mal skopírovať
 
   </script>
 
-  <!-- Service Worker registrácia -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
