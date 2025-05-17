@@ -15,7 +15,7 @@
   <link rel="dns-prefetch" href="//fonts.googleapis.com">
 
   <style>
-    /* ... (CSS zostáva rovnaké) ... */
+    /* ... (CSS KÓD ZOSTAŇUJE ROVNAKÝ AKO V POSLEDNEJ KOMPLETNEJ VERZII) ... */
     :root {
       --primary-bg-color: #f0f2f5;
       --secondary-bg-color: #ffffff;
@@ -519,14 +519,16 @@
         <div id="login-form">
           <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email">
           <input type="password" id="password" placeholder="Heslo" aria-label="Heslo" autocomplete="current-password">
-          <button class="btn export-btn" onclick="window.loginUser(event)">Prihlásiť sa</button>
-          <button class="btn export-btn" onclick="window.registerUser(event)">Registrovať</button>
-          <a href="#" onclick="window.resetUserPassword(); return false;">Zabudli ste heslo?</a>
+          <!-- ODSTRÁNENÉ onclick, pridané ID -->
+          <button class="btn export-btn" id="loginButton">Prihlásiť sa</button>
+          <button class="btn export-btn" id="registerButton">Registrovať</button>
+          <a href="#" id="resetPasswordLink">Zabudli ste heslo?</a>
         </div>
       </fieldset>
       <div id="user-info" style="display: none; justify-content: center; align-items: center; gap: 15px; margin-top:10px;">
         <span id="user-email" style="font-weight:500;"></span>
-        <button class="btn reset-btn" onclick="window.logoutUser(event)" style="padding: 8px 15px; font-size: 0.85rem; margin:0;">Odhlásiť sa</button>
+        <!-- ODSTRÁNENÉ onclick, pridané ID -->
+        <button class="btn reset-btn" id="logoutButton" style="padding: 8px 15px; font-size: 0.85rem; margin:0;">Odhlásiť sa</button>
       </div>
     </div>
 
@@ -534,12 +536,14 @@
     <h2 id="subTitle"></h2>
 
     <div class="settings">
+        <!-- ODSTRÁNENÉ onclick, toggleSettingsBtn už má ID -->
         <button id="toggleSettingsBtn" class="btn" aria-expanded="false" aria-controls="settings-collapsible-content">Zobraziť nastavenia aplikácie ▼</button>
         <div id="settings-collapsible-content">
             <fieldset>
                 <legend>Základné nastavenia</legend>
                 <div>
                     <label for="employeeNameInput">Meno pracovníka:</label>
+                    <!-- oninput a onblur pre inputy v tabuľke/settings môžu zostať, lebo sa volajú, keď už je všetko definované -->
                     <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka" oninput="window.updateEmployeeName()">
                 </div>
                 <div>
@@ -587,7 +591,6 @@
           </tr>
         </thead>
         <tbody id="workDays">
-          <!-- Riadky tabuľky budú generované JavaScriptom -->
         </tbody>
       </table>
     </div>
@@ -596,12 +599,13 @@
     <div id="localStorageIndicator"></div>
 
     <div class="btn-container">
-        <button class="btn export-btn" onclick="window.exportToPDF(event)">Exportovať do PDF</button>
-        <button class="btn export-btn" onclick="window.sendPDF(event)">Odoslať PDF (s pozn.)</button>
-        <button class="btn backup-btn" onclick="window.createBackup(event)">Vytvoriť zálohu (XLSX)</button>
-        <button class="btn backup-btn" onclick="window.restoreBackup(event)">Obnoviť zálohu (XLSX)</button>
-        <button class="btn export-btn" onclick="window.loadFromFirestore(event)">Načítať z Cloudu</button>
-        <button class="btn warning-btn" onclick="window.clearMonthData(event)" title="Vymazať všetky dáta pre aktuálny mesiac">Vymazať Mesiac</button>
+        <!-- ODSTRÁNENÉ onclick, pridané ID -->
+        <button class="btn export-btn" id="exportPdfButton">Exportovať do PDF</button>
+        <button class="btn export-btn" id="sendPdfButton">Odoslať PDF (s pozn.)</button>
+        <button class="btn backup-btn" id="createBackupButton">Vytvoriť zálohu (XLSX)</button>
+        <button class="btn backup-btn" id="restoreBackupButton">Obnoviť zálohu (XLSX)</button>
+        <button class="btn export-btn" id="loadFromCloudButton">Načítať z Cloudu</button>
+        <button class="btn warning-btn" id="clearMonthButton" title="Vymazať všetky dáta pre aktuálny mesiac">Vymazať Mesiac</button>
     </div>
   </div>
 
@@ -609,20 +613,17 @@
   <div id="errorNotification" role="alert" aria-live="assertive">Nastala chyba.</div>
   <div id="warningNotification" role="alert" aria-live="assertive">Upozornenie.</div>
 
-  <!-- Firebase SDK skripty s defer, presunuté na koniec body -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js" defer></script>
 
-  <!-- Hlavný aplikačný skript - UŽ NIE JE type="module" -->
   <script>
-    // Globálne premenné pre Firebase funkcie, ktoré budú priradené neskôr
+    // Globálne premenné pre Firebase funkcie
     let initializeApp, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail;
     let getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, enableFirestorePersistence;
     let initializeFirebaseAppCheck_SDK, ReCaptchaV3Provider_SDK;
 
-    // Funkcia na kontrolu, či sú všetky Firebase SDK načítané
     function areFirebaseSDKsLoaded() {
         return (
             typeof window.firebase !== 'undefined' &&
@@ -633,23 +634,19 @@
         );
     }
 
-    // Funkcia, ktorá priradí Firebase funkcie a spustí logiku aplikácie
     function setupAndRunApp() {
         if (!areFirebaseSDKsLoaded()) {
             console.log("Firebase SDKs not yet loaded, retrying in 100ms...");
-            setTimeout(setupAndRunApp, 100); // Skús znova o chvíľu
+            setTimeout(setupAndRunApp, 100);
             return;
         }
-
         console.log("Firebase SDKs loaded globally. Setting up app...");
 
-        // Priradenie globálnych Firebase objektov k našim premenným
-        const firebaseApp_module = window.firebase.app; // Používame lokálne premenné v tejto funkcii
+        const firebaseApp_module = window.firebase.app;
         const firebaseAuth_module = window.firebase.auth;
         const firebaseFirestore_module = window.firebase.firestore;
         const firebaseAppCheck_module = window.firebase.appCheck;
 
-        // Destructuring potrebných funkcií z globálnych modulov
         initializeApp = firebaseApp_module.initializeApp;
         getAuth = firebaseAuth_module.getAuth;
         signInWithEmailAndPassword = firebaseAuth_module.signInWithEmailAndPassword;
@@ -670,12 +667,10 @@
         initializeFirebaseAppCheck_SDK = firebaseAppCheck_module.initializeAppCheck;
         ReCaptchaV3Provider_SDK = firebaseAppCheck_module.ReCaptchaV3Provider;
 
-        initializeAppLogic(); // Spustí hlavnú logiku aplikácie
+        initializeAppLogic();
     }
 
-
     function initializeAppLogic() {
-        // Firebase Konfigurácia
         const firebaseConfig = {
             apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // <-- !!! NAHRAĎ SVOJÍM API KĽÚČOM !!!
             authDomain: "uuuuu-f7ef9.firebaseapp.com",
@@ -710,7 +705,6 @@
             }
           });
 
-        // Globálne Premenné
         let currentUser = null;
         let currentListenerUnsubscribe = null;
         const uiRefs = {
@@ -744,7 +738,6 @@
         const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
         const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
 
-        // --- Utility Funkcie ---
         function getDaysInMonth(month, year) { return new Date(year, month + 1, 0).getDate(); }
         function getDayName(year, month, day) { return DAY_NAMES_SHORT[new Date(year, month, day).getDay()]; }
         function isWeekend(year, month, day) { const d = new Date(year, month, day).getDay(); return d === 0 || d === 6; }
@@ -754,8 +747,6 @@
         };
         function isValidTimeFormat(timeString) { return typeof timeString === 'string' && /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeString); }
 
-
-        // --- Notifikácie ---
         function showNotification(id, message, duration = 3500) {
             const notification = document.getElementById(id);
             if (!notification) return;
@@ -786,7 +777,6 @@
             }
         }
 
-        // --- Správa Nastavení Aplikácie ---
         function loadAppSettingsFromLocalStorage() {
             appSettings.decimalPlaces = parseInt(localStorage.getItem('decimalPlaces')) || 2;
             appSettings.employeeName = localStorage.getItem('employeeName') || '';
@@ -853,7 +843,6 @@
             updateLocalStorageSizeIndicator();
         }
 
-        // Všetky globálne funkcie (onclick handlery atď.) musia byť priradené k `window` objektu
         window.updateEmployeeName = function() {
             saveAppSettingToLocalStorage('employeeName', uiRefs.employeeNameInput.value.trim());
             updatePageTitleAndGreeting();
@@ -977,7 +966,7 @@
             catch (error) { console.error('Chyba pri odhlásení:', error); showErrorNotification('Chyba pri odhlásení: ' + error.message); }
             finally { setLoadingState(btn, false, null, "Odhlásiť sa");}
         };
-        window.resetUserPassword = async function() {
+        window.resetUserPassword = async function() { // Tento event nepotrebuje, lebo nie je na tlačidle
             if (!navigator.onLine) { showErrorNotification('Ste offline. Obnova hesla je možná iba online.'); return; }
             const emailInput = document.getElementById('email'); const email = emailInput.value;
             if (!email) { emailInput.style.border = '1px solid red'; showErrorNotification('Prosím, zadajte email.'); setTimeout(() => { emailInput.style.border = ''; }, 3000); return; }
@@ -986,14 +975,9 @@
             catch (error) { console.error('Chyba pri obnove hesla:', error); showErrorNotification('Chyba pri obnove hesla: ' + mapFirebaseAuthError(error.code)); }
         };
 
-        // --- (Zvyšok kódu, ktorý som ti poslal v predchádzajúcej odpovedi, od `updateUIForAuthStateChange` až po koniec,
-        //      vrátane všetkých funkcií pre tabuľku, exporty, atď. sem patrí) ---
-        // Skopíruj sem ten zvyšok kódu z predchádzajúceho bloku "Rozumiem, pre úplnosť a istotu..."
-        // od riadku: function updateUIForAuthStateChange() {
-        // až po: initializeUI();
-
-        // Toto je len placeholder pre ten dlhý blok kódu, ktorý už máš
-        // Začína od:
+        // --- (Zvyšok JavaScript kódu od 'updateUIForAuthStateChange' po koniec,
+        //      vrátane exportov s dynamickým importom knižníc, zostáva rovnaký ako v predchádzajúcej kompletnej odpovedi) ---
+        // TENTO BLOK ZAČÍNA OD:
         function updateUIForAuthStateChange() {
             const isLoggedIn = !!currentUser;
             if (uiRefs.loginFieldset) {
@@ -1006,8 +990,10 @@
             if (isLoggedIn && uiRefs.userEmailSpan) {
                 uiRefs.userEmailSpan.textContent = `${currentUser.email}`;
             }
-            const logoutBtn = uiRefs.userInfo ? uiRefs.userInfo.querySelector('.reset-btn') : null;
-            if (logoutBtn) setLoadingState(logoutBtn, false, null, "Odhlásiť sa");
+            const logoutBtn = uiRefs.userInfo ? uiRefs.userInfo.querySelector('.reset-btn') : null; // uiRefs.userInfo už má ID
+            if (logoutBtn && logoutBtn.id === 'logoutButton') { // Kontrola, či je to správne tlačidlo
+                 setLoadingState(logoutBtn, false, null, "Odhlásiť sa");
+            }
         }
 
         function setupFirestoreWorkDataListener() {
@@ -1209,7 +1195,7 @@
                  if(endInput) endInput.oninput = (e) => window.handleTimeInput(e.target, `break-${dayStr}`, i);
                  if(noteTextarea) noteTextarea.oninput = (e) => window.handleNoteInput(e.target);
             }
-            loadWorkDataFromLocalStorage(); // Načíta dáta do novovytvorenej tabuľky
+            loadWorkDataFromLocalStorage();
         }
 
         window.setCurrentTime = function(inputId, day) {
@@ -1438,9 +1424,7 @@
         window.exportToPDF = async function(event) {
             const btn = event.currentTarget; setLoadingState(btn, true, "Načítavam PDF...");
             try {
-                // Dynamický import knižníc
                 const { default: jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-                // Pre autotable predpokladáme, že sa pripne na globálny jsPDF alebo jeho prototyp
                 await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js');
 
                 setLoadingState(btn, true, "Exportujem PDF..."); calculateTotal();
@@ -1672,11 +1656,27 @@
             updatePageTitleAndGreeting();
         }
 
-        uiRefs.toggleSettingsBtn.addEventListener('click', () => {
+        // Priradenie listenerov k tlačidlám
+        document.getElementById('loginButton').addEventListener('click', (event) => window.loginUser(event));
+        document.getElementById('registerButton').addEventListener('click', (event) => window.registerUser(event));
+        document.getElementById('resetPasswordLink').addEventListener('click', (event) => {
+            event.preventDefault();
+            window.resetUserPassword();
+        });
+        document.getElementById('logoutButton').addEventListener('click', (event) => window.logoutUser(event));
+        document.getElementById('toggleSettingsBtn').addEventListener('click', () => { // Tento nepotrebuje event pre funkciu
             const isVisible = uiRefs.settingsCollapsibleContent.classList.toggle('visible');
             uiRefs.toggleSettingsBtn.textContent = isVisible ? 'Skryť nastavenia aplikácie ▲' : 'Zobraziť nastavenia aplikácie ▼';
             uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', isVisible);
         });
+        document.getElementById('exportPdfButton').addEventListener('click', (event) => window.exportToPDF(event));
+        document.getElementById('sendPdfButton').addEventListener('click', (event) => window.sendPDF(event));
+        document.getElementById('createBackupButton').addEventListener('click', (event) => window.createBackup(event));
+        document.getElementById('restoreBackupButton').addEventListener('click', (event) => window.restoreBackup(event));
+        document.getElementById('loadFromCloudButton').addEventListener('click', (event) => window.loadFromFirestore(event));
+        document.getElementById('clearMonthButton').addEventListener('click', (event) => window.clearMonthData(event));
+
+
         window.addEventListener('online', () => { handleOnlineStatusChange(true); syncPendingWorkData(); if(currentUser) saveAppSettingsToFirestore(); });
         window.addEventListener('offline', () => handleOnlineStatusChange(false));
         function handleOnlineStatusChange(online) {
@@ -1705,11 +1705,9 @@
             updatePageTitleAndGreeting();
         });
 
-        initializeUI(); // Úplne prvá inicializácia UI
+        initializeUI();
     }
 
-    // Spustí kontrolu a následne aplikáciu
-    // Použijeme DOMContentLoaded, aby sme mali istotu, že DOM je pripravený skôr, ako začneme manipulovať s uiRefs
     document.addEventListener('DOMContentLoaded', setupAndRunApp);
 
   </script>
