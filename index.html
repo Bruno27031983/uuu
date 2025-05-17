@@ -15,6 +15,7 @@
   <link rel="dns-prefetch" href="//fonts.googleapis.com">
 
   <style>
+    /* ... (CSS zostáva rovnaké) ... */
     :root {
       --primary-bg-color: #f0f2f5;
       --secondary-bg-color: #ffffff;
@@ -518,7 +519,6 @@
         <div id="login-form">
           <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email">
           <input type="password" id="password" placeholder="Heslo" aria-label="Heslo" autocomplete="current-password">
-          <!-- Použijeme onclick="window.loginUser(event)" aby sme mali prístup k 'event' -->
           <button class="btn export-btn" onclick="window.loginUser(event)">Prihlásiť sa</button>
           <button class="btn export-btn" onclick="window.registerUser(event)">Registrovať</button>
           <a href="#" onclick="window.resetUserPassword(); return false;">Zabudli ste heslo?</a>
@@ -596,7 +596,6 @@
     <div id="localStorageIndicator"></div>
 
     <div class="btn-container">
-        <!-- Použijeme window.nazovFunkcie(event) pre tlačidlá, ktoré používajú event.currentTarget -->
         <button class="btn export-btn" onclick="window.exportToPDF(event)">Exportovať do PDF</button>
         <button class="btn export-btn" onclick="window.sendPDF(event)">Odoslať PDF (s pozn.)</button>
         <button class="btn backup-btn" onclick="window.createBackup(event)">Vytvoriť zálohu (XLSX)</button>
@@ -610,34 +609,47 @@
   <div id="errorNotification" role="alert" aria-live="assertive">Nastala chyba.</div>
   <div id="warningNotification" role="alert" aria-live="assertive">Upozornenie.</div>
 
+  <!-- Firebase SDK skripty s defer, presunuté na koniec body -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-check.js" defer></script>
 
-  <script type="module">
-    let firebaseApp_module, firebaseAuth_module, firebaseFirestore_module, firebaseAppCheck_module;
+  <!-- Hlavný aplikačný skript - UŽ NIE JE type="module" -->
+  <script>
+    // Globálne premenné pre Firebase funkcie, ktoré budú priradené neskôr
     let initializeApp, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail;
     let getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, enableFirestorePersistence;
     let initializeFirebaseAppCheck_SDK, ReCaptchaV3Provider_SDK;
 
-    async function initializeFirebaseModules() {
-        while (
-            typeof window.firebase === 'undefined' ||
-            typeof window.firebase.app === 'undefined' ||
-            typeof window.firebase.auth === 'undefined' ||
-            typeof window.firebase.firestore === 'undefined' ||
-            typeof window.firebase.appCheck === 'undefined'
-        ) {
-            await new Promise(resolve => setTimeout(resolve, 50));
+    // Funkcia na kontrolu, či sú všetky Firebase SDK načítané
+    function areFirebaseSDKsLoaded() {
+        return (
+            typeof window.firebase !== 'undefined' &&
+            typeof window.firebase.app !== 'undefined' &&
+            typeof window.firebase.auth !== 'undefined' &&
+            typeof window.firebase.firestore !== 'undefined' &&
+            typeof window.firebase.appCheck !== 'undefined'
+        );
+    }
+
+    // Funkcia, ktorá priradí Firebase funkcie a spustí logiku aplikácie
+    function setupAndRunApp() {
+        if (!areFirebaseSDKsLoaded()) {
+            console.log("Firebase SDKs not yet loaded, retrying in 100ms...");
+            setTimeout(setupAndRunApp, 100); // Skús znova o chvíľu
+            return;
         }
-        console.log("Firebase SDKs loaded globally.");
 
-        firebaseApp_module = window.firebase.app;
-        firebaseAuth_module = window.firebase.auth;
-        firebaseFirestore_module = window.firebase.firestore;
-        firebaseAppCheck_module = window.firebase.appCheck;
+        console.log("Firebase SDKs loaded globally. Setting up app...");
 
+        // Priradenie globálnych Firebase objektov k našim premenným
+        const firebaseApp_module = window.firebase.app; // Používame lokálne premenné v tejto funkcii
+        const firebaseAuth_module = window.firebase.auth;
+        const firebaseFirestore_module = window.firebase.firestore;
+        const firebaseAppCheck_module = window.firebase.appCheck;
+
+        // Destructuring potrebných funkcií z globálnych modulov
         initializeApp = firebaseApp_module.initializeApp;
         getAuth = firebaseAuth_module.getAuth;
         signInWithEmailAndPassword = firebaseAuth_module.signInWithEmailAndPassword;
@@ -658,10 +670,12 @@
         initializeFirebaseAppCheck_SDK = firebaseAppCheck_module.initializeAppCheck;
         ReCaptchaV3Provider_SDK = firebaseAppCheck_module.ReCaptchaV3Provider;
 
-        initializeAppLogic();
+        initializeAppLogic(); // Spustí hlavnú logiku aplikácie
     }
 
+
     function initializeAppLogic() {
+        // Firebase Konfigurácia
         const firebaseConfig = {
             apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // <-- !!! NAHRAĎ SVOJÍM API KĽÚČOM !!!
             authDomain: "uuuuu-f7ef9.firebaseapp.com",
@@ -696,6 +710,7 @@
             }
           });
 
+        // Globálne Premenné
         let currentUser = null;
         let currentListenerUnsubscribe = null;
         const uiRefs = {
@@ -729,6 +744,7 @@
         const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
         const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
 
+        // --- Utility Funkcie ---
         function getDaysInMonth(month, year) { return new Date(year, month + 1, 0).getDate(); }
         function getDayName(year, month, day) { return DAY_NAMES_SHORT[new Date(year, month, day).getDay()]; }
         function isWeekend(year, month, day) { const d = new Date(year, month, day).getDay(); return d === 0 || d === 6; }
@@ -738,6 +754,8 @@
         };
         function isValidTimeFormat(timeString) { return typeof timeString === 'string' && /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeString); }
 
+
+        // --- Notifikácie ---
         function showNotification(id, message, duration = 3500) {
             const notification = document.getElementById(id);
             if (!notification) return;
@@ -768,6 +786,7 @@
             }
         }
 
+        // --- Správa Nastavení Aplikácie ---
         function loadAppSettingsFromLocalStorage() {
             appSettings.decimalPlaces = parseInt(localStorage.getItem('decimalPlaces')) || 2;
             appSettings.employeeName = localStorage.getItem('employeeName') || '';
@@ -834,6 +853,7 @@
             updateLocalStorageSizeIndicator();
         }
 
+        // Všetky globálne funkcie (onclick handlery atď.) musia byť priradené k `window` objektu
         window.updateEmployeeName = function() {
             saveAppSettingToLocalStorage('employeeName', uiRefs.employeeNameInput.value.trim());
             updatePageTitleAndGreeting();
@@ -889,7 +909,7 @@
             debouncedSaveAppSettingsToFirestore();
         }
         function recalculateAllRowsAndUpdateTotal() {
-             if (!uiRefs.workDaysTbody.hasChildNodes()) return; // Ak tabuľka nie je vykreslená
+             if (!uiRefs.workDaysTbody.hasChildNodes()) return;
             const days = getDaysInMonth(currentMonth, currentYear);
             for (let i = 1; i <= days; i++) calculateRow(i);
             calculateTotal();
@@ -966,6 +986,14 @@
             catch (error) { console.error('Chyba pri obnove hesla:', error); showErrorNotification('Chyba pri obnove hesla: ' + mapFirebaseAuthError(error.code)); }
         };
 
+        // --- (Zvyšok kódu, ktorý som ti poslal v predchádzajúcej odpovedi, od `updateUIForAuthStateChange` až po koniec,
+        //      vrátane všetkých funkcií pre tabuľku, exporty, atď. sem patrí) ---
+        // Skopíruj sem ten zvyšok kódu z predchádzajúceho bloku "Rozumiem, pre úplnosť a istotu..."
+        // od riadku: function updateUIForAuthStateChange() {
+        // až po: initializeUI();
+
+        // Toto je len placeholder pre ten dlhý blok kódu, ktorý už máš
+        // Začína od:
         function updateUIForAuthStateChange() {
             const isLoggedIn = !!currentUser;
             if (uiRefs.loginFieldset) {
@@ -1026,7 +1054,7 @@
         window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
 
 
-        function getFirestoreDocId() { return `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`; } // Oprava: currentMonth + 1 pre Firestore ID
+        function getFirestoreDocId() { return `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`; }
         function getLocalStorageKeyForWorkData() { return currentUser ? `workData-${currentUser.uid}-${getFirestoreDocId()}` : `workData-guest-${getFirestoreDocId()}`; }
         function getPendingSyncKeyForWorkData() { return currentUser ? `pendingSync-workData-${currentUser.uid}-${getFirestoreDocId()}` : null; }
 
@@ -1096,7 +1124,7 @@
         }
 
         function parseAndApplyWorkData(dataString) {
-            resetTableInputsOnly(); // Najprv vyčistí existujúce inputy a prepočíta
+            resetTableInputsOnly();
             if (dataString) {
                 try {
                     const storedWorkData = JSON.parse(dataString);
@@ -1120,7 +1148,7 @@
                     showErrorNotification('Chyba spracovania dát: ' + error.message);
                 }
             }
-            calculateTotal(); // Prepočíta celkové sumy po aplikovaní dát
+            calculateTotal();
         }
 
         function resetTableInputsOnly() {
@@ -1135,7 +1163,7 @@
                     noteEl.value = '';
                     autoResizeTextarea(noteEl);
                 }
-                calculateRow(i); // Prepočíta riadok po vyčistení
+                calculateRow(i);
             }
         }
 
@@ -1181,8 +1209,7 @@
                  if(endInput) endInput.oninput = (e) => window.handleTimeInput(e.target, `break-${dayStr}`, i);
                  if(noteTextarea) noteTextarea.oninput = (e) => window.handleNoteInput(e.target);
             }
-             // Po vytvorení tabuľky zavoláme parseAndApplyWorkData, ak by už boli dáta v LS/FS pre tento mesiac
-            loadWorkDataFromLocalStorage();
+            loadWorkDataFromLocalStorage(); // Načíta dáta do novovytvorenej tabuľky
         }
 
         window.setCurrentTime = function(inputId, day) {
@@ -1191,7 +1218,7 @@
             if (targetInput) {
                 targetInput.value = `${hours}:${minutes}`;
                 handleTimeInput(targetInput, inputId.startsWith('start-') ? `end-${day}` : `break-${day}`, day);
-                validateAndFormatTimeBlur(targetInput, day); // Validácia po nastavení
+                validateAndFormatTimeBlur(targetInput, day);
                 debouncedSaveWorkDataAndSync();
             }
         }
@@ -1204,24 +1231,23 @@
                 if (nextElement && document.activeElement === input && !nextId.startsWith('break-')) {
                     nextElement.focus(); if (typeof nextElement.select === 'function') nextElement.select();
                 }
-            } else if (input.value.length < 5) { // Aj pri nekompletnom čase prepočítaj (napr. vynuluj)
+            } else if (input.value.length < 5) {
                 calculateRow(day);
             }
-            // debouncedSaveWorkDataAndSync(); // Toto je už v onblur, tu by to bolo príliš časté
         }
         window.validateAndFormatTimeBlur = function(input, day) {
             formatTimeInputOnly(input);
             const isValid = isValidTimeFormat(input.value);
             const isDefaultSettingInput = input.id.startsWith('default');
 
-            if (isDefaultSettingInput) { // Ak by si mal default nastavenia času
+            if (isDefaultSettingInput) {
                 input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
             } else {
                 input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
                 if (input.value.length > 0 && !isValid && day) {
                     showWarningNotification(`Neplatný formát času pre ${input.id.startsWith('start') ? 'príchod' : 'odchod'} dňa ${day}. (HH:MM)`);
                 }
-                if(day) calculateRow(day); // Vždy prepočítaj po strate focusu
+                if(day) calculateRow(day);
             }
         }
         function formatTimeInputOnly(input) {
@@ -1237,15 +1263,15 @@
             const numericValue = parseFloat(value);
             breakInput.classList.remove('invalid-value');
             if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) {
-                breakInput.value = value; // Nechaj prázdne alebo platné číslo
+                breakInput.value = value;
             } else {
-                breakInput.value = ''; // Reset na prázdne pri neplatnom vstupe
+                breakInput.value = '';
                 breakInput.classList.add('invalid-value');
                 showWarningNotification(`Neplatná hodnota prestávky pre deň ${day}. Musí byť číslo >= 0.`);
             }
             calculateRow(day);
         }
-        window.handleNoteInput = function(textarea) { autoResizeTextarea(textarea); /* debouncedSaveWorkDataAndSync() je v onblur */ }
+        window.handleNoteInput = function(textarea) { autoResizeTextarea(textarea); }
         function autoResizeTextarea(textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px';
@@ -1260,14 +1286,13 @@
             const netInput = document.getElementById(`net-${day}`);
 
             if (!startInput || !endTimeInput || !breakTimeInput || !totalCell || !grossInput || !netInput) {
-                return; // Ak niektorý element neexistuje, ukonči
+                return;
             }
 
             const startTime = startInput.value; const endTime = endTimeInput.value;
             const breakTimeHours = parseFloat(breakTimeInput.value.replace(',', '.')) || 0;
             let decimalHours = 0;
 
-            // Reset chybových stavov
             startInput.classList.remove('invalid-time');
             endTimeInput.classList.remove('invalid-time');
             breakTimeInput.classList.remove('invalid-value');
@@ -1276,11 +1301,10 @@
                 const [sH, sM] = startTime.split(':').map(Number); const [eH, eM] = endTime.split(':').map(Number);
                 let startDate = new Date(2000,0,1,sH,sM); let endDate = new Date(2000,0,1,eH,eM);
 
-                if (endDate < startDate && (eH < sH || (eH === sH && eM < sM))) { // Práca cez polnoc
+                if (endDate < startDate && (eH < sH || (eH === sH && eM < sM))) {
                      endDate.setDate(endDate.getDate() + 1);
-                } else if (endDate < startDate) { // Neplatný čas (napr. 10:00 - 09:00 v ten istý deň)
+                } else if (endDate < startDate) {
                     endTimeInput.classList.add('invalid-time');
-                    // Ak je čas neplatný, nepokračuj vo výpočte
                 }
 
                 if (!isNaN(breakTimeHours) && breakTimeHours >=0) {
@@ -1292,7 +1316,7 @@
                 } else {
                     breakTimeInput.classList.add('invalid-value');
                 }
-            } else { // Ak jeden alebo oba časy nie sú platné
+            } else {
                 if (startTime.length > 0 && !isValidTimeFormat(startTime)) startInput.classList.add('invalid-time');
                 if (endTime.length > 0 && !isValidTimeFormat(endTime)) endTimeInput.classList.add('invalid-time');
                 if (breakTimeInput.value.length > 0 && (isNaN(breakTimeHours) || breakTimeHours < 0)) breakTimeInput.classList.add('invalid-value');
@@ -1313,8 +1337,8 @@
                 noteEl.value = '';
                 autoResizeTextarea(noteEl);
             }
-            calculateRow(day); // Prepočíta tento riadok (mal by sa vynulovať)
-            debouncedSaveWorkDataAndSync(); // Uloží zmeny
+            calculateRow(day);
+            debouncedSaveWorkDataAndSync();
             showSaveNotification(`Záznam pre ${day}. deň bol vymazaný.`);
         }
 
@@ -1322,8 +1346,8 @@
             const btn = event.currentTarget;
             if (!confirm(`Naozaj vymazať VŠETKY dáta pre ${MONTH_NAMES[currentMonth]} ${currentYear}?`)) return;
             setLoadingState(btn, true, "Mazanie...");
-            resetTableInputsOnly(); // Vyčistí inputy a prepočíta riadky (vynuluje)
-            calculateTotal();       // Prepočíta celkové sumy (mali by byť 0)
+            resetTableInputsOnly();
+            calculateTotal();
 
             const emptyMonthData = { data: [], lastUpdated: new Date().toISOString() };
             localStorage.setItem(getLocalStorageKeyForWorkData(), JSON.stringify(emptyMonthData));
@@ -1414,7 +1438,9 @@
         window.exportToPDF = async function(event) {
             const btn = event.currentTarget; setLoadingState(btn, true, "Načítavam PDF...");
             try {
+                // Dynamický import knižníc
                 const { default: jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                // Pre autotable predpokladáme, že sa pripne na globálny jsPDF alebo jeho prototyp
                 await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js');
 
                 setLoadingState(btn, true, "Exportujem PDF..."); calculateTotal();
@@ -1537,8 +1563,8 @@
             finally { setLoadingState(btn, false, null, "Vytvoriť zálohu (XLSX)"); }
         };
 
-        window.restoreBackup = function(event) { // Event je tu pre konzistenciu, aj keď ho nepoužívame priamo
-            const btn = event.currentTarget; // Alebo document.querySelector(...) ak by nebol z eventu
+        window.restoreBackup = function(event) {
+            const btn = event.currentTarget;
             const input = document.createElement('input'); input.type = 'file'; input.accept = '.xlsx';
             input.onchange = async (eventFile) => {
                 setLoadingState(btn, true, "Načítavam XLSX...");
@@ -1601,12 +1627,12 @@
                                 if (backupMonth !== currentMonth || backupYear !== currentYear) {
                                     currentMonth = backupMonth; currentYear = backupYear;
                                     uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear;
-                                    createTable(); // Najprv vytvorí tabuľku pre nový mesiac/rok
+                                    createTable();
                                 }
                                 const workDataString = JSON.stringify({ ...restoredWorkData, lastUpdated: new Date().toISOString() });
                                 localStorage.setItem(getLocalStorageKeyForWorkData(), workDataString);
                                 const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.removeItem(pendingKey);
-                                parseAndApplyWorkData(workDataString); // Aplikuje dáta do už existujúcej tabuľky
+                                parseAndApplyWorkData(workDataString);
                                 if (currentUser && navigator.onLine) await saveWorkDataToFirestore(JSON.parse(workDataString), getFirestoreDocId());
                             }
                             showSaveNotification('Záloha úspešne obnovená.');
@@ -1632,17 +1658,16 @@
             input.click();
         };
 
+
         window.changeMonth = function() {
             currentMonth = parseInt(uiRefs.monthSelect.value);
-            createTable(); // Vytvorí novú prázdnu tabuľku pre nový mesiac
-            // loadWorkDataFromLocalStorage(); // Načíta dáta z LS pre tento mesiac (volané aj z createTable alebo onAuthStateChanged)
-            setupFirestoreWorkDataListener(); // Re-attachne listener pre nový mesiac
+            createTable();
+            setupFirestoreWorkDataListener();
             updatePageTitleAndGreeting();
         }
         window.changeYear = function() {
             currentYear = parseInt(uiRefs.yearSelect.value);
             createTable();
-            // loadWorkDataFromLocalStorage();
             setupFirestoreWorkDataListener();
             updatePageTitleAndGreeting();
         }
@@ -1675,16 +1700,18 @@
                 loadAppSettingsFromLocalStorage();
                 updateSettingsUIInputs();
             }
-            createTable(); // Vytvorí tabuľku po spracovaní nastavení
-            // loadWorkDataFromLocalStorage() je už volané z createTable()
-            setupFirestoreWorkDataListener(); // Nastaví listener pre dáta (ten potom zavolá parseAndApplyWorkData)
+            createTable();
+            setupFirestoreWorkDataListener();
             updatePageTitleAndGreeting();
         });
 
         initializeUI(); // Úplne prvá inicializácia UI
     }
 
-    initializeFirebaseModules(); // Spustí celý proces
+    // Spustí kontrolu a následne aplikáciu
+    // Použijeme DOMContentLoaded, aby sme mali istotu, že DOM je pripravený skôr, ako začneme manipulovať s uiRefs
+    document.addEventListener('DOMContentLoaded', setupAndRunApp);
+
   </script>
 
   <script>
