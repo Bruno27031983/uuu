@@ -289,7 +289,7 @@
       </div>
     </div>
 
-        <h1 id="mainTitle">Vitaj <span id="emojiHand">👋</span></h1>
+    <h1 id="mainTitle">Vitaj 👋</h1>
     <h2 id="subTitle"></h2>
 
     <div class="settings">
@@ -614,23 +614,11 @@
     }
     function recalculateAllRowsAndUpdateTotal() { const days = getDaysInMonth(currentMonth, currentYear); for (let i = 1; i <= days; i++) calculateRow(i); calculateTotal(); }
 
-        function updatePageTitleAndGreeting() {
-        const wavingHand = "👋";
-        const namePart = appSettings.employeeName ? `${appSettings.employeeName.split(' ')[0]}` : ""; // Získa prvé meno
-        const textGreetingPart = `Vitaj${namePart ? ' ' + namePart : ''}`; // Časť textu bez emoji
-
-        // Použijeme innerHTML na vloženie textovej časti a emoji v samostatnom span elemente
-        // Trieda "emoji-in-title" je pridaná pre prípadné budúce špecifické štýlovanie emoji, ak by bolo potrebné.
-        if (uiRefs.mainTitle) { // Kontrola, či element existuje
-            uiRefs.mainTitle.innerHTML = `${textGreetingPart} <span class="emoji-in-title">${wavingHand}</span>`;
-        }
-
-        const monthName = MONTH_NAMES[currentMonth];
-        const titleNamePart = appSettings.employeeName ? `${appSettings.employeeName} - ` : "";
-        document.title = `${titleNamePart}${monthName} ${currentYear} | Bruno's Calc Pro`;
-        if (uiRefs.subTitle) { // Kontrola, či element existuje
-            uiRefs.subTitle.textContent = `${monthName} ${currentYear}`;
-        }
+    function updatePageTitleAndGreeting() {
+        const wavingHand = "👋"; const namePart = appSettings.employeeName ? `${appSettings.employeeName.split(' ')[0]}` : "";
+        uiRefs.mainTitle.textContent = `Vitaj${namePart ? ' ' + namePart : ''} ${wavingHand}`;
+        const monthName = MONTH_NAMES[currentMonth]; const titleNamePart = appSettings.employeeName ? `${appSettings.employeeName} - ` : "";
+        document.title = `${titleNamePart}${monthName} ${currentYear} | Bruno's Calc Pro`; uiRefs.subTitle.textContent = `${monthName} ${currentYear}`;
     }
     function updateLocalStorageSizeIndicator() {
         let total = 0; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); total += (key.length + (localStorage.getItem(key)?.length || 0)) * 2; }
