@@ -105,9 +105,156 @@
       text-align: center; color: var(--secondary-text-color); margin-top: -5px;
       font-size: 1rem; font-weight: 500; margin-bottom: 20px;
     }
-    /* ... zvyšok vašich existujúcich CSS pravidiel ... (bez zmien) */
-    /* ... (dlhý blok CSS, ktorý tu pre prehľadnosť vynechávam, ale vo vašom súbore zostane) ... */
-     #saveNotification, #errorNotification, #warningNotification {
+    fieldset { border: 1px solid var(--table-border-color); border-radius: var(--border-radius); padding: 15px; margin-bottom: 20px; }
+    legend { font-weight: 600; color: var(--primary-text-color); padding: 0 8px; font-size: 0.95rem; }
+    *:focus-visible { outline: 3px solid var(--focus-outline-color); outline-offset: 2px; box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.2); }
+    input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--focus-outline-color); outline-offset: 1px; }
+    .settings { margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; }
+    .settings > div, .settings > button#toggleSettingsBtn { margin: 0; }
+    .settings > div { flex: 1 1 220px; }
+    .settings > button#toggleSettingsBtn {
+      flex-basis: 100%; margin-bottom: 10px; background-color: var(--secondary-bg-color); color: var(--primary-text-color);
+      border: 1px solid var(--table-border-color); text-align: left; padding: 10px 15px; font-size: 0.95rem;
+      font-weight: 500; cursor: pointer; border-radius: var(--border-radius);
+      transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+    }
+    .settings > button#toggleSettingsBtn:hover { background-color: var(--primary-bg-color); box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
+    .settings label { display: block; margin-bottom: 5px; font-size: 0.875rem; font-weight: 500; color: var(--secondary-text-color); }
+    #settings-collapsible-content {
+      display: flex; flex-wrap: wrap; width: 100%; max-height: 0; opacity: 0; overflow: hidden;
+      transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.4s ease-in-out; gap: 10px 12px;
+    }
+    #settings-collapsible-content.visible { max-height: 700px; opacity: 1; margin-top: 10px; }
+    #settings-collapsible-content > fieldset { display: contents; }
+    #settings-collapsible-content > fieldset > div { flex: 1 1 220px; margin: 0; }
+    .table-container {
+      overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px;
+      border: 1px solid var(--table-border-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 10px 12px; border: 1px solid var(--table-border-color); text-align: left;
+      font-size: 0.875rem; vertical-align: middle; transition: background-color var(--transition-speed);
+    }
+    thead tr { border-bottom: 2px solid #d1d5db; }
+    th { background-color: var(--table-header-bg-color); font-weight: 600; color: var(--primary-text-color); position: sticky; top: 0; z-index: 10; }
+    tr.weekend-day td:first-child { background-color: #f3f4f6; font-style: normal; color: var(--secondary-text-color); }
+    td .time-input-wrapper { display: flex; align-items: center; gap: 5px; }
+    td .time-input-wrapper input[type="tel"] { flex-grow: 1; min-width: 65px; padding: 8px 6px; font-size: 0.875rem; }
+    td .time-input-wrapper .time-btn {
+      font-size: 1.1rem; cursor: pointer; padding: 4px 5px; border: 1px solid transparent;
+      border-radius: var(--border-radius); line-height: 1; background: none; color: var(--secondary-text-color);
+      user-select: none; transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+    }
+    td .time-input-wrapper .time-btn:hover { background-color: #e5e7eb; border-color: #d1d5db; color: var(--primary-text-color); }
+    th:nth-child(1), td:nth-child(1) { width: 100px;} th:nth-child(2), td:nth-child(2) { width: 110px;}
+    th:nth-child(3), td:nth-child(3) { width: 110px;} th:nth-child(4), td:nth-child(4) { width: 90px;}
+    th:nth-child(5), td:nth-child(5) { width: 120px;} th:nth-child(7), td:nth-child(7) { width: 100px;}
+    th:nth-child(8), td:nth-child(8) { width: 100px;} th:nth-child(9), td:nth-child(9) { width: 50px; text-align: center;}
+    th:nth-child(6), td:nth-child(6) { min-width: 250px; width: auto; }
+    input[type="tel"], input[type="number"], input[type="text"], select, textarea {
+      width: 100%; padding: 9px 12px; box-sizing: border-box; background-color: var(--input-bg-color);
+      font-size: 0.9rem; border: 1px solid #d1d5db; border-radius: var(--border-radius); vertical-align: middle;
+      font-family: var(--font-family); transition: border-color var(--transition-speed), box-shadow var(--transition-speed); color: var(--primary-text-color);
+    }
+    input[type="tel"]:focus, input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
+        border-color: var(--focus-outline-color); box-shadow: 0 0 0 1px var(--focus-outline-color);
+    }
+    input[type="tel"].invalid-time, input[type="number"].invalid-value, input[type="text"].invalid-value {
+        border-color: var(--btn-danger-bg) !important; box-shadow: 0 0 0 1px var(--btn-danger-bg) !important;
+    }
+    td input[type="number"] { min-width: 60px; }
+    td input[type="text"] { min-width: 60px; }
+    td input[type="number"][readonly] {
+      background-color: #f9fafb; border: none; padding-left: 2px; padding-right: 2px;
+      color: var(--secondary-text-color); font-weight: 500;
+    }
+    textarea[id^="note-"] {
+      background-color: var(--input-note-bg-color); resize: vertical; min-height: 38px; line-height: 1.5;
+      overflow-y: hidden; white-space: pre-wrap; word-wrap: break-word;
+    }
+    .btn-container { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 25px; gap: 12px; }
+    .btn {
+      flex: 0 1 auto; padding: 10px 20px; color: var(--btn-text-color); border: none;
+      border-radius: var(--border-radius); cursor: pointer; font-size: 0.92rem; font-weight: 500;
+      margin: 0; transition: background-color var(--transition-speed) ease, transform 0.1s ease, box-shadow var(--transition-speed) ease;
+      text-align: center; box-shadow: var(--box-shadow);
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 7px 10px -3px rgba(0,0,0,0.1), 0 4px 5px -2px rgba(0,0,0,0.06); }
+    .btn:active { transform: translateY(0px); box-shadow: var(--box-shadow); }
+    .btn.is-loading { pointer-events: none; position: relative; }
+    .btn.is-loading::before {
+        content: ""; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+        width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.6);
+        border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+    .reset-btn { background-color: var(--btn-danger-bg); }
+    .reset-btn:hover { background-color: var(--btn-danger-hover-bg); }
+    .btn.warning-btn { background-color: var(--btn-warning-bg); color: var(--primary-text-color); }
+    .btn.warning-btn:hover { background-color: var(--btn-warning-hover-bg); }
+    .export-btn { background-color: var(--btn-primary-bg); }
+    .export-btn:hover { background-color: var(--btn-primary-hover-bg); }
+    .backup-btn { background-color: var(--btn-secondary-bg); }
+    .backup-btn:hover { background-color: var(--btn-secondary-hover-bg); }
+    #totalSalary {
+      font-size: 1rem; font-weight: 500; text-align: center; margin-top: 25px; padding: 15px;
+      background-color: var(--total-salary-bg); border-radius: var(--border-radius); line-height: 1.8;
+      color: var(--primary-text-color); box-shadow: var(--box-shadow);
+    }
+    #localStorageIndicator { font-size: 0.8rem; text-align: right; margin-top: 8px; color: #9ca3af; }
+    .current-day { background-color: var(--current-day-bg-color) !important; color: var(--current-day-text-color); }
+    .current-day td, .current-day th {
+        background-color: var(--current-day-bg-color) !important; color: var(--current-day-text-color) !important;
+        border-color: rgba(255,255,255,0.3) !important;
+    }
+    .current-day input, .current-day select, .current-day textarea {
+      background-color: rgba(255,255,255,0.15) !important; color: var(--current-day-text-color) !important;
+      border-color: rgba(255,255,255,0.4) !important;
+    }
+    .current-day input::placeholder, .current-day textarea::placeholder { color: rgba(255,255,255,0.7); }
+    .current-day textarea[id^="note-"] { background-color: rgba(255,255,255,0.2) !important; }
+    .current-day .time-btn { color: var(--current-day-text-color) !important; }
+    .current-day .time-btn:hover { background-color: rgba(255,255,255,0.25) !important; border-color: rgba(255,255,255,0.5) !important; }
+    #auth-container fieldset { width: 100%; max-width: 380px; margin-left:auto; margin-right:auto; }
+    #login-form { display: flex; flex-direction: column; align-items: center; }
+    #login-form input[type="email"], #login-form input[type="password"] {
+      width: 100%; margin: 8px 0; display: block; padding: 10px; font-size: 0.95rem; box-sizing: border-box;
+    }
+    #login-form .btn {
+      width: 100%; margin: 8px 0 0 0; padding: 10px 15px; font-size: 0.95rem;
+      flex-grow: 0; flex-shrink: 0; flex-basis: auto; min-width: auto; max-width: none;
+    }
+    #login-form .btn + .btn { margin-top: 10px; }
+    #login-form a { margin-top: 15px; display: block; font-size: 0.9rem; color: var(--link-color); text-decoration: none; }
+    #login-form a:hover { text-decoration: underline; color: var(--link-hover-color); }
+    #user-info { align-items: center; }
+    @media (max-width: 768px) {
+      body { padding: 8px; font-size: 0.9rem; }
+      .container { padding: 15px; margin: 10px auto; }
+      h1 { font-size: 1.8rem; } h2 { font-size: 0.95rem; }
+      .settings { flex-direction: column; align-items: stretch; }
+      .settings > div { flex-basis: auto; width: 100%; }
+      #settings-collapsible-content.visible { max-height: 700px; }
+      th, td { padding: 8px; font-size: 0.85rem; }
+      textarea[id^="note-"] { min-height: 40px; }
+      .btn-container .btn { font-size: 0.9rem; padding: 12px 18px; margin: 5px 0; min-width: 180px; max-width: 300px; }
+      .btn-container .btn[title*="Vymazať mesiac"] { max-width: 240px; }
+      #login-form input[type="email"], #login-form input[type="password"] { font-size: 0.9rem; padding: 10px;}
+      #login-form .btn { font-size: 0.92rem !important; padding-top: 11px !important; padding-bottom: 11px !important;}
+      #login-form a { margin-top: 18px !important; font-size: 0.88rem; }
+    }
+    @media (max-width: 480px) {
+      body { padding: 6px; } .container { padding: 10px; }
+      h1 { font-size: 1.6rem; } h2 { font-size: 0.9rem; }
+      th, td { padding: 7px; font-size: 0.82rem; }
+      textarea[id^="note-"] { min-height: 42px; }
+      #settings-collapsible-content.visible { max-height: 800px; }
+      .btn-container .btn { font-size: 0.88rem; padding: 11px 16px; min-width: 100%; max-width: 280px; }
+      #login-form input[type="email"], #login-form input[type="password"],
+      #login-form .btn { font-size: 0.88rem !important; }
+    }
+    #saveNotification, #errorNotification, #warningNotification {
         display: none; position: fixed; bottom: 25px; right: 25px; padding: 15px 22px;
         border-radius: var(--border-radius); font-size: 0.95rem; box-shadow: var(--box-shadow-lg);
         z-index: 10000; opacity: 0; transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
@@ -176,7 +323,6 @@
   </div>
 
   <div class="container content-hidden"> <!-- Pridaná trieda content-hidden -->
-    <!-- ... zvyšok vášho hlavného kontajnera aplikácie ... (bez zmien) -->
     <h1 id="mainTitle">Vitaj 👋</h1>
     <h2 id="subTitle"></h2>
 
@@ -255,7 +401,7 @@
   <div id="warningNotification" role="alert" aria-live="assertive">Upozornenie.</div>
 
   <script type="module">
-    // ... (všetky importy Firebase zostávajú rovnaké) ...
+    // Importy Firebase
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
     import {
@@ -264,7 +410,7 @@
     } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js';
 
-   const firebaseConfig = {
+    const firebaseConfig = {
         apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // Nahraďte vašimi skutočnými kľúčmi
         authDomain: "uuuuu-f7ef9.firebaseapp.com",
         projectId: "uuuuu-f7ef9",
@@ -276,14 +422,13 @@
     const app = initializeApp(firebaseConfig);
     try {
        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), // Váš reCAPTCHA v3 site key
+            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'),
             isTokenAutoRefreshEnabled: true
         });
     } catch (e) {
-        console.warn("App Check initialization failed. This might happen if reCAPTCHA script is blocked or fails to load. App will continue without App Check.", e);
+        console.warn("App Check initialization failed.", e);
     }
     const auth = getAuth(app);
-
     let db;
     try {
         db = initializeFirestore(app, {
@@ -291,49 +436,93 @@
         });
     } catch (error) {
         db = initializeFirestore(app, {});
-        showErrorNotification("Chyba pri inicializácii offline úložiska. Offline režim nemusí byť dostupný.");
+        showErrorNotification("Chyba pri inicializácii offline úložiska.");
     }
 
-    // Globálne Premenné a Konštanty
-    // ... (všetky vaše globálne premenné zostávajú) ...
+    // --- PRESUNUTÉ DEFINÍCIE FUNKCIÍ VYŠŠIE ---
+    function loadAppSettingsFromLocalStorage() {
+        appSettings.decimalPlaces = parseInt(localStorage.getItem('decimalPlaces')) || 2;
+        appSettings.employeeName = localStorage.getItem('employeeName') || '';
+        appSettings.hourlyWage = parseFloat(localStorage.getItem('hourlyWage')) || 10;
+        appSettings.taxRate = parseFloat(localStorage.getItem('taxRate')) || 0.02;
+    }
+
+    function updateUIForAuthStateChange() {
+        const isLoggedIn = !!currentUser;
+        if (uiRefs.loginFieldset) uiRefs.loginFieldset.style.display = isLoggedIn ? 'none' : 'block';
+        if (uiRefs.userInfo) uiRefs.userInfo.style.display = isLoggedIn ? 'flex' : 'none';
+        if (isLoggedIn && uiRefs.userEmailSpan) uiRefs.userEmailSpan.textContent = `Prihlásený: ${currentUser.email}`;
+        const logoutBtn = uiRefs.userInfo?.querySelector('.reset-btn');
+        if (logoutBtn) setLoadingState(logoutBtn, false, "Odhlásiť sa");
+        updateAppBadge(getPendingSyncCount());
+    }
+    // --- KONIEC PRESUNUTÝCH DEFINÍCIÍ ---
+
+
     let currentUser = null;
     let currentListenerUnsubscribe = null;
-
-    const uiRefs = { /* ... zostáva rovnaké ... */ };
+    const uiRefs = {
+        workDaysTbody: document.getElementById('workDays'),
+        totalSalaryDiv: document.getElementById('totalSalary'),
+        mainTitle: document.getElementById('mainTitle'),
+        subTitle: document.getElementById('subTitle'),
+        hourlyWageInput: document.getElementById('hourlyWageInput'),
+        taxRateInput: document.getElementById('taxRateInput'),
+        monthSelect: document.getElementById('monthSelect'),
+        yearSelect: document.getElementById('yearSelect'),
+        decimalPlacesSelect: document.getElementById('decimalPlacesSelect'),
+        employeeNameInput: document.getElementById('employeeNameInput'),
+        toggleSettingsBtn: document.getElementById('toggleSettingsBtn'),
+        settingsCollapsibleContent: document.getElementById('settings-collapsible-content'),
+        localStorageIndicator: document.getElementById('localStorageIndicator'),
+        loginForm: document.getElementById('login-form'),
+        loginFieldset: document.getElementById('login-fieldset'),
+        userInfo: document.getElementById('user-info'),
+        userEmailSpan: document.getElementById('user-email'),
+    };
     const currentDate = new Date();
     let currentMonth = currentDate.getMonth();
     let currentYear = currentDate.getFullYear();
-    let appSettings = { /* ... zostáva rovnaké ... */ };
-    const MONTH_NAMES = [/* ... */];
-    const DAY_NAMES_SHORT = [/* ... */];
+    let appSettings = {
+        decimalPlaces: 2, employeeName: '', hourlyWage: 10, taxRate: 0.02,
+    };
+    const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
+    const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
     const PENDING_SYNC_MONTHS_LS_KEY = 'pendingSyncMonthsList';
 
-
-    // Načítanie elementov pre loader a hlavné kontajnery
     const appLoader = document.getElementById('app-loader');
     const authContainer = document.getElementById('auth-container');
-    const mainAppContainer = document.querySelector('.container:not(#auth-container)'); // Presnejší selektor pre hlavný kontajner
+    const mainAppContainer = document.querySelector('.container:not(#auth-container)');
 
-    // ... (všetky vaše funkcie ako updateAppBadge, getPendingSyncMonths, atď. zostávajú rovnaké) ...
-    // ... (všetky pomocné funkcie getDaysInMonth, isValidTimeFormat, atď. zostávajú rovnaké) ...
-    // ... (všetky UI funkcie showNotification, setLoadingState, atď. zostávajú rovnaké) ...
-    // ... (všetky funkcie pre prácu s localStorage a Firestore appSettings zostávajú rovnaké) ...
+    async function updateAppBadge(count) { /* ... kód ... */ }
+    function getPendingSyncMonths() { /* ... kód ... */ }
+    function savePendingSyncMonths(months) { /* ... kód ... */ }
+    function addMonthToPendingList(monthDocId) { /* ... kód ... */ }
+    function removeMonthFromPendingList(monthDocId) { /* ... kód ... */ }
+    function getPendingSyncCount() { /* ... kód ... */ }
 
-    // --- Badging API Funkcie ---
-    async function updateAppBadge(count) { /* ... kód funkcie ... */ }
-    function getPendingSyncMonths() { /* ... kód funkcie ... */ }
-    function savePendingSyncMonths(months) { /* ... kód funkcie ... */ }
-    function addMonthToPendingList(monthDocId) { /* ... kód funkcie ... */ }
-    function removeMonthFromPendingList(monthDocId) { /* ... kód funkcie ... */ }
-    function getPendingSyncCount() { /* ... kód funkcie ... */ }
-    // --- Koniec Badging API Funkcií ---
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.addEventListener('message', event => { if (event.data && event.data.type === 'NETWORK_STATUS_ONLINE') { console.log('[App] Received NETWORK_STATUS_ONLINE from SW.'); if (currentUser && navigator.onLine) { showNotification('saveNotification', 'Pripojenie obnovené. Spúšťam synchronizáciu...', 3000); syncPendingWorkData(); } } }); }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { console.log('[App] Tab became visible.'); if (currentUser && navigator.onLine) { if (getPendingSyncCount() > 0) { showNotification('saveNotification', 'Kontrolujem čakajúce dáta...', 2000); } syncPendingWorkData(); } updateAppBadge(getPendingSyncCount()); } });
 
-    if ('serviceWorker' in navigator) { /* ... kód pre SW message listener ... */ }
-    document.addEventListener('visibilitychange', () => { /* ... kód pre visibilitychange listener ... */ });
+    function getDaysInMonth(month, year) { /* ... kód ... */ }
+    function getDayName(year, month, day) { /* ... kód ... */ }
+    function isWeekend(year, month, day) { /* ... kód ... */ }
+    const debounce = (func, wait) => { /* ... kód ... */ };
+    function isValidTimeFormat(timeString) { /* ... kód ... */ }
+    function showNotification(id, message, duration = 3500) { /* ... kód ... */ }
+    window.showSaveNotification = (message = 'Dáta boli úspešne uložené.') => showNotification('saveNotification', message);
+    window.showErrorNotification = (message) => showNotification('errorNotification', message, 5000);
+    window.showWarningNotification = (message) => showNotification('warningNotification', message, 4500);
+    function setLoadingState(button, isLoading, originalText = "Spracúvam...") { /* ... kód ... */ }
+    // POZNÁMKA: loadAppSettingsFromLocalStorage je už definovaná vyššie
+    function saveAppSettingToLocalStorage(key, value) { /* ... kód ... */ }
+    async function saveAppSettingsToFirestore() { /* ... kód ... */ }
+    const debouncedSaveAppSettingsToFirestore = debounce(saveAppSettingsToFirestore, 1800);
+    async function loadUserAppSettingsFromFirestore() { /* ... kód ... */ }
+    function updateSettingsUIInputs() { /* ... kód ... */ }
 
-
-    function initializeUIelements() { // Premenovaná z initializeUI, aby sa nemýlila s logikou v onAuthStateChanged
-        loadAppSettingsFromLocalStorage();
+    function initializeUIelements() {
+        loadAppSettingsFromLocalStorage(); // Teraz by mala byť definovaná
         MONTH_NAMES.forEach((name, index) => { const option = document.createElement('option'); option.value = index; option.textContent = name; uiRefs.monthSelect.appendChild(option); });
         const startYear = 2020, endYear = currentDate.getFullYear() + 5;
         for (let year = startYear; year <= endYear; year++) { const option = document.createElement('option'); option.value = year; option.textContent = year; uiRefs.yearSelect.appendChild(option); }
@@ -341,79 +530,92 @@
         uiRefs.yearSelect.value = currentYear;
         updateSettingsUIInputs();
         updateLocalStorageSizeIndicator();
-        // updatePageTitleAndGreeting() a updateAppBadge() sa zavolajú až v onAuthStateChanged
     }
 
+    window.updateEmployeeName = function() { /* ... kód ... */ }
+    window.handleNumericInput = function(inputElement) { /* ... kód ... */ }
+    window.handleWageOrTaxBlur = function(inputElement) { /* ... kód ... */ }
+    window.changeDecimalPlaces = function() { /* ... kód ... */ }
+    function recalculateAllRowsAndUpdateTotal() { /* ... kód ... */ }
+    function updatePageTitleAndGreeting() { /* ... kód s úpravou pre emoji ... */ }
+    function updateLocalStorageSizeIndicator() { /* ... kód ... */ }
+    const authErrorMap = { /* ... kód ... */ };
+    function mapFirebaseAuthError(code) { /* ... kód ... */ }
+    window.loginUser = async function() { /* ... kód ... */ };
+    window.registerUser = async function() { /* ... kód ... */ };
+    async function createUserCollectionAndSettings() { /* ... kód ... */ }
+    window.logoutUser = async function() { /* ... kód ... */ };
+    window.resetUserPassword = async function() { /* ... kód ... */ };
+    // POZNÁMKA: updateUIForAuthStateChange je už definovaná vyššie
 
-    // ... (všetky vaše funkcie pre updateEmployeeName, handleNumericInput, atď. zostávajú rovnaké) ...
-    // ... (updatePageTitleAndGreeting - kód funkcie s úpravou pre emoji) ...
-    function updatePageTitleAndGreeting() {
-        const wavingHand = "👋";
-        const namePart = appSettings.employeeName ? `${appSettings.employeeName.split(' ')[0]}` : "";
-        const textGreetingPart = `Vitaj${namePart ? ' ' + namePart : ''}`;
-        
-        if (uiRefs.mainTitle) {
-            uiRefs.mainTitle.innerHTML = `${textGreetingPart} <span class="emoji-in-title">${wavingHand}</span>`;
-        }
-
-        const monthName = MONTH_NAMES[currentMonth];
-        const titleNamePart = appSettings.employeeName ? `${appSettings.employeeName} - ` : "";
-        document.title = `${titleNamePart}${monthName} ${currentYear} | Bruno's Calc Pro`;
-        if (uiRefs.subTitle) {
-            uiRefs.subTitle.textContent = `${monthName} ${currentYear}`;
-        }
-    }
-    // ... (authErrorMap, mapFirebaseAuthError, loginUser, registerUser, createUserCollectionAndSettings, logoutUser, resetUserPassword zostávajú rovnaké) ...
-    // ... (updateUIForAuthStateChange - volá sa až v onAuthStateChanged) ...
-
-    // ... (setupFirestoreWorkDataListener, _debouncedSaveWorkDataAndSync, getFirestoreDocId, atď. zostávajú rovnaké) ...
-    // ... (collectWorkDataForStorage, saveWorkDataToFirestore, syncPendingWorkData zostávajú rovnaké) ...
-    // ... (loadFromFirestore, loadWorkDataFromLocalStorage, parseAndApplyWorkData, resetTableInputsOnly zostávajú rovnaké) ...
-    // ... (createTable a všetky funkcie pre prácu s tabuľkou a výpočty zostávajú rovnaké) ...
-    // ... (exportToPDF, sendPDF, createBackup, restoreBackup zostávajú rovnaké) ...
-    // ... (changeMonth, changeYear, toggleSettingsBtn listener, window online/offline listeners zostávajú rovnaké) ...
+    function setupFirestoreWorkDataListener() { /* ... kód ... */ }
+    const _debouncedSaveWorkDataAndSync = debounce(async () => { /* ... kód ... */ }, 1200);
+    window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
+    function getFirestoreDocId(year, month) { /* ... kód ... */ }
+    function getLocalStorageKeyForWorkData(docId) { /* ... kód ... */ }
+    function getPendingSyncKeyForMonth(docId) { /* ... kód ... */ }
+    function collectWorkDataForStorage() { /* ... kód ... */ }
+    async function saveWorkDataToFirestore(dataToSave, docId) { /* ... kód ... */ }
+    async function syncPendingWorkData() { /* ... kód ... */ }
+    window.loadFromFirestore = async function() { /* ... kód ... */ };
+    function loadWorkDataFromLocalStorage() { /* ... kód ... */ }
+    function parseAndApplyWorkData(dataString) { /* ... kód ... */ }
+    function resetTableInputsOnly() { /* ... kód ... */ }
+    function createTable() { /* ... kód ... */ }
+    window.setCurrentTime = function(inputId, day) { /* ... kód ... */ }
+    window.handleTimeInput = function(input, nextId, day) { /* ... kód ... */ }
+    window.validateAndFormatTimeBlur = function(input, day) { /* ... kód ... */ }
+    function formatTimeInputOnly(input) { /* ... kód ... */ }
+    window.handleBreakInput = function(day) { /* ... kód ... */ }
+    window.handleNoteInput = function(textarea) { /* ... kód ... */ }
+    function autoResizeTextarea(textarea) { /* ... kód ... */ }
+    function calculateRow(day) { /* ... kód ... */ }
+    window.resetRow = function(day) { /* ... kód ... */ }
+    window.clearMonthData = async function() { /* ... kód ... */ }
+    function calculateTotal() { /* ... kód ... */ }
+    window.exportToPDF = async function() { /* ... kód ... */ }
+    window.sendPDF = async function() { /* ... kód ... */ }
+    window.createBackup = function() { /* ... kód ... */ };
+    window.restoreBackup = function() { /* ... kód ... */ };
+    window.changeMonth = function() { /* ... kód ... */ }
+    window.changeYear = function() { /* ... kód ... */ }
+    uiRefs.toggleSettingsBtn.addEventListener('click', () => { /* ... kód ... */ });
+    window.addEventListener('online', () => { /* ... kód ... */ });
+    window.addEventListener('offline', () => { /* ... kód ... */ });
+    function handleOnlineStatusChange(online) { /* ... kód ... */ }
 
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
 
         if (user) {
-            // Používateľ je prihlásený
             if (authContainer) authContainer.classList.add('content-hidden');
             if (mainAppContainer) mainAppContainer.classList.remove('content-hidden');
-            
-            updateUIForAuthStateChange(); // Aktualizuje user-info a odznak
-
+            updateUIForAuthStateChange(); // Teraz by mala byť definovaná
             const settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
             if (!settingsLoadedFromFS) {
-                loadAppSettingsFromLocalStorage(); // Načíta z LS, ak nie sú v FS
-                updateSettingsUIInputs();        // Aplikuje na UI
-                if (navigator.onLine) await saveAppSettingsToFirestore(); // A uloží do FS
+                loadAppSettingsFromLocalStorage();
+                updateSettingsUIInputs();
+                if (navigator.onLine) await saveAppSettingsToFirestore();
             }
-            // Ak boli nastavenia načítané z FS, updateSettingsUIInputs() už bolo volané v loadUserAppSettingsFromFirestore
-
-            syncPendingWorkData(); // Skús synchronizovať
+            syncPendingWorkData();
         } else {
-            // Používateľ nie je prihlásený
             if (mainAppContainer) mainAppContainer.classList.add('content-hidden');
             if (authContainer) authContainer.classList.remove('content-hidden');
-            
-            updateUIForAuthStateChange(); // Aktualizuje user-info (skryje ho) a odznak
-
-            loadAppSettingsFromLocalStorage(); // Načítaj aspoň defaultné/posledné lokálne nastavenia
-            updateSettingsUIInputs();        // Aplikuj ich na UI
+            updateUIForAuthStateChange(); // Teraz by mala byť definovaná
+            loadAppSettingsFromLocalStorage();
+            updateSettingsUIInputs();
             localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY);
             updateAppBadge(0);
         }
 
-        if (appLoader) appLoader.classList.add('content-hidden'); // Skry loader
+        if (appLoader) appLoader.classList.add('content-hidden');
 
-        // Až teraz, keď je jasné, čo zobraziť a nastavenia sú načítané, inicializujeme zvyšok UI
         createTable();
-        setupFirestoreWorkDataListener(); // Nastaví listener pre aktuálny mesiac (a môže spustiť sync)
-        updatePageTitleAndGreeting(); // Nastaví titulky
+        setupFirestoreWorkDataListener();
+        updatePageTitleAndGreeting();
     });
 
-    initializeUIelements(); // Zavoláme len základné nastavenie UI elementov, ktoré nezávisia od prihlásenia
+    initializeUIelements(); // Volanie základného UI setupu
 
   </script>
 
@@ -421,7 +623,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => { /* console.log('Service Worker registered.', reg); */ })
+          .then(reg => { /* Logovanie odstránené */ })
           .catch(err => { console.error('Service Worker registration failed:', err); });
       });
     }
