@@ -10,13 +10,11 @@
   <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
   <meta name="theme-color" content="#7c3aed"/>
 
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
 
   <style>
-    /* CSS štýly zostávajú rovnaké ako vo vašom kóde */
     :root {
       --primary-bg-color: #f0f2f5;
       --secondary-bg-color: #ffffff;
@@ -48,6 +46,7 @@
       --base-font-size: 16px;
       --focus-outline-color: var(--btn-primary-bg);
       --transition-speed: 0.2s;
+      --skeleton-color: #e0e7ff; /* Farba pre skeleton bloky */
     }
 
     @font-face {
@@ -173,6 +172,10 @@
       font-size: 1rem; font-weight: 500; text-align: center; margin-top: 25px; padding: 15px;
       background-color: var(--total-salary-bg); border-radius: var(--border-radius); line-height: 1.8;
       color: var(--primary-text-color); box-shadow: var(--box-shadow);
+      min-height: 90px; /* Približná výška, aby to neposkakovalo veľmi pri zmene z kostry na text */
+      display: flex; /* Pre lepšie centrovanie skeleton blokov, ak sú menšie */
+      flex-direction: column; /* Aby boli skeleton bloky pod sebou */
+      justify-content: center; /* Vertikálne centrovanie skeleton blokov */
     }
     #localStorageIndicator { font-size: 0.8rem; text-align: right; margin-top: 8px; color: #9ca3af; }
     .current-day { background-color: var(--current-day-bg-color) !important; color: var(--current-day-text-color); }
@@ -201,6 +204,27 @@
     #login-form a { margin-top: 15px; display: block; font-size: 0.9rem; color: var(--link-color); text-decoration: none; }
     #login-form a:hover { text-decoration: underline; color: var(--link-hover-color); }
     #user-info { align-items: center; }
+
+    /* Skeleton Styles */
+    #totalSalary.skeleton-active {
+      /* Štýly pre kontajner, keď je kostra aktívna */
+      /* min-height je už definovaný vyššie pre #totalSalary */
+    }
+    .skeleton-block {
+      background-color: var(--skeleton-color);
+      border-radius: 4px;
+      /* Výška a margin-bottom sú nastavené inline v HTML pre variabilitu,
+         alebo ich môžete definovať tu, ak sú uniformné */
+    }
+    #totalSalary.skeleton-active .skeleton-block {
+      animation: skeleton-pulse 1.5s infinite ease-in-out;
+    }
+    @keyframes skeleton-pulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
+    }
+
     @media (max-width: 768px) {
       body { padding: 8px; font-size: 0.9rem; }
       .container { padding: 15px; margin: 10px auto; }
@@ -239,7 +263,7 @@
     @media print {
       body { padding: 0; font-size: 10pt; color: #000; background-color: #fff; font-family: Arial, sans-serif;}
       .container { max-width: 100%; margin: 0; padding: 10px; box-shadow: none; border: none;}
-      #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn { display: none !important; }
+      #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn, .skeleton-active { display: none !important; }
       h1 { font-size: 18pt; margin-bottom: 5mm; background: none !important; -webkit-background-clip: unset !important; background-clip: unset !important; color: black !important;}
       h2 { font-size: 12pt; margin-bottom: 8mm; }
       .table-container { overflow: visible; border: 1px solid #ccc; }
@@ -259,7 +283,7 @@
       }
       #totalSalary {
         margin-top: 10mm; padding: 8px; border: 1px solid #ccc; background-color: #f9f9f9 !important;
-        color: #000 !important; box-shadow: none; page-break-before: auto;
+        color: #000 !important; box-shadow: none; page-break-before: auto; min-height: unset !important; display: block !important; /* Upravy pre tlač */
       }
       a { text-decoration: none; color: #000; }
       a[href^="http"]:after { content: " (" attr(href) ")"; font-size: 8pt; }
@@ -349,9 +373,12 @@
       </table>
     </div>
 
-    <!-- ========== ZMENA TU ========== -->
-    <div id="totalSalary" aria-live="polite" style="display: none;">Výpočet celkovej mzdy...</div>
-    <!-- ============================== -->
+    <div id="totalSalary" aria-live="polite" class="skeleton-active">
+        <div class="skeleton-block" style="width: 60%; height: 1.2em; margin-bottom: 10px; align-self: center;"></div>
+        <div class="skeleton-block" style="width: 90%; height: 1.2em; margin-bottom: 10px; align-self: center;"></div>
+        <div class="skeleton-block" style="width: 80%; height: 1.2em; margin-bottom: 10px; align-self: center;"></div>
+        <div class="skeleton-block" style="width: 70%; height: 1.2em; align-self: center;"></div>
+    </div>
     <div id="localStorageIndicator"></div>
 
     <div class="btn-container">
@@ -576,10 +603,6 @@
         uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear;
         updateSettingsUIInputs(); updatePageTitleAndGreeting(); updateLocalStorageSizeIndicator();
         updateAppBadge(getPendingSyncCount());
-        // Volanie calculateTotal() tu už nie je bezpodmienečne nutné,
-        // pretože parseAndApplyWorkData ho zavolá po načítaní dát.
-        // Alebo ho tu môžeme nechať, aby sa zobrazil (s nulami) ak by parseAndApplyWorkData z nejakého dôvodu nezbehlo hneď.
-        // S Možnosťou 1 (skrytie divu) to nevadí.
     }
 
     window.updateEmployeeName = function() {
@@ -700,9 +723,8 @@
 
     function setupFirestoreWorkDataListener() {
         if (currentListenerUnsubscribe) currentListenerUnsubscribe();
-        if (!currentUser) { loadWorkDataFromLocalStorage(); return; } // Ak nie je user, načítaj len lokálne (guest)
+        if (!currentUser) { loadWorkDataFromLocalStorage(); return; } 
 
-        // Ak sme offline, len načítame lokálne a nesnažíme sa nadviazať listener
         if (!navigator.onLine) {
             loadWorkDataFromLocalStorage();
             showWarningNotification("Ste offline. Zobrazujem lokálne dáta. Synchronizácia prebehne po pripojení.");
@@ -717,7 +739,7 @@
                 const firestoreData = docSnap.data(); const firestoreDataString = JSON.stringify(firestoreData);
                 if (!docSnap.metadata.hasPendingWrites || firestoreDataString !== localStorage.getItem(localKey)) {
                     localStorage.setItem(localKey, firestoreDataString);
-                    if (!docSnap.metadata.hasPendingWrites) { // Ak dáta prišli zo servera (nie lokálny zápis)
+                    if (!docSnap.metadata.hasPendingWrites) { 
                        removeMonthFromPendingList(docId);
                     }
                     parseAndApplyWorkData(firestoreDataString);
@@ -760,7 +782,7 @@
     }, 1200);
     window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
 
-    function getFirestoreDocId(year, month) { return `${year}-${String(month + 0).padStart(2, '0')}`; } // Mesiac je 0-indexed
+    function getFirestoreDocId(year, month) { return `${year}-${String(month + 0).padStart(2, '0')}`; } 
     function getLocalStorageKeyForWorkData(docId) { return currentUser ? `workData-${currentUser.uid}-${docId}` : `workData-guest-${docId}`; }
     function getPendingSyncKeyForMonth(docId) { return currentUser ? `pendingSync-workData-${currentUser.uid}-${docId}` : null; }
 
@@ -808,11 +830,8 @@
                     successfullySyncedMonths.push(monthId);
                 } catch (error) {
                     console.error(`Chyba synchronizácie dát pre ${monthId}:`, error);
-                    // Nezobrazujeme notifikáciu pre každú chybu tu, aby sme nezaplavili používateľa
-                    // Mesiac zostane v pending zozname
                 }
             } else {
-                // Ak dáta pre pending kľúč neexistujú, mesiac bol pravdepodobne zmazaný/spracovaný inak
                 successfullySyncedMonths.push(monthId);
             }
         }
@@ -887,7 +906,7 @@
                 } else { resetTableInputsOnly(); }
             } catch (error) { showErrorNotification('Chyba pri spracovaní uložených dát: ' + error.message); resetTableInputsOnly(); }
         } else { resetTableInputsOnly(); }
-        calculateTotal(); // Toto je kľúčové - zavolá sa calculateTotal po spracovaní dát
+        calculateTotal();
     }
     function resetTableInputsOnly() {
         const daysInTable = getDaysInMonth(currentMonth, currentYear);
@@ -1004,7 +1023,10 @@
 
     window.clearMonthData = async function() {
         const btn = event.target; if (!confirm(`Naozaj chcete vymazať VŠETKY dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear}? Táto akcia je nezvratná!`)) return;
-        setLoadingState(btn, true, "Mazanie dát..."); resetTableInputsOnly(); calculateTotal();
+        setLoadingState(btn, true, "Mazanie dát..."); 
+        uiRefs.totalSalaryDiv.classList.add('skeleton-active'); // Znovu aktivuj skeleton kým sa prepočíta
+        resetTableInputsOnly(); 
+        calculateTotal(); // Toto zavolá prepočet a odstráni skeleton-active
         const emptyMonthData = { data: [], lastUpdated: new Date().toISOString() };
         const docId = getFirestoreDocId(currentYear, currentMonth);
         const localKey = getLocalStorageKeyForWorkData(docId);
@@ -1016,7 +1038,7 @@
         if (currentUser && navigator.onLine) {
             const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
             try {
-                await setDoc(docRef, emptyMonthData); // Zmaže dáta v cloude (prepísaním)
+                await setDoc(docRef, emptyMonthData); 
                 if (pendingKey) localStorage.removeItem(pendingKey);
                 removeMonthFromPendingList(docId);
             } catch (error) {
@@ -1064,11 +1086,12 @@
             Celková hrubá mzda: <strong>${totalGrossSalary.toFixed(appSettings.decimalPlaces)} €</strong> | Celková čistá mzda: <strong>${totalNetSalary.toFixed(appSettings.decimalPlaces)} €</strong><br>
             Priemerná čistá mzda na deň: <strong>${avgNetSalary.toFixed(appSettings.decimalPlaces)} €</strong> | Priemerný čas na deň: <strong>${avgHoursPart}h ${avgMinutesPart}m</strong> (${avgDecimalHours.toFixed(appSettings.decimalPlaces)} h)`;
 
-        // ========== ZMENA TU ==========
-        if (uiRefs.totalSalaryDiv.style.display === 'none') {
-            uiRefs.totalSalaryDiv.style.display = 'block';
+        if (uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+            uiRefs.totalSalaryDiv.classList.remove('skeleton-active');
+             // Po odstránení skeleton-active sa uistíme, že štýly pre flex centrovanie neovplyvnia text
+            uiRefs.totalSalaryDiv.style.justifyContent = ''; 
+            uiRefs.totalSalaryDiv.style.alignItems = '';
         }
-        // ==============================
     }
 
     window.exportToPDF = async function() {
@@ -1219,13 +1242,14 @@
                         updateSettingsUIInputs(); await saveAppSettingsToFirestore();
                     }
                     if (restoredWorkData.data.length > 0 || (workSheetName && restoredWorkData.data.length === 0 )) {
+                         uiRefs.totalSalaryDiv.classList.add('skeleton-active'); // Aktivuj skeleton pred zmenou dát
                         if (backupMonth !== currentMonth || backupYear !== currentYear) {
                             currentMonth = backupMonth; currentYear = backupYear; uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear; createTable();
                         }
                         const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
                         const workDataString = JSON.stringify(workDataToApply);
                         localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
-                        parseAndApplyWorkData(workDataString); // Aplikuje dáta na UI
+                        parseAndApplyWorkData(workDataString); 
 
                         if (currentUser) {
                             if (navigator.onLine) {
@@ -1250,8 +1274,20 @@
         input.click();
     };
 
-    window.changeMonth = function() { currentMonth = parseInt(uiRefs.monthSelect.value); createTable(); setupFirestoreWorkDataListener(); updatePageTitleAndGreeting(); }
-    window.changeYear = function() { currentYear = parseInt(uiRefs.yearSelect.value); createTable(); setupFirestoreWorkDataListener(); updatePageTitleAndGreeting(); }
+    window.changeMonth = function() { 
+        uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        currentMonth = parseInt(uiRefs.monthSelect.value); 
+        createTable(); 
+        setupFirestoreWorkDataListener(); 
+        updatePageTitleAndGreeting(); 
+    }
+    window.changeYear = function() { 
+        uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        currentYear = parseInt(uiRefs.yearSelect.value); 
+        createTable(); 
+        setupFirestoreWorkDataListener(); 
+        updatePageTitleAndGreeting(); 
+    }
 
     uiRefs.toggleSettingsBtn.addEventListener('click', () => {
         const isVisible = uiRefs.settingsCollapsibleContent.classList.toggle('visible');
@@ -1275,6 +1311,9 @@
 
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) { // Pridaj skeleton len ak tam už nie je
+            uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        }
         updateUIForAuthStateChange();
         if (user) {
             const settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
@@ -1283,18 +1322,15 @@
                 updateSettingsUIInputs();
                 if (navigator.onLine) await saveAppSettingsToFirestore();
             }
-            // Po prihlásení sa pokúsime synchronizovať všetky čakajúce mesiace
             syncPendingWorkData();
         } else {
             loadAppSettingsFromLocalStorage();
             updateSettingsUIInputs();
-            // Ak sa používateľ odhlási, vymažeme zoznam čakajúcich mesiacov,
-            // pretože sú viazané na konkrétneho používateľa.
             localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY);
-            updateAppBadge(0); // Vynulovať odznak
+            updateAppBadge(0); 
         }
         createTable();
-        setupFirestoreWorkDataListener(); // Toto sa pokúsi načítať dáta pre aktuálny mesiac a môže spustiť sync
+        setupFirestoreWorkDataListener(); 
         updatePageTitleAndGreeting();
     });
 
@@ -1306,7 +1342,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => { /* Logovanie odstránené */ })
+          .then(reg => { /* console.log('Service Worker registered.', reg); */ })
           .catch(err => { console.error('Service Worker registration failed:', err); });
       });
     }
