@@ -273,7 +273,7 @@
 <body>
   <div class="container">
     <div id="auth-container" style="margin-bottom: 20px;">
-      <fieldset id="login-fieldset" style="display: none;">
+      <fieldset id="login-fieldset">
         <legend>Prihlásenie / Registrácia</legend>
         <div id="login-form">
           <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email">
@@ -349,9 +349,7 @@
       </table>
     </div>
 
-    <!-- ========== ZMENA TU ========== -->
-    <div id="totalSalary" aria-live="polite" style="display: none;">Výpočet celkovej mzdy...</div>
-    <!-- ============================== -->
+    <div id="totalSalary" aria-live="polite">Výpočet celkovej mzdy...</div>
     <div id="localStorageIndicator"></div>
 
     <div class="btn-container">
@@ -576,10 +574,6 @@
         uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear;
         updateSettingsUIInputs(); updatePageTitleAndGreeting(); updateLocalStorageSizeIndicator();
         updateAppBadge(getPendingSyncCount());
-        // Volanie calculateTotal() tu už nie je bezpodmienečne nutné,
-        // pretože parseAndApplyWorkData ho zavolá po načítaní dát.
-        // Alebo ho tu môžeme nechať, aby sa zobrazil (s nulami) ak by parseAndApplyWorkData z nejakého dôvodu nezbehlo hneď.
-        // S Možnosťou 1 (skrytie divu) to nevadí.
     }
 
     window.updateEmployeeName = function() {
@@ -887,7 +881,7 @@
                 } else { resetTableInputsOnly(); }
             } catch (error) { showErrorNotification('Chyba pri spracovaní uložených dát: ' + error.message); resetTableInputsOnly(); }
         } else { resetTableInputsOnly(); }
-        calculateTotal(); // Toto je kľúčové - zavolá sa calculateTotal po spracovaní dát
+        calculateTotal();
     }
     function resetTableInputsOnly() {
         const daysInTable = getDaysInMonth(currentMonth, currentYear);
@@ -1057,18 +1051,11 @@
         const totalHoursPart = Math.floor(totalWorkMinutes / 60); const totalMinutesPart = Math.round(totalWorkMinutes % 60); const totalDecimalHours = totalWorkMinutes / 60;
         const avgNetSalary = daysWithEntries > 0 ? totalNetSalary / daysWithEntries : 0; const avgWorkMinutes = daysWithEntries > 0 ? totalWorkMinutes / daysWithEntries : 0;
         const avgHoursPart = Math.floor(avgWorkMinutes / 60); const avgMinutesPart = Math.round(avgWorkMinutes % 60); const avgDecimalHours = avgWorkMinutes / 60;
-        
         uiRefs.totalSalaryDiv.innerHTML = `
             Započítaných dní s aktivitou: <strong>${daysWithEntries}</strong><br>
             Celkový odpracovaný čas: <strong>${totalHoursPart}h ${totalMinutesPart}m</strong> (${totalDecimalHours.toFixed(appSettings.decimalPlaces)} h)<br>
             Celková hrubá mzda: <strong>${totalGrossSalary.toFixed(appSettings.decimalPlaces)} €</strong> | Celková čistá mzda: <strong>${totalNetSalary.toFixed(appSettings.decimalPlaces)} €</strong><br>
             Priemerná čistá mzda na deň: <strong>${avgNetSalary.toFixed(appSettings.decimalPlaces)} €</strong> | Priemerný čas na deň: <strong>${avgHoursPart}h ${avgMinutesPart}m</strong> (${avgDecimalHours.toFixed(appSettings.decimalPlaces)} h)`;
-
-        // ========== ZMENA TU ==========
-        if (uiRefs.totalSalaryDiv.style.display === 'none') {
-            uiRefs.totalSalaryDiv.style.display = 'block';
-        }
-        // ==============================
     }
 
     window.exportToPDF = async function() {
