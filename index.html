@@ -7,14 +7,16 @@
 
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
-  <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+  <link rel="apple-touch-icon" href="./icons/icon-192x192.png"> <!-- Uistite sa, že tento súbor existuje -->
+  <meta name="theme-color" content="#7c3aed"/> <!-- Pridané pre konzistenciu s manifestom -->
+
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
   <style>
-    /* CSS štýly zostávajú rovnaké ako v predchádzajúcej "maximálne vylepšenej" verzii */
+    /* CSS štýly zostávajú rovnaké ako vo vašom kóde */
     :root {
       --primary-bg-color: #f0f2f5;
       --secondary-bg-color: #ffffff;
@@ -172,7 +174,6 @@
       background-color: var(--total-salary-bg); border-radius: var(--border-radius); line-height: 1.8;
       color: var(--primary-text-color); box-shadow: var(--box-shadow);
     }
-    #totalSalary strong { font-weight: 700; }
     #localStorageIndicator { font-size: 0.8rem; text-align: right; margin-top: 8px; color: #9ca3af; }
     .current-day { background-color: var(--current-day-bg-color) !important; color: var(--current-day-text-color); }
     .current-day td, .current-day th {
@@ -270,6 +271,7 @@
   </style>
 </head>
 <body>
+  <!-- Obsah BODY zostáva rovnaký ako vo vašom kóde -->
   <div class="container">
     <div id="auth-container" style="margin-bottom: 20px;">
       <fieldset id="login-fieldset">
@@ -406,9 +408,7 @@
     }
 
     // Zvyšok JavaScript kódu (od "Globálne Premenné a Konštanty" ďalej) zostáva
-    // rovnaký ako v predchádzajúcej odpovedi, kde bol "kompletný kód".
-    // Sem skopírujte zvyšok JS.
-
+    // rovnaký ako vo vašom kóde.
     // Globálne Premenné a Konštanty
     let currentUser = null;
     let currentListenerUnsubscribe = null;
@@ -1112,8 +1112,8 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => { /* Logovanie odstránené */ })
-          .catch(err => { /* Logovanie odstránené */ });
+          .then(reg => { /* Logovanie odstránené, SW sa zaregistroval */ })
+          .catch(err => { /* Logovanie odstránené, chyba registrácie SW */ });
       });
     }
   </script>
