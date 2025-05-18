@@ -46,7 +46,7 @@
       --base-font-size: 16px;
       --focus-outline-color: var(--btn-primary-bg);
       --transition-speed: 0.2s;
-      --skeleton-color: #e0e7ff; /* Farba pre skeleton bloky */
+      --skeleton-color: #e0e7ff; 
     }
 
     @font-face {
@@ -172,10 +172,10 @@
       font-size: 1rem; font-weight: 500; text-align: center; margin-top: 25px; padding: 15px;
       background-color: var(--total-salary-bg); border-radius: var(--border-radius); line-height: 1.8;
       color: var(--primary-text-color); box-shadow: var(--box-shadow);
-      min-height: 90px; /* Približná výška, aby to neposkakovalo veľmi pri zmene z kostry na text */
-      display: flex; /* Pre lepšie centrovanie skeleton blokov, ak sú menšie */
-      flex-direction: column; /* Aby boli skeleton bloky pod sebou */
-      justify-content: center; /* Vertikálne centrovanie skeleton blokov */
+      min-height: 90px; 
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
     }
     #localStorageIndicator { font-size: 0.8rem; text-align: right; margin-top: 8px; color: #9ca3af; }
     .current-day { background-color: var(--current-day-bg-color) !important; color: var(--current-day-text-color); }
@@ -203,18 +203,23 @@
     #login-form .btn + .btn { margin-top: 10px; }
     #login-form a { margin-top: 15px; display: block; font-size: 0.9rem; color: var(--link-color); text-decoration: none; }
     #login-form a:hover { text-decoration: underline; color: var(--link-hover-color); }
-    #user-info { align-items: center; }
+    #user-info { 
+        display: none; /* Skryté defaultne, JS to zobrazí ak treba */
+        justify-content: center; 
+        align-items: center; 
+        gap: 15px; 
+        margin-top: -5px; /* Trochu bližšie k H2 */
+        margin-bottom: 15px; /* Odsadenie od nastavení */
+        font-size: 0.9rem;
+    }
 
     /* Skeleton Styles */
     #totalSalary.skeleton-active {
-      /* Štýly pre kontajner, keď je kostra aktívna */
-      /* min-height je už definovaný vyššie pre #totalSalary */
+       /* Štýly pre kontajner, keď je kostra aktívna */
     }
     .skeleton-block {
       background-color: var(--skeleton-color);
       border-radius: 4px;
-      /* Výška a margin-bottom sú nastavené inline v HTML pre variabilitu,
-         alebo ich môžete definovať tu, ak sú uniformné */
     }
     #totalSalary.skeleton-active .skeleton-block {
       animation: skeleton-pulse 1.5s infinite ease-in-out;
@@ -263,9 +268,10 @@
     @media print {
       body { padding: 0; font-size: 10pt; color: #000; background-color: #fff; font-family: Arial, sans-serif;}
       .container { max-width: 100%; margin: 0; padding: 10px; box-shadow: none; border: none;}
-      #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn, .skeleton-active { display: none !important; }
+      #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn, .skeleton-active, #logoutBtnBottom { display: none !important; }
       h1 { font-size: 18pt; margin-bottom: 5mm; background: none !important; -webkit-background-clip: unset !important; background-clip: unset !important; color: black !important;}
       h2 { font-size: 12pt; margin-bottom: 8mm; }
+      #user-info { display: block !important; text-align: center; margin-bottom: 5mm; } /* Zobraziť user-info pri tlači */
       .table-container { overflow: visible; border: 1px solid #ccc; }
       table { width: 100%; page-break-inside: auto; border-collapse: collapse;}
       tr { page-break-inside: avoid; page-break-after: auto; }
@@ -283,7 +289,7 @@
       }
       #totalSalary {
         margin-top: 10mm; padding: 8px; border: 1px solid #ccc; background-color: #f9f9f9 !important;
-        color: #000 !important; box-shadow: none; page-break-before: auto; min-height: unset !important; display: block !important; /* Upravy pre tlač */
+        color: #000 !important; box-shadow: none; page-break-before: auto; min-height: unset !important; display: block !important;
       }
       a { text-decoration: none; color: #000; }
       a[href^="http"]:after { content: " (" attr(href) ")"; font-size: 8pt; }
@@ -307,9 +313,9 @@
           <a href="#" onclick="resetUserPassword(); return false;">Zabudli ste heslo?</a>
         </div>
       </fieldset>
-      <div id="user-info" style="display: none; justify-content: center; align-items: center; gap: 15px; margin-top:10px;">
+      <!-- user-info teraz obsahuje len email -->
+      <div id="user-info"> 
         <span id="user-email" style="font-weight:500;"></span>
-        <button class="btn reset-btn" onclick="logoutUser()" style="padding: 8px 15px; font-size: 0.85rem; margin:0;">Odhlásiť sa</button>
       </div>
     </div>
 
@@ -388,6 +394,7 @@
         <button class="btn backup-btn" onclick="restoreBackup()">Obnoviť zálohu (XLSX)</button>
         <button class="btn export-btn" onclick="loadFromFirestore()">Načítať z Cloudu</button>
         <button class="btn warning-btn" onclick="clearMonthData()" title="Vymazať všetky dáta pre aktuálny mesiac">Vymazať Mesiac</button>
+        <button id="logoutBtnBottom" class="btn reset-btn" onclick="logoutUser()" style="display: none;">Odhlásiť sa</button>
     </div>
   </div>
 
@@ -417,7 +424,7 @@
     const app = initializeApp(firebaseConfig);
     try {
        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), // Váš reCAPTCHA v3 site key
+            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), 
             isTokenAutoRefreshEnabled: true
         });
     } catch (e) {
@@ -435,7 +442,6 @@
         showErrorNotification("Chyba pri inicializácii offline úložiska. Offline režim nemusí byť dostupný.");
     }
 
-    // Globálne Premenné a Konštanty
     let currentUser = null;
     let currentListenerUnsubscribe = null;
 
@@ -457,6 +463,7 @@
         loginFieldset: document.getElementById('login-fieldset'),
         userInfo: document.getElementById('user-info'),
         userEmailSpan: document.getElementById('user-email'),
+        logoutBtnBottom: document.getElementById('logoutBtnBottom')
     };
 
     const currentDate = new Date();
@@ -469,34 +476,23 @@
 
     const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
     const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
-
-    // --- Badging API Funkcie ---
     const PENDING_SYNC_MONTHS_LS_KEY = 'pendingSyncMonthsList';
 
     async function updateAppBadge(count) {
       if ('setAppBadge' in navigator) {
         try {
-          if (count > 0) {
-            await navigator.setAppBadge(count);
-          } else {
-            await navigator.clearAppBadge();
-          }
-        } catch (error) {
-          console.error('Failed to set app badge:', error);
-        }
+          if (count > 0) { await navigator.setAppBadge(count); } else { await navigator.clearAppBadge(); }
+        } catch (error) { console.error('Failed to set app badge:', error); }
       }
     }
-
     function getPendingSyncMonths() {
         const stored = localStorage.getItem(PENDING_SYNC_MONTHS_LS_KEY);
         return stored ? JSON.parse(stored) : [];
     }
-
     function savePendingSyncMonths(months) {
         localStorage.setItem(PENDING_SYNC_MONTHS_LS_KEY, JSON.stringify(months));
         updateAppBadge(months.length);
     }
-
     function addMonthToPendingList(monthDocId) {
         if (!currentUser) return;
         let pendingMonths = getPendingSyncMonths();
@@ -505,7 +501,6 @@
             savePendingSyncMonths(pendingMonths);
         }
     }
-
     function removeMonthFromPendingList(monthDocId) {
         let pendingMonths = getPendingSyncMonths();
         const index = pendingMonths.indexOf(monthDocId);
@@ -514,12 +509,10 @@
             savePendingSyncMonths(pendingMonths);
         }
     }
-
     function getPendingSyncCount() {
         if (!currentUser) return 0;
         return getPendingSyncMonths().length;
     }
-    // --- Koniec Badging API Funkcií ---
 
     function getDaysInMonth(month, year) { return new Date(year, month + 1, 0).getDate(); }
     function getDayName(year, month, day) { return DAY_NAMES_SHORT[new Date(year, month, day).getDay()]; }
@@ -550,7 +543,7 @@
         } else {
             button.disabled = false;
             if (button.dataset.originalText) button.innerHTML = button.dataset.originalText;
-            else button.textContent = originalText;
+            else button.textContent = originalText; // Fallback if originalText wasn't set
             button.classList.remove('is-loading');
         }
     }
@@ -641,7 +634,14 @@
         uiRefs.hourlyWageInput.value = appSettings.hourlyWage.toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1);
         recalculateAllRowsAndUpdateTotal(); debouncedSaveAppSettingsToFirestore();
     }
-    function recalculateAllRowsAndUpdateTotal() { const days = getDaysInMonth(currentMonth, currentYear); for (let i = 1; i <= days; i++) calculateRow(i); calculateTotal(); }
+    function recalculateAllRowsAndUpdateTotal() { 
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+             uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        }
+        const days = getDaysInMonth(currentMonth, currentYear); 
+        for (let i = 1; i <= days; i++) calculateRow(i); 
+        calculateTotal(); 
+    }
 
     function updatePageTitleAndGreeting() {
         const wavingHand = "👋"; const namePart = appSettings.employeeName ? `${appSettings.employeeName.split(' ')[0]}` : "";
@@ -698,10 +698,19 @@
         }
     }
     window.logoutUser = async function() {
-        const btn = event.target; setLoadingState(btn, true, "Odhlasujem...");
+        const btn = event?.target || uiRefs.logoutBtnBottom; 
+        if (btn) setLoadingState(btn, true, "Odhlasujem...");
+        
         if (currentListenerUnsubscribe) { currentListenerUnsubscribe(); currentListenerUnsubscribe = null; }
-        try { await signOut(auth); showSaveNotification('Úspešne odhlásený.'); }
-        catch (error) { showErrorNotification('Chyba pri odhlásení: ' + error.message); setLoadingState(btn, false, "Odhlásiť sa");}
+        
+        try { 
+            await signOut(auth); 
+            showSaveNotification('Úspešne odhlásený.'); 
+        }
+        catch (error) { 
+            showErrorNotification('Chyba pri odhlásení: ' + error.message); 
+            if (btn) setLoadingState(btn, false, "Odhlásiť sa");
+        }
     };
     window.resetUserPassword = async function() {
         if (!navigator.onLine) { showErrorNotification('Ste offline. Obnova hesla je možná iba v online režime.'); return; }
@@ -715,9 +724,21 @@
     function updateUIForAuthStateChange() {
         const isLoggedIn = !!currentUser;
         if (uiRefs.loginFieldset) uiRefs.loginFieldset.style.display = isLoggedIn ? 'none' : 'block';
+        
         uiRefs.userInfo.style.display = isLoggedIn ? 'flex' : 'none';
-        if (isLoggedIn && uiRefs.userEmailSpan) uiRefs.userEmailSpan.textContent = `Prihlásený: ${currentUser.email}`;
-        const logoutBtn = uiRefs.userInfo.querySelector('.reset-btn'); if (logoutBtn) setLoadingState(logoutBtn, false, "Odhlásiť sa");
+        if (isLoggedIn && uiRefs.userEmailSpan) {
+            uiRefs.userEmailSpan.textContent = `Prihlásený: ${currentUser.email}`;
+        } else if (uiRefs.userEmailSpan) {
+            uiRefs.userEmailSpan.textContent = '';
+        }
+
+        if (uiRefs.logoutBtnBottom) {
+            uiRefs.logoutBtnBottom.style.display = isLoggedIn ? 'inline-block' : 'none';
+            if (isLoggedIn) { // Reset loading state len ak sa zobrazuje
+                 setLoadingState(uiRefs.logoutBtnBottom, false, "Odhlásiť sa");
+            }
+        }
+        
         updateAppBadge(getPendingSyncCount());
     }
 
@@ -734,6 +755,9 @@
         const docId = getFirestoreDocId(currentYear, currentMonth);
         const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
         currentListenerUnsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+                 uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+            }
             const localKey = getLocalStorageKeyForWorkData(docId);
             if (docSnap.exists()) {
                 const firestoreData = docSnap.data(); const firestoreDataString = JSON.stringify(firestoreData);
@@ -777,6 +801,9 @@
             addMonthToPendingList(docId);
             const pendingKey = getPendingSyncKeyForMonth(docId);
             if(pendingKey) localStorage.setItem(pendingKey, JSON.stringify(dataToSave));
+        }
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+             uiRefs.totalSalaryDiv.classList.add('skeleton-active');
         }
         calculateTotal();
     }, 1200);
@@ -856,7 +883,10 @@
         if (!currentUser) { showErrorNotification('Pre načítanie dát z cloudu musíte byť prihlásený.'); setLoadingState(btn, false, "Načítať z Cloudu"); return; }
         if (!navigator.onLine) { showErrorNotification('Ste offline. Načítanie z cloudu vyžaduje internetové pripojenie.'); setLoadingState(btn, false, "Načítať z Cloudu"); return; }
         if (!confirm('Naozaj chcete prepísať lokálne dáta pre tento mesiac dátami z cloudu? Vaše neuložené lokálne zmeny môžu byť stratené.')) { setLoadingState(btn, false, "Načítať z Cloudu"); return; }
-
+        
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+            uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        }
         const docId = getFirestoreDocId(currentYear, currentMonth);
         const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
         try {
@@ -883,6 +913,9 @@
     };
 
     function loadWorkDataFromLocalStorage() {
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+             uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        }
         const docId = getFirestoreDocId(currentYear, currentMonth);
         const localKey = getLocalStorageKeyForWorkData(docId);
         const localData = localStorage.getItem(localKey);
@@ -1024,9 +1057,11 @@
     window.clearMonthData = async function() {
         const btn = event.target; if (!confirm(`Naozaj chcete vymazať VŠETKY dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear}? Táto akcia je nezvratná!`)) return;
         setLoadingState(btn, true, "Mazanie dát..."); 
-        uiRefs.totalSalaryDiv.classList.add('skeleton-active'); // Znovu aktivuj skeleton kým sa prepočíta
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+             uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        }
         resetTableInputsOnly(); 
-        calculateTotal(); // Toto zavolá prepočet a odstráni skeleton-active
+        calculateTotal(); 
         const emptyMonthData = { data: [], lastUpdated: new Date().toISOString() };
         const docId = getFirestoreDocId(currentYear, currentMonth);
         const localKey = getLocalStorageKeyForWorkData(docId);
@@ -1088,7 +1123,6 @@
 
         if (uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
             uiRefs.totalSalaryDiv.classList.remove('skeleton-active');
-             // Po odstránení skeleton-active sa uistíme, že štýly pre flex centrovanie neovplyvnia text
             uiRefs.totalSalaryDiv.style.justifyContent = ''; 
             uiRefs.totalSalaryDiv.style.alignItems = '';
         }
@@ -1242,7 +1276,9 @@
                         updateSettingsUIInputs(); await saveAppSettingsToFirestore();
                     }
                     if (restoredWorkData.data.length > 0 || (workSheetName && restoredWorkData.data.length === 0 )) {
-                         uiRefs.totalSalaryDiv.classList.add('skeleton-active'); // Aktivuj skeleton pred zmenou dát
+                        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+                            uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+                        }
                         if (backupMonth !== currentMonth || backupYear !== currentYear) {
                             currentMonth = backupMonth; currentYear = backupYear; uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear; createTable();
                         }
@@ -1275,14 +1311,18 @@
     };
 
     window.changeMonth = function() { 
-        uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+            uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        }
         currentMonth = parseInt(uiRefs.monthSelect.value); 
         createTable(); 
         setupFirestoreWorkDataListener(); 
         updatePageTitleAndGreeting(); 
     }
     window.changeYear = function() { 
-        uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
+            uiRefs.totalSalaryDiv.classList.add('skeleton-active');
+        }
         currentYear = parseInt(uiRefs.yearSelect.value); 
         createTable(); 
         setupFirestoreWorkDataListener(); 
@@ -1311,7 +1351,7 @@
 
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
-        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) { // Pridaj skeleton len ak tam už nie je
+        if (!uiRefs.totalSalaryDiv.classList.contains('skeleton-active')) {
             uiRefs.totalSalaryDiv.classList.add('skeleton-active');
         }
         updateUIForAuthStateChange();
