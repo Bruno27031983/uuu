@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-pro-v1.7'; // <-- NASTAVTE NOVÚ VERZIU!
+const CACHE_NAME = 'bruno-calculator-pro-v1.8'; // <-- NASTAVTE NOVÚ VERZIU!
 const ASSETS_TO_CACHE = [
   './', // Alias pre index.html
   './index.html',
