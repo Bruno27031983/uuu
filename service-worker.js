@@ -1,19 +1,22 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-pro-v1.5'; // <-- ZVÝŠTE VERZIU!
+const CACHE_NAME = 'bruno-calculator-pro-v1.6'; // <-- NASTAVTE NOVÚ VERZIU!
 const ASSETS_TO_CACHE = [
   './', // Alias pre index.html
   './index.html',
   './manifest.json',
-  './icons/icon-192x192.png',
-  './icons/icon-512x512.png',
+  './icons/icon-192x192.png', // Uistite sa, že tieto ikony existujú
+  './icons/icon-512x512.png', // Uistite sa, že tieto ikony existujú
+  // Font (ak ho chcete cachovať explicitne)
   'https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2'
+  // Pridajte sem ďalšie kľúčové lokálne assety, ak nejaké máte (napr. hlavný CSS súbor, ak nie je inline)
 ];
 
-const CDN_ORIGINS = [
-  'https://cdnjs.cloudflare.com',
-  'https://www.gstatic.com',
-  'https://fonts.gstatic.com'
+// Zoznam CDN, ktorých obsah chceme tiež cachovať (stratégia Cache, then Network s aktualizáciou)
+const CDN_ORIGINS_TO_CACHE_REFRESH = [
+  'https://cdnjs.cloudflare.com', // Pre jspdf, xlsx
+  'https://www.gstatic.com',      // Pre Firebase (aj keď väčšinu si rieši sám)
+  'https://fonts.gstatic.com'     // Pre Google Fonts (ak by ste mali viac fontov)
 ];
 
 self.addEventListener('install', event => {
@@ -23,6 +26,8 @@ self.addEventListener('install', event => {
       .then(cache => {
         console.log('[ServiceWorker] Precaching App Shell and critical assets');
         const promises = ASSETS_TO_CACHE.map(assetUrl => {
+          // Pre kritické assety, ak zlyhá pridanie, môže to byť problém
+          // Tu by sa mohla pridať robustnejšia logika, ak sú niektoré menej kritické
           return cache.add(assetUrl).catch(err => {
             console.warn(`[ServiceWorker] Failed to cache ${assetUrl} during install:`, err);
           });
@@ -31,7 +36,7 @@ self.addEventListener('install', event => {
       })
       .then(() => {
         console.log('[ServiceWorker] All assets precached, activating new SW immediately.');
-        return self.skipWaiting();
+        return self.skipWaiting(); // Aktivuje nový SW hneď po inštalácii
       })
       .catch(error => {
         console.error('[ServiceWorker] Precaching failed:', error);
@@ -53,7 +58,7 @@ self.addEventListener('activate', event => {
       );
     }).then(() => {
       console.log('[ServiceWorker] Old caches deleted, claiming clients.');
-      return self.clients.claim();
+      return self.clients.claim(); // Prevezme kontrolu nad otvorenými klientmi
     })
   );
 });
@@ -61,26 +66,28 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
 
+  // Ignorovať Chrome extension požiadavky
   if (requestUrl.protocol === 'chrome-extension:') {
     return;
   }
 
-  if (requestUrl.hostname.includes('firebaseapp.com') ||
-      requestUrl.hostname.includes('firebaseio.com') ||
-      requestUrl.hostname.includes('googleapis.com')
+  // Ignorovať Firebase Auth a Firestore požiadavky - tie si rieši Firebase SDK
+  if (requestUrl.hostname.includes('firebaseapp.com') || // *.firebaseapp.com (authDomain)
+      requestUrl.hostname.includes('firebaseio.com') || // *.firebaseio.com (databaseURL)
+      requestUrl.hostname.includes('googleapis.com') // identitytoolkit.googleapis.com (Auth), firestore.googleapis.com (Firestore)
      ) {
-    return; // Nechaj Firebase SDK spravovať svoje požiadavky
+    // Nechať tieto požiadavky prejsť na sieť
+    return;
   }
 
+  // Stratégia: Cache-First s Network fallbackom a aktualizáciou cache pre statické assety a CDN zdroje
   if (ASSETS_TO_CACHE.some(asset => requestUrl.pathname.endsWith(asset.substring(1))) ||
-      CDN_ORIGINS.some(origin => requestUrl.origin === origin)) {
+      CDN_ORIGINS_TO_CACHE_REFRESH.some(origin => requestUrl.origin === origin)) {
     event.respondWith(
       caches.match(event.request)
         .then(cachedResponse => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          return fetch(event.request).then(networkResponse => {
+          const fetchPromise = fetch(event.request).then(networkResponse => {
+            // Skontrolovať, či je odpoveď platná pred cachovaním
             if (networkResponse && networkResponse.status === 200 && (networkResponse.type === 'basic' || networkResponse.type === 'cors')) {
               const responseToCache = networkResponse.clone();
               caches.open(CACHE_NAME).then(cache => {
@@ -90,10 +97,19 @@ self.addEventListener('fetch', event => {
             return networkResponse;
           }).catch(error => {
             console.error('[ServiceWorker] Network fetch failed for asset:', event.request.url, error);
+            // Ak zlyhá sieť a máme niečo v cache (pre tento blok by to nemalo nastať, lebo sme to už kontrolovali),
+            // vrátime cachedResponse. Ak nemáme nič, chyba sa prenesie.
+            if (cachedResponse) return cachedResponse;
+            throw error; // Ak nie je ani v cache a sieť zlyhala, necháme chybu prejsť
           });
+
+          // Ak je v cache, vrátiť z cache, inak čakať na fetchPromise
+          return cachedResponse || fetchPromise;
         })
     );
-  } else if (event.request.mode === 'navigate' ||
+  }
+  // Stratégia: Stale-While-Revalidate pre hlavnú HTML stránku (navigácie)
+  else if (event.request.mode === 'navigate' ||
            (event.request.method === 'GET' && event.request.headers.get('accept').includes('text/html'))) {
     event.respondWith(
       caches.open(CACHE_NAME).then(cache => {
@@ -105,15 +121,20 @@ self.addEventListener('fetch', event => {
             return networkResponse;
           }).catch(error => {
             console.warn('[ServiceWorker] Network fetch failed for navigation. Serving stale if available.', error);
+            // Ak sieť zlyhá A nemáme nič v cache, tu by sa mohol zobraziť offline fallback page
+            // if (!cachedResponse) return caches.match('./offline.html'); // ak existuje
           });
+          // Vrátiť z cache ak je k dispozícii, inak čakať na sieť
           return cachedResponse || fetchPromise;
         });
       })
     );
   }
+  // Pre ostatné požiadavky (napr. POST, alebo iné GET ktoré nespadajú do kategórií vyššie)
+  // ich môžeme nechať ísť priamo na sieť (default browser behavior).
 });
 
-// Počúvanie na 'message' event od klientov pre pokročilé interakcie
+// Počúvanie na 'message' event od klientov
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[ServiceWorker] Received SKIP_WAITING message, skipping wait.');
@@ -121,9 +142,10 @@ self.addEventListener('message', event => {
   }
 });
 
-// NOVÁ ČASŤ: Počúvanie na online event a posielanie správy klientom
+// Počúvanie na online event a posielanie správy klientom
 self.addEventListener('online', () => {
   console.log('[ServiceWorker] Detected online status.');
+  // Informuj všetkých otvorených klientov (karty s PWA)
   self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then((clients) => {
     if (clients && clients.length) {
       clients.forEach((client) => {
@@ -132,10 +154,12 @@ self.addEventListener('online', () => {
       console.log('[ServiceWorker] Sent NETWORK_STATUS_ONLINE message to clients.');
     } else {
       console.log('[ServiceWorker] No clients to send NETWORK_STATUS_ONLINE message to.');
+      // V budúcnosti by tu mohol byť pokus o Background Sync, ak by bol implementovaný
     }
   });
 });
 
+// Voliteľné: počúvanie na offline event pre logovanie alebo inú logiku
 self.addEventListener('offline', () => {
   console.log('[ServiceWorker] Detected offline status.');
 });
