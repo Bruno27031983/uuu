@@ -1,24 +1,79 @@
 {
-  "name": "Dochádzka",
-  "short_name": "Dochádzka",
-  "description": "Evidencia a výpočet pracovnej dochádzky.",
-  "lang": "sk",
+  "name": "Bruno's Calculator Pro",
+  "short_name": "BrunoCalc",
+  "description": "Kalkulačka pracovnej dochádzky a miezd s offline podporou.",
+  "lang": "sk-SK",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#5c67f2",
+  "background_color": "#f0f2f5",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "icons/icon-192x192.png",
+      "src": "./icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512x512.png",
+      "src": "./icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png"
+    },
+    {
+      "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "./screenshots/screenshot_mobile.png",
+      "sizes": "540x1080",
       "type": "image/png",
-      "purpose": "any maskable"
+      "form_factor": "narrow",
+      "label": "Výpočet mzdy na mobile"
+    },
+    {
+      "src": "./screenshots/screenshot_desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Prehľad na desktope"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Aktuálny mesiac",
+      "short_name": "Aktuálny",
+      "description": "Otvoriť kalkulačku pre aktuálny mesiac a rok",
+      "url": "./index.html?action=current_month",
+      "icons": [{ "src": "./icons/icon-96x96.png", "sizes": "96x96" }]
     }
   ]
 }
