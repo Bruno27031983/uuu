@@ -7,8 +7,8 @@
 
   <link rel="manifest" href="./manifest.json" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
-  <link rel="apple-touch-icon" href="./icons/icon-192x192.png"> <!-- Uistite sa, že tento súbor existuje -->
-  <meta name="theme-color" content="#7c3aed"/> <!-- Pridané pre konzistenciu s manifestom -->
+  <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+  <meta name="theme-color" content="#7c3aed"/>
 
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -271,7 +271,6 @@
   </style>
 </head>
 <body>
-  <!-- Obsah BODY zostáva rovnaký ako vo vašom kóde -->
   <div class="container">
     <div id="auth-container" style="margin-bottom: 20px;">
       <fieldset id="login-fieldset">
@@ -393,7 +392,7 @@
             isTokenAutoRefreshEnabled: true
         });
     } catch (e) {
-        // Logovanie odstránené
+        console.warn("App Check initialization failed. This might happen if reCAPTCHA script is blocked or fails to load. App will continue without App Check.", e);
     }
     const auth = getAuth(app);
 
@@ -407,8 +406,6 @@
         showErrorNotification("Chyba pri inicializácii offline úložiska. Offline režim nemusí byť dostupný.");
     }
 
-    // Zvyšok JavaScript kódu (od "Globálne Premenné a Konštanty" ďalej) zostáva
-    // rovnaký ako vo vašom kóde.
     // Globálne Premenné a Konštanty
     let currentUser = null;
     let currentListenerUnsubscribe = null;
@@ -443,6 +440,57 @@
 
     const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
     const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
+
+    // --- Badging API Funkcie ---
+    const PENDING_SYNC_MONTHS_LS_KEY = 'pendingSyncMonthsList';
+
+    async function updateAppBadge(count) {
+      if ('setAppBadge' in navigator) {
+        try {
+          if (count > 0) {
+            await navigator.setAppBadge(count);
+          } else {
+            await navigator.clearAppBadge();
+          }
+        } catch (error) {
+          console.error('Failed to set app badge:', error);
+        }
+      }
+    }
+
+    function getPendingSyncMonths() {
+        const stored = localStorage.getItem(PENDING_SYNC_MONTHS_LS_KEY);
+        return stored ? JSON.parse(stored) : [];
+    }
+
+    function savePendingSyncMonths(months) {
+        localStorage.setItem(PENDING_SYNC_MONTHS_LS_KEY, JSON.stringify(months));
+        updateAppBadge(months.length);
+    }
+
+    function addMonthToPendingList(monthDocId) {
+        if (!currentUser) return;
+        let pendingMonths = getPendingSyncMonths();
+        if (!pendingMonths.includes(monthDocId)) {
+            pendingMonths.push(monthDocId);
+            savePendingSyncMonths(pendingMonths);
+        }
+    }
+
+    function removeMonthFromPendingList(monthDocId) {
+        let pendingMonths = getPendingSyncMonths();
+        const index = pendingMonths.indexOf(monthDocId);
+        if (index > -1) {
+            pendingMonths.splice(index, 1);
+            savePendingSyncMonths(pendingMonths);
+        }
+    }
+
+    function getPendingSyncCount() {
+        if (!currentUser) return 0;
+        return getPendingSyncMonths().length;
+    }
+    // --- Koniec Badging API Funkcií ---
 
     function getDaysInMonth(month, year) { return new Date(year, month + 1, 0).getDate(); }
     function getDayName(year, month, day) { return DAY_NAMES_SHORT[new Date(year, month, day).getDay()]; }
@@ -525,6 +573,7 @@
         for (let year = startYear; year <= endYear; year++) { const option = document.createElement('option'); option.value = year; option.textContent = year; uiRefs.yearSelect.appendChild(option); }
         uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear;
         updateSettingsUIInputs(); updatePageTitleAndGreeting(); updateLocalStorageSizeIndicator();
+        updateAppBadge(getPendingSyncCount());
     }
 
     window.updateEmployeeName = function() {
@@ -610,7 +659,8 @@
     async function createUserCollectionAndSettings() {
          if (auth.currentUser) {
             const userDocRef = doc(db, 'users', auth.currentUser.uid);
-            const initialMonthDocId = getFirestoreDocId(); const initialMonthDocRef = doc(db, 'users', auth.currentUser.uid, 'workData', initialMonthDocId);
+            const initialMonthDocId = getFirestoreDocId(currentYear, currentMonth);
+            const initialMonthDocRef = doc(db, 'users', auth.currentUser.uid, 'workData', initialMonthDocId);
             const batch = writeBatch(db);
             batch.set(userDocRef, { email: auth.currentUser.email, createdAt: new Date().toISOString(), appSettings: appSettings }, { merge: true });
             batch.set(initialMonthDocRef, { data: [], lastUpdated: new Date().toISOString() });
@@ -639,21 +689,36 @@
         uiRefs.userInfo.style.display = isLoggedIn ? 'flex' : 'none';
         if (isLoggedIn && uiRefs.userEmailSpan) uiRefs.userEmailSpan.textContent = `Prihlásený: ${currentUser.email}`;
         const logoutBtn = uiRefs.userInfo.querySelector('.reset-btn'); if (logoutBtn) setLoadingState(logoutBtn, false, "Odhlásiť sa");
+        updateAppBadge(getPendingSyncCount());
     }
 
     function setupFirestoreWorkDataListener() {
         if (currentListenerUnsubscribe) currentListenerUnsubscribe();
-        if (!currentUser || !navigator.onLine) { loadWorkDataFromLocalStorage(); return; }
-        const docId = getFirestoreDocId(); const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
+        if (!currentUser) { loadWorkDataFromLocalStorage(); return; } // Ak nie je user, načítaj len lokálne (guest)
+
+        // Ak sme offline, len načítame lokálne a nesnažíme sa nadviazať listener
+        if (!navigator.onLine) {
+            loadWorkDataFromLocalStorage();
+            showWarningNotification("Ste offline. Zobrazujem lokálne dáta. Synchronizácia prebehne po pripojení.");
+            return;
+        }
+
+        const docId = getFirestoreDocId(currentYear, currentMonth);
+        const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
         currentListenerUnsubscribe = onSnapshot(docRef, (docSnap) => {
-            const localKey = getLocalStorageKeyForWorkData();
+            const localKey = getLocalStorageKeyForWorkData(docId);
             if (docSnap.exists()) {
                 const firestoreData = docSnap.data(); const firestoreDataString = JSON.stringify(firestoreData);
                 if (!docSnap.metadata.hasPendingWrites || firestoreDataString !== localStorage.getItem(localKey)) {
-                    localStorage.setItem(localKey, firestoreDataString); parseAndApplyWorkData(firestoreDataString);
+                    localStorage.setItem(localKey, firestoreDataString);
+                    if (!docSnap.metadata.hasPendingWrites) { // Ak dáta prišli zo servera (nie lokálny zápis)
+                       removeMonthFromPendingList(docId);
+                    }
+                    parseAndApplyWorkData(firestoreDataString);
                 } else { calculateTotal(); }
             } else {
-                if (localStorage.getItem(localKey)) localStorage.removeItem(localKey); parseAndApplyWorkData(null);
+                if (localStorage.getItem(localKey)) localStorage.removeItem(localKey);
+                parseAndApplyWorkData(null);
             }
         }, (error) => {
             showErrorNotification(`Chyba synchronizácie dát s cloudom: ${error.message}. Zobrazujem lokálne uložené dáta.`);
@@ -661,18 +726,38 @@
         });
         syncPendingWorkData();
     }
-    const _debouncedSaveWorkDataAndSync = debounce(() => {
-        const dataToSave = collectWorkDataForStorage(); const localKey = getLocalStorageKeyForWorkData();
-        localStorage.setItem(localKey, JSON.stringify(dataToSave)); updateLocalStorageSizeIndicator();
-        if (currentUser && navigator.onLine) saveWorkDataToFirestore(dataToSave, getFirestoreDocId());
-        else if (currentUser) { localStorage.setItem(getPendingSyncKeyForWorkData(), JSON.stringify(dataToSave)); }
+
+    const _debouncedSaveWorkDataAndSync = debounce(async () => {
+        const dataToSave = collectWorkDataForStorage();
+        const docId = getFirestoreDocId(currentYear, currentMonth);
+        const localKey = getLocalStorageKeyForWorkData(docId);
+        localStorage.setItem(localKey, JSON.stringify(dataToSave));
+        updateLocalStorageSizeIndicator();
+
+        if (currentUser && navigator.onLine) {
+            try {
+                await saveWorkDataToFirestore(dataToSave, docId);
+                removeMonthFromPendingList(docId);
+                const pendingKey = getPendingSyncKeyForMonth(docId);
+                if(pendingKey) localStorage.removeItem(pendingKey);
+            } catch (error) {
+                addMonthToPendingList(docId);
+                const pendingKey = getPendingSyncKeyForMonth(docId);
+                if(pendingKey) localStorage.setItem(pendingKey, JSON.stringify(dataToSave));
+            }
+        } else if (currentUser) {
+            addMonthToPendingList(docId);
+            const pendingKey = getPendingSyncKeyForMonth(docId);
+            if(pendingKey) localStorage.setItem(pendingKey, JSON.stringify(dataToSave));
+        }
         calculateTotal();
     }, 1200);
     window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
 
-    function getFirestoreDocId() { return `${currentYear}-${String(currentMonth).padStart(2, '0')}`; }
-    function getLocalStorageKeyForWorkData() { return currentUser ? `workData-${currentUser.uid}-${getFirestoreDocId()}` : `workData-guest-${getFirestoreDocId()}`; }
-    function getPendingSyncKeyForWorkData() { return currentUser ? `pendingSync-workData-${currentUser.uid}-${getFirestoreDocId()}` : null; }
+    function getFirestoreDocId(year, month) { return `${year}-${String(month + 0).padStart(2, '0')}`; } // Mesiac je 0-indexed
+    function getLocalStorageKeyForWorkData(docId) { return currentUser ? `workData-${currentUser.uid}-${docId}` : `workData-guest-${docId}`; }
+    function getPendingSyncKeyForMonth(docId) { return currentUser ? `pendingSync-workData-${currentUser.uid}-${docId}` : null; }
+
 
     function collectWorkDataForStorage() {
         const saveData = { data: [] }; const days = getDaysInMonth(currentMonth, currentYear);
@@ -681,54 +766,104 @@
         }
         saveData.lastUpdated = new Date().toISOString(); return saveData;
     }
+
     async function saveWorkDataToFirestore(dataToSave, docId) {
-        if (!currentUser || !navigator.onLine) return;
+        if (!currentUser) return Promise.reject(new Error("User not logged in."));
+        if (!navigator.onLine) return Promise.reject(new Error("Cannot save to Firestore: App is offline."));
+
         const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
-        try {
-            await setDoc(docRef, dataToSave, { merge: true });
-            const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.removeItem(pendingKey);
-        } catch (error) {
-            showErrorNotification('Chyba ukladania pracovných dát do cloudu: ' + error.message);
-            const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.setItem(pendingKey, JSON.stringify(dataToSave));
-        }
+        await setDoc(docRef, dataToSave, { merge: true });
     }
+
+
     async function syncPendingWorkData() {
         if (!currentUser || !navigator.onLine) { return; }
-        const pendingKey = getPendingSyncKeyForWorkData(); if (!pendingKey) { return; }
-        const pendingDataString = localStorage.getItem(pendingKey);
-        if (pendingDataString) {
-            try {
-                const dataToSync = JSON.parse(pendingDataString); dataToSync.lastUpdated = new Date().toISOString();
-                await saveWorkDataToFirestore(dataToSync, getFirestoreDocId()); showSaveNotification('Lokálne zmeny boli úspešne synchronizované s cloudom.');
-            } catch (error) { showErrorNotification('Chyba synchronizácie lokálnych zmien: ' + error.message); }
+
+        const pendingMonths = getPendingSyncMonths();
+        if (pendingMonths.length === 0) {
+            updateAppBadge(0);
+            return;
+        }
+
+        showNotification('saveNotification', `Synchronizujem ${pendingMonths.length} mesiac(ov)...`, 2000);
+        const successfullySyncedMonths = [];
+
+        for (const monthId of pendingMonths) {
+            const pendingKey = getPendingSyncKeyForMonth(monthId);
+            if (!pendingKey) continue;
+
+            const pendingDataString = localStorage.getItem(pendingKey);
+            if (pendingDataString) {
+                try {
+                    const dataToSync = JSON.parse(pendingDataString);
+                    dataToSync.lastUpdated = new Date().toISOString();
+                    await saveWorkDataToFirestore(dataToSync, monthId);
+                    localStorage.removeItem(pendingKey);
+                    successfullySyncedMonths.push(monthId);
+                } catch (error) {
+                    console.error(`Chyba synchronizácie dát pre ${monthId}:`, error);
+                    // Nezobrazujeme notifikáciu pre každú chybu tu, aby sme nezaplavili používateľa
+                    // Mesiac zostane v pending zozname
+                }
+            } else {
+                // Ak dáta pre pending kľúč neexistujú, mesiac bol pravdepodobne zmazaný/spracovaný inak
+                successfullySyncedMonths.push(monthId);
+            }
+        }
+
+        if (successfullySyncedMonths.length > 0) {
+            let currentPending = getPendingSyncMonths();
+            currentPending = currentPending.filter(id => !successfullySyncedMonths.includes(id));
+            savePendingSyncMonths(currentPending);
+        }
+
+        const finalPendingCount = getPendingSyncCount();
+        if (pendingMonths.length > 0 && finalPendingCount === 0) {
+            showSaveNotification('Všetky lokálne zmeny boli úspešne synchronizované s cloudom.');
+        } else if (finalPendingCount > 0) {
+            showWarningNotification(`Niektoré dáta sa nepodarilo synchronizovať. Zostáva ${finalPendingCount} mesiac(ov) na synchronizáciu.`);
         }
     }
+
 
     window.loadFromFirestore = async function() {
         const btn = event.target; setLoadingState(btn, true, "Načítavam z cloudu...");
         if (!currentUser) { showErrorNotification('Pre načítanie dát z cloudu musíte byť prihlásený.'); setLoadingState(btn, false, "Načítať z Cloudu"); return; }
         if (!navigator.onLine) { showErrorNotification('Ste offline. Načítanie z cloudu vyžaduje internetové pripojenie.'); setLoadingState(btn, false, "Načítať z Cloudu"); return; }
         if (!confirm('Naozaj chcete prepísať lokálne dáta pre tento mesiac dátami z cloudu? Vaše neuložené lokálne zmeny môžu byť stratené.')) { setLoadingState(btn, false, "Načítať z Cloudu"); return; }
-        const docId = getFirestoreDocId(); const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
+
+        const docId = getFirestoreDocId(currentYear, currentMonth);
+        const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
         try {
-            const docSnap = await getDoc(docRef); const localKey = getLocalStorageKeyForWorkData();
+            const docSnap = await getDoc(docRef);
+            const localKey = getLocalStorageKeyForWorkData(docId);
+            const pendingKey = getPendingSyncKeyForMonth(docId);
+
             if (docSnap.exists()) {
                 const storedData = docSnap.data(); const dataString = JSON.stringify(storedData);
                 localStorage.setItem(localKey, dataString);
-                const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.removeItem(pendingKey);
-                parseAndApplyWorkData(dataString); showSaveNotification('Dáta boli úspešne načítané z cloudu.');
+                if (pendingKey) localStorage.removeItem(pendingKey);
+                removeMonthFromPendingList(docId);
+                parseAndApplyWorkData(dataString);
+                showSaveNotification('Dáta boli úspešne načítané z cloudu.');
             } else {
                 localStorage.removeItem(localKey);
-                const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.removeItem(pendingKey);
-                parseAndApplyWorkData(null); showWarningNotification('Pre tento mesiac neboli v cloude nájdené žiadne dáta.');
+                if (pendingKey) localStorage.removeItem(pendingKey);
+                removeMonthFromPendingList(docId);
+                parseAndApplyWorkData(null);
+                showWarningNotification('Pre tento mesiac neboli v cloude nájdené žiadne dáta.');
             }
         } catch (error) { showErrorNotification('Chyba pri načítaní dát z cloudu: ' + error.message); }
         finally { setLoadingState(btn, false, "Načítať z Cloudu"); }
     };
+
     function loadWorkDataFromLocalStorage() {
-        const localKey = getLocalStorageKeyForWorkData(); const localData = localStorage.getItem(localKey);
+        const docId = getFirestoreDocId(currentYear, currentMonth);
+        const localKey = getLocalStorageKeyForWorkData(docId);
+        const localData = localStorage.getItem(localKey);
         parseAndApplyWorkData(localData);
     }
+
     function parseAndApplyWorkData(dataString) {
         if (dataString) {
             try {
@@ -865,17 +1000,28 @@
         const btn = event.target; if (!confirm(`Naozaj chcete vymazať VŠETKY dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear}? Táto akcia je nezvratná!`)) return;
         setLoadingState(btn, true, "Mazanie dát..."); resetTableInputsOnly(); calculateTotal();
         const emptyMonthData = { data: [], lastUpdated: new Date().toISOString() };
-        localStorage.setItem(getLocalStorageKeyForWorkData(), JSON.stringify(emptyMonthData)); updateLocalStorageSizeIndicator();
+        const docId = getFirestoreDocId(currentYear, currentMonth);
+        const localKey = getLocalStorageKeyForWorkData(docId);
+        localStorage.setItem(localKey, JSON.stringify(emptyMonthData));
+        updateLocalStorageSizeIndicator();
+
+        const pendingKey = getPendingSyncKeyForMonth(docId);
+
         if (currentUser && navigator.onLine) {
-            const docId = getFirestoreDocId(); const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
+            const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
             try {
-                await setDoc(docRef, emptyMonthData);
-                const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.removeItem(pendingKey);
+                await setDoc(docRef, emptyMonthData); // Zmaže dáta v cloude (prepísaním)
+                if (pendingKey) localStorage.removeItem(pendingKey);
+                removeMonthFromPendingList(docId);
             } catch (error) {
                 showErrorNotification('Chyba pri mazaní dát v cloude: ' + error.message);
-                const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.setItem(pendingKey, JSON.stringify(emptyMonthData));
+                if (pendingKey) localStorage.setItem(pendingKey, JSON.stringify(emptyMonthData));
+                addMonthToPendingList(docId);
             }
-        } else if (currentUser) { const pendingKey = getPendingSyncKeyForWorkData(); if(pendingKey) localStorage.setItem(pendingKey, JSON.stringify(emptyMonthData)); }
+        } else if (currentUser) {
+            if (pendingKey) localStorage.setItem(pendingKey, JSON.stringify(emptyMonthData));
+            addMonthToPendingList(docId);
+        }
         showSaveNotification(`Všetky dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear} boli úspešne vymazané.`);
         setLoadingState(btn, false, "Vymazať Mesiac");
     }
@@ -1049,9 +1195,12 @@
                     if (Object.keys(restoredAppSettings).length === 0 && restoredWorkData.data.length === 0 && !workSheetName && !settingsSheetName) {
                         showErrorNotification("Záloha neobsahuje platné dáta alebo má nesprávny formát."); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
                     }
+
+                    const restoreMonthDocId = getFirestoreDocId(backupYear, backupMonth);
                     if (!confirm(`Obnoviť dáta? ${Object.keys(restoredAppSettings).length > 0 ? 'Nastavenia budú aktualizované. ' : ''}${restoredWorkData.data.length > 0 || workSheetName ? `Dáta pre ${MONTH_NAMES[backupMonth]} ${backupYear} budú obnovené (${restoredWorkData.data.length} dní). ` : ''}Neuložené zmeny môžu byť prepísané.`)) {
                         setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
                     }
+
                     if (Object.keys(restoredAppSettings).length > 0) {
                         Object.assign(appSettings, restoredAppSettings); Object.entries(appSettings).forEach(([key, value]) => localStorage.setItem(key, value));
                         updateSettingsUIInputs(); await saveAppSettingsToFirestore();
@@ -1060,11 +1209,23 @@
                         if (backupMonth !== currentMonth || backupYear !== currentYear) {
                             currentMonth = backupMonth; currentYear = backupYear; uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear; createTable();
                         }
-                        const workDataString = JSON.stringify({ ...restoredWorkData, lastUpdated: new Date().toISOString() });
-                        localStorage.setItem(getLocalStorageKeyForWorkData(), workDataString);
-                        const pendingKey = getPendingSyncKeyForWorkData(); if (pendingKey) localStorage.removeItem(pendingKey);
-                        parseAndApplyWorkData(workDataString);
-                        if (currentUser && navigator.onLine) await saveWorkDataToFirestore(JSON.parse(workDataString), getFirestoreDocId());
+                        const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
+                        const workDataString = JSON.stringify(workDataToApply);
+                        localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
+                        parseAndApplyWorkData(workDataString); // Aplikuje dáta na UI
+
+                        if (currentUser) {
+                            if (navigator.onLine) {
+                                await saveWorkDataToFirestore(workDataToApply, restoreMonthDocId);
+                                removeMonthFromPendingList(restoreMonthDocId);
+                                const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
+                                if(pendingKey) localStorage.removeItem(pendingKey);
+                            } else {
+                                addMonthToPendingList(restoreMonthDocId);
+                                const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
+                                if(pendingKey) localStorage.setItem(pendingKey, workDataString);
+                            }
+                        }
                     }
                     showSaveNotification('Záloha bola úspešne obnovená.');
                 } catch (error) { showErrorNotification('Chyba pri obnove zálohy: ' + error.message); }
@@ -1085,7 +1246,11 @@
         uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', isVisible);
     });
     window.addEventListener('online', () => {
-        handleOnlineStatusChange(true); syncPendingWorkData(); if(currentUser) saveAppSettingsToFirestore();
+        handleOnlineStatusChange(true);
+        if(currentUser) {
+            syncPendingWorkData();
+            saveAppSettingsToFirestore();
+        }
     });
     window.addEventListener('offline', () => {
         handleOnlineStatusChange(false);
@@ -1096,12 +1261,28 @@
     }
 
     onAuthStateChanged(auth, async (user) => {
-        currentUser = user; updateUIForAuthStateChange();
+        currentUser = user;
+        updateUIForAuthStateChange();
         if (user) {
             const settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
-            if (!settingsLoadedFromFS) { loadAppSettingsFromLocalStorage(); updateSettingsUIInputs(); if (navigator.onLine) await saveAppSettingsToFirestore(); }
-        } else { loadAppSettingsFromLocalStorage(); updateSettingsUIInputs(); }
-        createTable(); setupFirestoreWorkDataListener(); updatePageTitleAndGreeting();
+            if (!settingsLoadedFromFS) {
+                loadAppSettingsFromLocalStorage();
+                updateSettingsUIInputs();
+                if (navigator.onLine) await saveAppSettingsToFirestore();
+            }
+            // Po prihlásení sa pokúsime synchronizovať všetky čakajúce mesiace
+            syncPendingWorkData();
+        } else {
+            loadAppSettingsFromLocalStorage();
+            updateSettingsUIInputs();
+            // Ak sa používateľ odhlási, vymažeme zoznam čakajúcich mesiacov,
+            // pretože sú viazané na konkrétneho používateľa.
+            localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY);
+            updateAppBadge(0); // Vynulovať odznak
+        }
+        createTable();
+        setupFirestoreWorkDataListener(); // Toto sa pokúsi načítať dáta pre aktuálny mesiac a môže spustiť sync
+        updatePageTitleAndGreeting();
     });
 
     initializeUI();
@@ -1112,8 +1293,8 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => { /* Logovanie odstránené, SW sa zaregistroval */ })
-          .catch(err => { /* Logovanie odstránené, chyba registrácie SW */ });
+          .then(reg => { /* Logovanie odstránené */ })
+          .catch(err => { console.error('Service Worker registration failed:', err); });
       });
     }
   </script>
