@@ -21,22 +21,6 @@
       "type": "image/png"
     }
   ],
-  "screenshots": [
-    {
-      "src": "./screenshots/screenshot_mobile.png",
-      "sizes": "540x1080",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Výpočet mzdy na mobile"
-    },
-    {
-      "src": "./screenshots/screenshot_desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Prehľad na desktope"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Aktuálny mesiac",
