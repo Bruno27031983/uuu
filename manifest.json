@@ -1,7 +1,7 @@
 {
-  "name": "Bruno's Calculator Pro",
-  "short_name": "BrunoCalc",
-  "description": "Kalkulačka pracovnej dochádzky a miezd s offline podporou.",
+  "name": "Bruno's Calculator Pro", // Plný názov môže zostať rovnaký, alebo ho tiež môžete zmeniť
+  "short_name": "Dochádzka",     // <--- ZMENENÉ
+  "description": "Kalkulačka pracovnej dochádzky a miezd s offline podporou a synchronizáciou.",
   "lang": "sk-SK",
   "start_url": "./index.html",
   "display": "standalone",
@@ -18,13 +18,14 @@
     {
       "src": "./icons/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ],
   "shortcuts": [
     {
       "name": "Aktuálny mesiac",
-      "short_name": "Aktuálny",
+      "short_name": "Aktuálny", // Aj tu môžete zvážiť zmenu, ak by "Aktuálny" nedávalo zmysel k "Dochádzka"
       "description": "Otvoriť kalkulačku pre aktuálny mesiac a rok",
       "url": "./index.html?action=current_month",
       "icons": [{ "src": "./icons/icon-192x192.png", "sizes": "192x192" }]
