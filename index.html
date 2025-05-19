@@ -188,7 +188,15 @@
     .current-day textarea[id^="note-"] { background-color: rgba(255,255,255,0.2) !important; }
     .current-day .time-btn { color: var(--current-day-text-color) !important; }
     .current-day .time-btn:hover { background-color: rgba(255,255,255,0.25) !important; border-color: rgba(255,255,255,0.5) !important; }
+    
+    /* ÚPRAVA PRE PREBLIKÁVANIE */
+    #auth-container {
+      display: none; /* Predvolene skryté */
+      margin-bottom: 20px; /* Zachovaný margin */
+    }
     #auth-container fieldset { width: 100%; max-width: 380px; margin-left:auto; margin-right:auto; }
+    /* Koniec úpravy pre preblikávanie */
+
     #login-form { display: flex; flex-direction: column; align-items: center; }
     #login-form input[type="email"], #login-form input[type="password"] {
       width: 100%; margin: 8px 0; display: block; padding: 10px; font-size: 0.95rem; box-sizing: border-box;
@@ -272,7 +280,8 @@
 </head>
 <body>
   <div class="container">
-    <div id="auth-container" style="margin-bottom: 20px;">
+    <!-- HTML pre #auth-container bol upravený - odstránený inline štýl -->
+    <div id="auth-container">
       <fieldset id="login-fieldset">
         <legend>Prihlásenie / Registrácia</legend>
         <div id="login-form">
@@ -1260,9 +1269,18 @@
         showNotification(online ? 'saveNotification' : 'warningNotification', message, online ? 3000: 4000);
     }
 
+    // ÚPRAVA PRE PREBLIKÁVANIE - upravený onAuthStateChanged handler
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
-        updateUIForAuthStateChange();
+        updateUIForAuthStateChange(); // Táto funkcia nastaví, čo má byť viditeľné VNÚTRI auth-container
+
+        // Teraz zobrazíme samotný auth-container, keďže už vieme stav prihlásenia
+        const authContainerElement = document.getElementById('auth-container');
+        if (authContainerElement) {
+            authContainerElement.style.display = 'block'; // 'block' je štandardné zobrazenie pre div
+        }
+
+        // Zvyšok vašej existujúcej logiky v onAuthStateChanged...
         if (user) {
             const settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
             if (!settingsLoadedFromFS) {
@@ -1284,6 +1302,7 @@
         setupFirestoreWorkDataListener(); // Toto sa pokúsi načítať dáta pre aktuálny mesiac a môže spustiť sync
         updatePageTitleAndGreeting();
     });
+    // Koniec úpravy pre preblikávanie
 
     initializeUI();
 
