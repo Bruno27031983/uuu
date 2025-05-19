@@ -16,7 +16,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
   <style>
-    /* CSS štýly zostávajú rovnaké ako vo vašom kóde */
     :root {
       --primary-bg-color: #f0f2f5;
       --secondary-bg-color: #ffffff;
@@ -64,7 +63,23 @@
       background-color: var(--primary-bg-color); color: var(--primary-text-color);
       font-size: 0.92rem; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     }
+    /* Načítavací loader */
+    #app-loader {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh; /* Výška na celú obrazovku */
+      font-size: 1.2em;
+      color: #4b5563; /* secondary-text-color */
+      text-align: center;
+      flex-direction: column;
+      background-color: var(--primary-bg-color);
+    }
+    #app-loader p { margin: 5px 0; }
+    #app-loader .loader-emoji { font-size: 2em; margin-bottom: 10px; }
+
     .container {
+      /* display: none; je teraz nastavený inline v HTML */
       max-width: 1500px; margin: 20px auto; background: var(--secondary-bg-color);
       padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow-lg); position: relative;
     }
@@ -189,13 +204,10 @@
     .current-day .time-btn { color: var(--current-day-text-color) !important; }
     .current-day .time-btn:hover { background-color: rgba(255,255,255,0.25) !important; border-color: rgba(255,255,255,0.5) !important; }
     
-    /* ÚPRAVA PRE PREBLIKÁVANIE */
     #auth-container {
-      display: none; /* Predvolene skryté */
-      margin-bottom: 20px; /* Zachovaný margin */
+      margin-bottom: 20px; /* Zachovaný margin, display:none je pre rodiča .container */
     }
     #auth-container fieldset { width: 100%; max-width: 380px; margin-left:auto; margin-right:auto; }
-    /* Koniec úpravy pre preblikávanie */
 
     #login-form { display: flex; flex-direction: column; align-items: center; }
     #login-form input[type="email"], #login-form input[type="password"] {
@@ -247,7 +259,7 @@
     @media print {
       body { padding: 0; font-size: 10pt; color: #000; background-color: #fff; font-family: Arial, sans-serif;}
       .container { max-width: 100%; margin: 0; padding: 10px; box-shadow: none; border: none;}
-      #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn { display: none !important; }
+      #app-loader, #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn { display: none !important; }
       h1 { font-size: 18pt; margin-bottom: 5mm; background: none !important; -webkit-background-clip: unset !important; background-clip: unset !important; color: black !important;}
       h2 { font-size: 12pt; margin-bottom: 8mm; }
       .table-container { overflow: visible; border: 1px solid #ccc; }
@@ -279,9 +291,14 @@
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- HTML pre #auth-container bol upravený - odstránený inline štýl -->
-    <div id="auth-container">
+  <div id="app-loader">
+    <p class="loader-emoji">🧮</p>
+    <p>Bruno's Calculator Pro</p>
+    <p style="font-size: 0.8em;">Načítavam aplikáciu...</p>
+  </div>
+
+  <div class="container" style="display: none;"> <!-- Hlavný kontajner je na začiatku skrytý -->
+    <div id="auth-container"> <!-- Tento div má teraz margin-bottom z CSS -->
       <fieldset id="login-fieldset">
         <legend>Prihlásenie / Registrácia</legend>
         <div id="login-form">
@@ -437,6 +454,8 @@
         loginFieldset: document.getElementById('login-fieldset'),
         userInfo: document.getElementById('user-info'),
         userEmailSpan: document.getElementById('user-email'),
+        appLoader: document.getElementById('app-loader'), // Referencia na loader
+        mainContainer: document.querySelector('.container') // Referencia na hlavný kontajner
     };
 
     const currentDate = new Date();
@@ -705,7 +724,6 @@
         if (currentListenerUnsubscribe) currentListenerUnsubscribe();
         if (!currentUser) { loadWorkDataFromLocalStorage(); return; } // Ak nie je user, načítaj len lokálne (guest)
 
-        // Ak sme offline, len načítame lokálne a nesnažíme sa nadviazať listener
         if (!navigator.onLine) {
             loadWorkDataFromLocalStorage();
             showWarningNotification("Ste offline. Zobrazujem lokálne dáta. Synchronizácia prebehne po pripojení.");
@@ -720,7 +738,7 @@
                 const firestoreData = docSnap.data(); const firestoreDataString = JSON.stringify(firestoreData);
                 if (!docSnap.metadata.hasPendingWrites || firestoreDataString !== localStorage.getItem(localKey)) {
                     localStorage.setItem(localKey, firestoreDataString);
-                    if (!docSnap.metadata.hasPendingWrites) { // Ak dáta prišli zo servera (nie lokálny zápis)
+                    if (!docSnap.metadata.hasPendingWrites) { 
                        removeMonthFromPendingList(docId);
                     }
                     parseAndApplyWorkData(firestoreDataString);
@@ -763,7 +781,10 @@
     }, 1200);
     window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
 
-    function getFirestoreDocId(year, month) { return `${year}-${String(month + 0).padStart(2, '0')}`; } // Mesiac je 0-indexed
+    // OPRAVA: Firestore ID s 1-indexovaným mesiacom
+    function getFirestoreDocId(year, month) { // 'month' je tu stále 0-indexed (0 pre Január, 11 pre December)
+        return `${year}-${String(month + 1).padStart(2, '0')}`; // Kľúčová zmena: month + 1
+    }
     function getLocalStorageKeyForWorkData(docId) { return currentUser ? `workData-${currentUser.uid}-${docId}` : `workData-guest-${docId}`; }
     function getPendingSyncKeyForMonth(docId) { return currentUser ? `pendingSync-workData-${currentUser.uid}-${docId}` : null; }
 
@@ -811,11 +832,8 @@
                     successfullySyncedMonths.push(monthId);
                 } catch (error) {
                     console.error(`Chyba synchronizácie dát pre ${monthId}:`, error);
-                    // Nezobrazujeme notifikáciu pre každú chybu tu, aby sme nezaplavili používateľa
-                    // Mesiac zostane v pending zozname
                 }
             } else {
-                // Ak dáta pre pending kľúč neexistujú, mesiac bol pravdepodobne zmazaný/spracovaný inak
                 successfullySyncedMonths.push(monthId);
             }
         }
@@ -1019,7 +1037,7 @@
         if (currentUser && navigator.onLine) {
             const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
             try {
-                await setDoc(docRef, emptyMonthData); // Zmaže dáta v cloude (prepísaním)
+                await setDoc(docRef, emptyMonthData); 
                 if (pendingKey) localStorage.removeItem(pendingKey);
                 removeMonthFromPendingList(docId);
             } catch (error) {
@@ -1205,7 +1223,7 @@
                         showErrorNotification("Záloha neobsahuje platné dáta alebo má nesprávny formát."); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
                     }
 
-                    const restoreMonthDocId = getFirestoreDocId(backupYear, backupMonth);
+                    const restoreMonthDocId = getFirestoreDocId(backupYear, backupMonth); // Toto už použije novú logiku (month+1)
                     if (!confirm(`Obnoviť dáta? ${Object.keys(restoredAppSettings).length > 0 ? 'Nastavenia budú aktualizované. ' : ''}${restoredWorkData.data.length > 0 || workSheetName ? `Dáta pre ${MONTH_NAMES[backupMonth]} ${backupYear} budú obnovené (${restoredWorkData.data.length} dní). ` : ''}Neuložené zmeny môžu byť prepísané.`)) {
                         setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
                     }
@@ -1221,7 +1239,7 @@
                         const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
                         const workDataString = JSON.stringify(workDataToApply);
                         localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
-                        parseAndApplyWorkData(workDataString); // Aplikuje dáta na UI
+                        parseAndApplyWorkData(workDataString); 
 
                         if (currentUser) {
                             if (navigator.onLine) {
@@ -1269,18 +1287,15 @@
         showNotification(online ? 'saveNotification' : 'warningNotification', message, online ? 3000: 4000);
     }
 
-    // ÚPRAVA PRE PREBLIKÁVANIE - upravený onAuthStateChanged handler
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
-        updateUIForAuthStateChange(); // Táto funkcia nastaví, čo má byť viditeľné VNÚTRI auth-container
+        updateUIForAuthStateChange();
 
-        // Teraz zobrazíme samotný auth-container, keďže už vieme stav prihlásenia
         const authContainerElement = document.getElementById('auth-container');
         if (authContainerElement) {
-            authContainerElement.style.display = 'block'; // 'block' je štandardné zobrazenie pre div
+            authContainerElement.style.display = 'block';
         }
 
-        // Zvyšok vašej existujúcej logiky v onAuthStateChanged...
         if (user) {
             const settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
             if (!settingsLoadedFromFS) {
@@ -1288,21 +1303,25 @@
                 updateSettingsUIInputs();
                 if (navigator.onLine) await saveAppSettingsToFirestore();
             }
-            // Po prihlásení sa pokúsime synchronizovať všetky čakajúce mesiace
             syncPendingWorkData();
         } else {
             loadAppSettingsFromLocalStorage();
             updateSettingsUIInputs();
-            // Ak sa používateľ odhlási, vymažeme zoznam čakajúcich mesiacov,
-            // pretože sú viazané na konkrétneho používateľa.
             localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY);
-            updateAppBadge(0); // Vynulovať odznak
+            updateAppBadge(0);
         }
         createTable();
-        setupFirestoreWorkDataListener(); // Toto sa pokúsi načítať dáta pre aktuálny mesiac a môže spustiť sync
+        setupFirestoreWorkDataListener(); 
         updatePageTitleAndGreeting();
+
+        // Skry loader a zobraz hlavný kontajner aplikácie
+        if (uiRefs.appLoader) {
+            uiRefs.appLoader.style.display = 'none';
+        }
+        if (uiRefs.mainContainer) {
+            uiRefs.mainContainer.style.display = 'block';
+        }
     });
-    // Koniec úpravy pre preblikávanie
 
     initializeUI();
 
@@ -1312,7 +1331,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => { /* Logovanie odstránené */ })
+          .then(reg => { /* console.log('Service Worker registered successfully', reg); */ })
           .catch(err => { console.error('Service Worker registration failed:', err); });
       });
     }
