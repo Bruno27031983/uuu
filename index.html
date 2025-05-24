@@ -10,10 +10,7 @@
   <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
   <meta name="theme-color" content="#7c3aed"/>
 
-  <!-- ZMENENÉ: Pridaný atribút defer -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
+  <!-- Knižnice jsPDF a XLSX budú načítavané dynamicky, preto sú tu odstránené -->
 
   <style>
     :root {
@@ -468,6 +465,73 @@
 
     const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
     const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
+
+    // --- Dynamické načítavanie knižníc ---
+    let jsPDFLibsLoaded = false;
+    let xlsxLibLoaded = false;
+
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) { // Skontroluj, či skript už nie je na stránke
+                resolve();
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            document.head.appendChild(script);
+        });
+    }
+
+    async function loadJsPDFLibs() {
+        if (jsPDFLibsLoaded) return true;
+        try {
+            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js");
+            if (window.jspdf && window.jspdf.jsPDF && typeof window.jspdf.jsPDF.autoTable === 'function') {
+                 jsPDFLibsLoaded = true;
+                 return true;
+            } else {
+                // Tento fallback by nemal byť potrebný, ak sa skripty načítajú správne, ale pre istotu
+                // počkáme krátky čas, aby sa globálne objekty mohli inicializovať
+                await new Promise(resolve => setTimeout(resolve, 200));
+                if (window.jspdf && window.jspdf.jsPDF && typeof window.jspdf.jsPDF.autoTable === 'function') {
+                     jsPDFLibsLoaded = true;
+                     return true;
+                }
+                throw new Error("jsPDF or autoTable not found on window object after loading scripts.");
+            }
+        } catch (error) {
+            console.error("Failed to load jsPDF libraries:", error);
+            showErrorNotification("Nepodarilo sa načítať knižnice pre PDF export.");
+            return false;
+        }
+    }
+
+    async function loadXLSXLib() {
+        if (xlsxLibLoaded) return true;
+        try {
+            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js");
+            if (window.XLSX) {
+                xlsxLibLoaded = true;
+                return true;
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                 if (window.XLSX) {
+                    xlsxLibLoaded = true;
+                    return true;
+                }
+                throw new Error("XLSX not found on window object after loading script.");
+            }
+        } catch (error) {
+            console.error("Failed to load XLSX library:", error);
+            showErrorNotification("Nepodarilo sa načítať knižnicu pre XLSX.");
+            return false;
+        }
+    }
+    // --- Koniec dynamického načítavania knižníc ---
+
 
     // --- Badging API Funkcie ---
     const PENDING_SYNC_MONTHS_LS_KEY = 'pendingSyncMonthsList';
@@ -1086,8 +1150,15 @@
     }
 
     window.exportToPDF = async function() {
-        const btn = event.target; setLoadingState(btn, true, "Exportujem PDF..."); calculateTotal();
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        const btn = event.target; setLoadingState(btn, true, "Načítavam knižnicu PDF...");
+        const loaded = await loadJsPDFLibs();
+        if (!loaded) {
+            setLoadingState(btn, false, "Exportovať do PDF");
+            return;
+        }
+        setLoadingState(btn, true, "Exportujem PDF...");
+        calculateTotal();
+        const { jsPDF } = window.jspdf; const doc = new jsPDF(); // jsPDF je teraz dostupné
         try {
             try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
             catch (e) { doc.setFont('helvetica'); }
@@ -1105,7 +1176,7 @@
                     tableData.push([`${i}. ${dayName}`, startTime, endTime, breakTime || '0', totalTimeText, note, `${grossSalary} €`, `${netSalary} €`]);
                 }
             }
-            doc.autoTable({
+            doc.autoTable({ // autoTable by malo byť teraz dostupné na jsPDF inštancii
                 head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Odpracované', 'Poznámka', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
                 body: tableData, startY: 42, theme: 'grid',
                 styles: { font: doc.getFont().fontName || 'helvetica', fontSize: 7.5, cellPadding: 1.2, valign: 'middle' },
@@ -1126,7 +1197,14 @@
         finally { setLoadingState(btn, false, "Exportovať do PDF"); }
     }
     window.sendPDF = async function() {
-        const btn = event.target; setLoadingState(btn, true, "Pripravujem PDF na odoslanie..."); calculateTotal();
+        const btn = event.target; setLoadingState(btn, true, "Načítavam knižnicu PDF...");
+        const loaded = await loadJsPDFLibs();
+        if (!loaded) {
+            setLoadingState(btn, false, "Odoslať PDF (s pozn.)");
+            return;
+        }
+        setLoadingState(btn, true, "Pripravujem PDF na odoslanie...");
+        calculateTotal();
         const { jsPDF } = window.jspdf; const doc = new jsPDF();
         try {
             try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
@@ -1159,8 +1237,16 @@
         } finally { setLoadingState(btn, false, "Odoslať PDF (s pozn.)"); }
     }
 
-    window.createBackup = function() {
-        const btn = event.target; setLoadingState(btn, true, "Vytváram zálohu..."); const workData = collectWorkDataForStorage();
+    window.createBackup = async function() {
+        const btn = event.target; setLoadingState(btn, true, "Načítavam knižnicu XLSX...");
+        const loaded = await loadXLSXLib();
+        if (!loaded) {
+            setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)");
+            return;
+        }
+        setLoadingState(btn, true, "Vytváram zálohu...");
+        const XLSX = window.XLSX; // XLSX je teraz dostupné
+        const workData = collectWorkDataForStorage();
         if (!workData.data.some(d => d.start || d.end || d.breakTime || d.note) && !appSettings.employeeName) {
             showWarningNotification('Nie sú zadané žiadne dáta na vytvorenie zálohy.'); setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); return;
         }
@@ -1179,10 +1265,20 @@
         } catch(error) { showErrorNotification('Nastala chyba pri vytváraní zálohy: ' + error.message); }
         finally { setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); }
     };
-    window.restoreBackup = function() {
+    window.restoreBackup = function() { // Nechávam tu sync, aby sa nemenila logika UI, ale XLSX sa načíta až v handleru
         const btn = event.target; const input = document.createElement('input'); input.type = 'file'; input.accept = '.xlsx';
-        input.onchange = async (event) => {
-            setLoadingState(btn, true, "Spracúvam súbor zálohy..."); const file = event.target.files[0];
+        input.onchange = async (event) => { // Handler je async
+            setLoadingState(btn, true, "Načítavam knižnicu XLSX...");
+            const xlsxLoaded = await loadXLSXLib();
+            if (!xlsxLoaded) {
+                setLoadingState(btn, false, "Obnoviť zálohu (XLSX)");
+                input.value = ''; // Aby sa dalo znova vybrať súbor
+                return;
+            }
+            const XLSX = window.XLSX;
+
+            setLoadingState(btn, true, "Spracúvam súbor zálohy...");
+            const file = event.target.files[0];
             if (!file) { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return; }
             const reader = new FileReader();
             reader.onload = async (e) => {
@@ -1223,7 +1319,7 @@
                         showErrorNotification("Záloha neobsahuje platné dáta alebo má nesprávny formát."); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
                     }
 
-                    const restoreMonthDocId = getFirestoreDocId(backupYear, backupMonth); // Toto už použije novú logiku (month+1)
+                    const restoreMonthDocId = getFirestoreDocId(backupYear, backupMonth);
                     if (!confirm(`Obnoviť dáta? ${Object.keys(restoredAppSettings).length > 0 ? 'Nastavenia budú aktualizované. ' : ''}${restoredWorkData.data.length > 0 || workSheetName ? `Dáta pre ${MONTH_NAMES[backupMonth]} ${backupYear} budú obnovené (${restoredWorkData.data.length} dní). ` : ''}Neuložené zmeny môžu byť prepísané.`)) {
                         setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
                     }
