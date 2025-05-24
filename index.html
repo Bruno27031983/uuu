@@ -204,7 +204,7 @@
     .current-day .time-btn:hover { background-color: rgba(255,255,255,0.25) !important; border-color: rgba(255,255,255,0.5) !important; }
 
     #auth-container {
-      margin-bottom: 20px; /* Zachovaný margin, display:none je pre rodiča .container */
+      margin-bottom: 20px;
     }
     #auth-container fieldset { width: 100%; max-width: 380px; margin-left:auto; margin-right:auto; }
 
@@ -296,7 +296,7 @@
     <p style="font-size: 0.8em;">Načítavam aplikáciu...</p>
   </div>
 
-  <div class="container" style="display: none;"> <!-- Hlavný kontajner je na začiatku skrytý -->
+  <div class="container" style="display: none;">
     <div id="auth-container">
       <fieldset id="login-fieldset">
         <legend>Prihlásenie / Registrácia</legend>
@@ -392,7 +392,7 @@
   <div id="warningNotification" role="alert" aria-live="assertive">Upozornenie.</div>
 
   <script type="module">
-    // Importy Firebase - AKTUALIZOVANÉ NA VERZIU 9.22.1
+    // Importy Firebase
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
     import {
@@ -401,7 +401,6 @@
     } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js';
 
-    // !!! DÔLEŽITÉ: Nahraďte tieto hodnoty vašimi skutočnými Firebase konfiguračnými údajmi a reCAPTCHA kľúčom !!!
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_AUTH_DOMAIN",
@@ -411,7 +410,6 @@
         appId: "YOUR_APP_ID",
     };
     const RECAPTCHA_V3_SITE_KEY = "YOUR_RECAPTCHA_V3_SITE_KEY";
-    // !!! KONIEC DÔLEŽITÉHO UPOZORNENIA !!!
 
 
     const app = initializeApp(firebaseConfig);
@@ -421,8 +419,8 @@
             isTokenAutoRefreshEnabled: true
         });
     } catch (e) {
-        console.warn("App Check initialization failed. This might happen if reCAPTCHA script is blocked or fails to load. App will continue without App Check.", e);
-        showWarningNotification("Inicializácia App Check zlyhala. Bezpečnosť aplikácie môže byť znížená.");
+        console.warn("App Check initialization failed.", e);
+        showWarningNotification("Inicializácia App Check zlyhala.");
     }
     const auth = getAuth(app);
 
@@ -432,8 +430,8 @@
             localCache: persistentLocalCache({ sizeBytes: CACHE_SIZE_UNLIMITED })
         });
     } catch (error) {
-        console.warn("Failed to initialize Firestore with persistent cache, falling back to memory cache.", error);
-        showWarningNotification("Chyba pri inicializácii offline úložiska. Offline režim nemusí byť plne dostupný.");
+        console.warn("Failed to initialize Firestore with persistent cache.", error);
+        showWarningNotification("Chyba pri inicializácii offline úložiska.");
         db = initializeFirestore(app, {});
     }
 
@@ -478,14 +476,9 @@
     async function updateAppBadge(count) {
       if ('setAppBadge' in navigator) {
         try {
-          if (count > 0) {
-            await navigator.setAppBadge(count);
-          } else {
-            await navigator.clearAppBadge();
-          }
-        } catch (error) {
-          console.error('Failed to set app badge:', error);
-        }
+          if (count > 0) { await navigator.setAppBadge(count); }
+          else { await navigator.clearAppBadge(); }
+        } catch (error) { console.error('Failed to set app badge:', error); }
       }
     }
 
@@ -802,7 +795,10 @@
                 if(pendingKey) localStorage.setItem(pendingKey, JSON.stringify(dataToSave));
             }
         }
-        calculateTotal(); // Calculate total after debounced save attempts
+        // calculateTotal() sa volá explicitne po zmenách inputov a po debouncedSave.
+        // Tu by sa mohol volať tiež, ale je to už pokryté v onblur/oninput eventoch,
+        // ktoré vedú k tomuto debounced savu. Pre istotu a konzistenciu ho tu môžeme nechať.
+        calculateTotal();
     }, 1200);
     window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
 
@@ -985,16 +981,13 @@
         if (targetInput) { targetInput.value = `${hours}:${minutes}`; targetInput.dispatchEvent(new Event('input', { bubbles: true })); targetInput.dispatchEvent(new Event('blur', { bubbles: true })); }
     }
 
-    // ***** ZMENENÁ FUNKCIA handleTimeInput *****
     window.handleTimeInput = function(input, nextId, day) {
         formatTimeInputOnly(input);
 
         if (input.value.length === 5 && isValidTimeFormat(input.value)) {
             calculateRow(day);
-
-            // Ak je to pole pre odchod a čas je validný, prepočítaj aj celkové sumy
-            if (input.id.startsWith('end-')) {
-                calculateTotal(); // <<< OKAMŽITÝ PREPOČET CELKOVÝCH SÚM
+            if (input.id.startsWith('end-') || input.id.startsWith('start-')) { // Prepočítaj total ak je start alebo end validný
+                calculateTotal();
             }
 
             const nextElement = document.getElementById(nextId);
@@ -1004,18 +997,14 @@
                     nextElement.select();
                 }
             }
-        } else if (input.value.length < 5) {
+        } else if (input.value.length < 5) { // Ak čas nie je kompletný (napr. používateľ maže)
             calculateRow(day);
-             // Ak je to pole pre odchod a čas nie je kompletný (napr. používateľ maže), prepočítaj aj celkové sumy
-            if (input.id.startsWith('end-')) {
-                calculateTotal(); // Prepočíta celkové sumy aj pri nekompletnom čase, aby sa odrážalo mazanie
+            if (input.id.startsWith('end-') || input.id.startsWith('start-')) { // Prepočítaj total, aby sa odrážalo mazanie
+                calculateTotal();
             }
         }
     }
-    // ***** KONIEC ZMENENEJ FUNKCIE handleTimeInput *****
 
-
-    // ***** ZMENENÁ FUNKCIA validateAndFormatTimeBlur *****
     window.validateAndFormatTimeBlur = function(input, day) {
         formatTimeInputOnly(input);
         const isValid = isValidTimeFormat(input.value);
@@ -1030,37 +1019,42 @@
             }
             if(day) {
                 calculateRow(day);
-                // Celkové sumy sa prepočítavajú už v handleTimeInput,
-                // ale pre istotu aj tu, ak by sa blur spustil bez predchádzajúceho inputu (napr. pri vložení cez paste a strate focusu)
-                if ( (input.id.startsWith('start-') || input.id.startsWith('end-')) && isValid) {
+                // Celkové sumy sa prepočítavajú už v handleTimeInput pri písaní,
+                // ale pre istotu aj tu, ak by sa blur spustil bez predchádzajúceho inputu
+                // alebo ak sa pole vymaže
+                if ( (input.id.startsWith('start-') || input.id.startsWith('end-')) && (isValid || input.value === '') ) {
                      calculateTotal();
-                } else if ( (input.id.startsWith('start-') || input.id.startsWith('end-')) && input.value === '' ) {
-                    // Ak sa pole vymaže a opustí, prepočítať celkové sumy
-                    calculateTotal();
                 }
             }
         }
     }
-    // ***** KONIEC ZMENENEJ FUNKCIE validateAndFormatTimeBlur *****
-
 
     function formatTimeInputOnly(input) {
         const rawValue = input.value; let digits = rawValue.replace(/[^\d]/g, ''); let formattedValue = "";
         if (digits.length > 2) formattedValue = `${digits.substring(0,2)}:${digits.substring(2,4)}`; else formattedValue = digits;
         if (input.value !== formattedValue && formattedValue.length <= 5) input.value = formattedValue;
     }
+
     window.handleBreakInput = function(day) {
-        const breakInput = document.getElementById(`break-${day}`); let value = breakInput.value.replace(',', '.'); const numericValue = parseFloat(value);
+        const breakInput = document.getElementById(`break-${day}`);
+        let value = breakInput.value.replace(',', '.');
+        const numericValue = parseFloat(value);
         breakInput.classList.remove('invalid-value');
-        if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) breakInput.value = value;
-        else { breakInput.value = ''; breakInput.classList.add('invalid-value'); showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}. Zadajte kladné číslo (napr. 0.5 pre 30 minút).`); }
+
+        if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) {
+            breakInput.value = value;
+        } else {
+            breakInput.value = '';
+            breakInput.classList.add('invalid-value');
+            showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}. Zadajte kladné číslo (napr. 0.5 pre 30 minút).`);
+        }
         calculateRow(day);
-        calculateTotal(); // Prepočítaj celkové sumy aj po zmene prestávky
+        calculateTotal(); // Okamžitý prepočet celkových súm po zmene prestávky
     }
+
     window.handleNoteInput = function(textarea) {
         autoResizeTextarea(textarea);
-        // Poznámka sama o sebe nemení finančné výpočty, ale mení `daysWithEntries`,
-        // takže prepočítame celkové sumy po strate focusu (v debouncedSave)
+        // Poznámka mení `daysWithEntries`, takže `calculateTotal` sa zavolá po `debouncedSaveWorkDataAndSync` (pri onblur)
     }
     function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px'; }
 
@@ -1100,7 +1094,7 @@
         const breakEl = document.getElementById(`break-${dayStr}`); if(breakEl) breakEl.value = '';
         const noteEl = document.getElementById(`note-${dayStr}`); if (noteEl) { noteEl.value = ''; autoResizeTextarea(noteEl); }
         calculateRow(day);
-        calculateTotal(); // Okamžitý prepočet po resete riadku
+        calculateTotal();
         debouncedSaveWorkDataAndSync(); showSaveNotification(`Záznam pre ${day}. deň bol úspešne vymazaný.`);
     }
 
@@ -1341,13 +1335,14 @@
                         if (backupMonth !== currentMonth || backupYear !== currentYear) {
                             currentMonth = backupMonth; currentYear = backupYear;
                             uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear;
-                            createTable();
+                            // createTable() a setupFirestoreWorkDataListener() sa zavolajú cez changeMonth/Year
+                            changeMonth(); // alebo changeYear(), záleží čo sa zmenilo, alebo oboje ak obe
                         }
                         const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
                         const workDataString = JSON.stringify(workDataToApply);
 
                         localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
-                        parseAndApplyWorkData(workDataString); // Toto volá calculateTotal() na konci
+                        parseAndApplyWorkData(workDataString);
 
                         const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
                         if (currentUser) {
@@ -1365,16 +1360,9 @@
                                 if (pendingKey) localStorage.setItem(pendingKey, workDataString);
                             }
                         }
-                        // Po zmene mesiaca/roku a načítaní dát je dôležité znovu nastaviť listener
-                        // `changeMonth` a `changeYear` volajú `createTable` a `setupFirestoreWorkDataListener`
-                        // Ak sa mesiac/rok nemenil, `parseAndApplyWorkData` už volala `calculateTotal`.
-                        // Listener by sa mal obnoviť, ak sa zmenil mesiac/rok.
-                        if (parseInt(uiRefs.monthSelect.value) !== backupMonth || parseInt(uiRefs.yearSelect.value) !== backupYear) {
-                            // Ak sme zmenili mesiac/rok, createTable a setupFirestoreWorkDataListener už boli volané
-                        } else {
-                            // Ak mesiac/rok ostal rovnaký, ale dáta sa načítali, listener by mal byť stále platný,
-                            // ale pre istotu, ak by sa `setupFirestoreWorkDataListener` nevolal z `changeMonth/Year`
-                            setupFirestoreWorkDataListener();
+                         // Ak sa mesiac/rok nemenil, ale dáta áno, je dôležité zavolať listener manuálne, ak to `changeMonth/Year` neurobilo
+                        if (parseInt(uiRefs.monthSelect.value) === backupMonth && parseInt(uiRefs.yearSelect.value) === backupYear && (backupMonth !== currentMonth || backupYear !== currentYear) === false) {
+                           setupFirestoreWorkDataListener();
                         }
                     }
                     showSaveNotification('Záloha bola úspešne obnovená.');
