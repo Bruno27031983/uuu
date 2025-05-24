@@ -402,13 +402,13 @@
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js';
 
     // !!! DÔLEŽITÉ: Nahraďte tieto hodnoty vašimi skutočnými Firebase konfiguračnými údajmi a reCAPTCHA kľúčom !!!
-   const firebaseConfig = {
-        apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // Nahraďte vašimi skutočnými kľúčmi
-        authDomain: "uuuuu-f7ef9.firebaseapp.com",
-        projectId: "uuuuu-f7ef9",
-        storageBucket: "uuuuu-f7ef9.appspot.com",
-        messagingSenderId: "456105865458",
-        appId: "1:456105865458:web:101f0a4dcb455f174b606b",
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID",
     };
     const RECAPTCHA_V3_SITE_KEY = "YOUR_RECAPTCHA_V3_SITE_KEY";
     // !!! KONIEC DÔLEŽITÉHO UPOZORNENIA !!!
@@ -417,7 +417,7 @@
     const app = initializeApp(firebaseConfig);
     try {
        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), // Váš reCAPTCHA v3 site key
+            provider: new ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
             isTokenAutoRefreshEnabled: true
         });
     } catch (e) {
@@ -802,7 +802,7 @@
                 if(pendingKey) localStorage.setItem(pendingKey, JSON.stringify(dataToSave));
             }
         }
-        calculateTotal();
+        calculateTotal(); // Calculate total after debounced save attempts
     }, 1200);
     window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
 
@@ -984,22 +984,66 @@
         const targetInput = document.getElementById(inputId);
         if (targetInput) { targetInput.value = `${hours}:${minutes}`; targetInput.dispatchEvent(new Event('input', { bubbles: true })); targetInput.dispatchEvent(new Event('blur', { bubbles: true })); }
     }
+
+    // ***** ZMENENÁ FUNKCIA handleTimeInput *****
     window.handleTimeInput = function(input, nextId, day) {
         formatTimeInputOnly(input);
+
         if (input.value.length === 5 && isValidTimeFormat(input.value)) {
-            calculateRow(day); const nextElement = document.getElementById(nextId);
-            if (nextElement && document.activeElement === input && !nextId.startsWith('break-')) { nextElement.focus(); if (typeof nextElement.select === 'function') nextElement.select(); }
-        } else if (input.value.length < 5) { calculateRow(day); }
-    }
-    window.validateAndFormatTimeBlur = function(input, day) {
-        formatTimeInputOnly(input); const isValid = isValidTimeFormat(input.value); const isDefaultSettingInput = input.id.startsWith('default');
-        if (isDefaultSettingInput) input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
-        else {
-            input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
-            if (input.value.length > 0 && !isValid && day) showWarningNotification(`Neplatný formát času pre ${input.id.startsWith('start') ? 'príchod' : 'odchod'} dňa ${day}. Použite formát HH:MM.`);
-            if(day) calculateRow(day);
+            calculateRow(day);
+
+            // Ak je to pole pre odchod a čas je validný, prepočítaj aj celkové sumy
+            if (input.id.startsWith('end-')) {
+                calculateTotal(); // <<< OKAMŽITÝ PREPOČET CELKOVÝCH SÚM
+            }
+
+            const nextElement = document.getElementById(nextId);
+            if (nextElement && document.activeElement === input && !nextId.startsWith('break-')) {
+                nextElement.focus();
+                if (typeof nextElement.select === 'function') {
+                    nextElement.select();
+                }
+            }
+        } else if (input.value.length < 5) {
+            calculateRow(day);
+             // Ak je to pole pre odchod a čas nie je kompletný (napr. používateľ maže), prepočítaj aj celkové sumy
+            if (input.id.startsWith('end-')) {
+                calculateTotal(); // Prepočíta celkové sumy aj pri nekompletnom čase, aby sa odrážalo mazanie
+            }
         }
     }
+    // ***** KONIEC ZMENENEJ FUNKCIE handleTimeInput *****
+
+
+    // ***** ZMENENÁ FUNKCIA validateAndFormatTimeBlur *****
+    window.validateAndFormatTimeBlur = function(input, day) {
+        formatTimeInputOnly(input);
+        const isValid = isValidTimeFormat(input.value);
+        const isDefaultSettingInput = input.id.startsWith('default');
+
+        if (isDefaultSettingInput) {
+            input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
+        } else {
+            input.classList.toggle('invalid-time', input.value.length > 0 && !isValid);
+            if (input.value.length > 0 && !isValid && day) {
+                showWarningNotification(`Neplatný formát času pre ${input.id.startsWith('start') ? 'príchod' : 'odchod'} dňa ${day}. Použite formát HH:MM.`);
+            }
+            if(day) {
+                calculateRow(day);
+                // Celkové sumy sa prepočítavajú už v handleTimeInput,
+                // ale pre istotu aj tu, ak by sa blur spustil bez predchádzajúceho inputu (napr. pri vložení cez paste a strate focusu)
+                if ( (input.id.startsWith('start-') || input.id.startsWith('end-')) && isValid) {
+                     calculateTotal();
+                } else if ( (input.id.startsWith('start-') || input.id.startsWith('end-')) && input.value === '' ) {
+                    // Ak sa pole vymaže a opustí, prepočítať celkové sumy
+                    calculateTotal();
+                }
+            }
+        }
+    }
+    // ***** KONIEC ZMENENEJ FUNKCIE validateAndFormatTimeBlur *****
+
+
     function formatTimeInputOnly(input) {
         const rawValue = input.value; let digits = rawValue.replace(/[^\d]/g, ''); let formattedValue = "";
         if (digits.length > 2) formattedValue = `${digits.substring(0,2)}:${digits.substring(2,4)}`; else formattedValue = digits;
@@ -1011,9 +1055,12 @@
         if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) breakInput.value = value;
         else { breakInput.value = ''; breakInput.classList.add('invalid-value'); showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}. Zadajte kladné číslo (napr. 0.5 pre 30 minút).`); }
         calculateRow(day);
+        calculateTotal(); // Prepočítaj celkové sumy aj po zmene prestávky
     }
     window.handleNoteInput = function(textarea) {
         autoResizeTextarea(textarea);
+        // Poznámka sama o sebe nemení finančné výpočty, ale mení `daysWithEntries`,
+        // takže prepočítame celkové sumy po strate focusu (v debouncedSave)
     }
     function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px'; }
 
@@ -1052,7 +1099,9 @@
         const endEl = document.getElementById(`end-${dayStr}`); if(endEl) endEl.value = '';
         const breakEl = document.getElementById(`break-${dayStr}`); if(breakEl) breakEl.value = '';
         const noteEl = document.getElementById(`note-${dayStr}`); if (noteEl) { noteEl.value = ''; autoResizeTextarea(noteEl); }
-        calculateRow(day); debouncedSaveWorkDataAndSync(); showSaveNotification(`Záznam pre ${day}. deň bol úspešne vymazaný.`);
+        calculateRow(day);
+        calculateTotal(); // Okamžitý prepočet po resete riadku
+        debouncedSaveWorkDataAndSync(); showSaveNotification(`Záznam pre ${day}. deň bol úspešne vymazaný.`);
     }
 
     window.clearMonthData = async function() {
@@ -1114,11 +1163,9 @@
             const grossSalary = parseFloat(document.getElementById(`gross-${i}`)?.value) || 0;
             const netSalary = parseFloat(document.getElementById(`net-${i}`)?.value) || 0;
 
-            // ***** ZMENENÁ PODMIENKA TU *****
             if (isValidTimeFormat(startTime) || dayWorkMinutes > 0 || grossSalary > 0 || noteValue.trim() !== "") {
                 daysWithEntries++;
             }
-            // ***** KONIEC ZMENENEJ PODMIENKY *****
 
             totalWorkMinutes += dayWorkMinutes;
             totalGrossSalary += grossSalary;
@@ -1300,7 +1347,7 @@
                         const workDataString = JSON.stringify(workDataToApply);
 
                         localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
-                        parseAndApplyWorkData(workDataString);
+                        parseAndApplyWorkData(workDataString); // Toto volá calculateTotal() na konci
 
                         const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
                         if (currentUser) {
@@ -1318,10 +1365,16 @@
                                 if (pendingKey) localStorage.setItem(pendingKey, workDataString);
                             }
                         }
-                        if (backupMonth !== parseInt(uiRefs.monthSelect.value) || backupYear !== parseInt(uiRefs.yearSelect.value)) {
-                           // Zmena mesiaca/roku by mala automaticky zavolať setupFirestoreWorkDataListener()
+                        // Po zmene mesiaca/roku a načítaní dát je dôležité znovu nastaviť listener
+                        // `changeMonth` a `changeYear` volajú `createTable` a `setupFirestoreWorkDataListener`
+                        // Ak sa mesiac/rok nemenil, `parseAndApplyWorkData` už volala `calculateTotal`.
+                        // Listener by sa mal obnoviť, ak sa zmenil mesiac/rok.
+                        if (parseInt(uiRefs.monthSelect.value) !== backupMonth || parseInt(uiRefs.yearSelect.value) !== backupYear) {
+                            // Ak sme zmenili mesiac/rok, createTable a setupFirestoreWorkDataListener už boli volané
                         } else {
-                           setupFirestoreWorkDataListener();
+                            // Ak mesiac/rok ostal rovnaký, ale dáta sa načítali, listener by mal byť stále platný,
+                            // ale pre istotu, ak by sa `setupFirestoreWorkDataListener` nevolal z `changeMonth/Year`
+                            setupFirestoreWorkDataListener();
                         }
                     }
                     showSaveNotification('Záloha bola úspešne obnovená.');
