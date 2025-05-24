@@ -402,12 +402,12 @@
     import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js';
 
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_AUTH_DOMAIN",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_STORAGE_BUCKET",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID",
+        apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk", // Nahraďte vašimi skutočnými kľúčmi
+        authDomain: "uuuuu-f7ef9.firebaseapp.com",
+        projectId: "uuuuu-f7ef9",
+        storageBucket: "uuuuu-f7ef9.appspot.com",
+        messagingSenderId: "456105865458",
+        appId: "1:456105865458:web:101f0a4dcb455f174b606b",
     };
     const RECAPTCHA_V3_SITE_KEY = "YOUR_RECAPTCHA_V3_SITE_KEY";
 
@@ -415,7 +415,7 @@
     const app = initializeApp(firebaseConfig);
     try {
        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
+            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), // Váš reCAPTCHA v3 site key
             isTokenAutoRefreshEnabled: true
         });
     } catch (e) {
