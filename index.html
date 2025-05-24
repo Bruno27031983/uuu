@@ -852,62 +852,37 @@
         }
     }
 
-    // ---------- ZAČIATOK FUNKCIE S ROZŠÍRENÝM LOGOVANÍM ----------
+
     window.loadFromFirestore = async function() {
         const btn = event.target; setLoadingState(btn, true, "Načítavam z cloudu...");
-        if (!currentUser) { 
-            showErrorNotification('Pre načítanie dát z cloudu musíte byť prihlásený.'); 
-            setLoadingState(btn, false, "Načítať z Cloudu"); 
-            return; 
-        }
-        if (!navigator.onLine) { 
-            showErrorNotification('Ste offline. Načítanie z cloudu vyžaduje internetové pripojenie.'); 
-            setLoadingState(btn, false, "Načítať z Cloudu"); 
-            return; 
-        }
-        if (!confirm('Naozaj chcete prepísať lokálne dáta pre tento mesiac dátami z cloudu? Vaše neuložené lokálne zmeny môžu byť stratené.')) { 
-            setLoadingState(btn, false, "Načítať z Cloudu"); 
-            return; 
-        }
+        if (!currentUser) { showErrorNotification('Pre načítanie dát z cloudu musíte byť prihlásený.'); setLoadingState(btn, false, "Načítať z Cloudu"); return; }
+        if (!navigator.onLine) { showErrorNotification('Ste offline. Načítanie z cloudu vyžaduje internetové pripojenie.'); setLoadingState(btn, false, "Načítať z Cloudu"); return; }
+        if (!confirm('Naozaj chcete prepísať lokálne dáta pre tento mesiac dátami z cloudu? Vaše neuložené lokálne zmeny môžu byť stratené.')) { setLoadingState(btn, false, "Načítať z Cloudu"); return; }
 
         const docId = getFirestoreDocId(currentYear, currentMonth);
-        console.log("Pokúšam sa načítať z cloudu dokument s ID:", docId, "pre usera:", currentUser.uid); 
         const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
-        
         try {
-            console.log("Odosielam požiadavku getDoc pre:", docRef.path);
             const docSnap = await getDoc(docRef);
-            console.log("Dostal som docSnap.exists():", docSnap.exists()); // <-- DÔLEŽITÝ LOG
-            if (docSnap.exists()) {
-                console.log("Dokument existuje. Dáta:", docSnap.data()); // <-- DÔLEŽITÝ LOG
-                const storedData = docSnap.data(); 
-                const dataString = JSON.stringify(storedData);
-                
-                const localKey = getLocalStorageKeyForWorkData(docId);
-                const pendingKey = getPendingSyncKeyForMonth(docId);
+            const localKey = getLocalStorageKeyForWorkData(docId);
+            const pendingKey = getPendingSyncKeyForMonth(docId);
 
+            if (docSnap.exists()) {
+                const storedData = docSnap.data(); const dataString = JSON.stringify(storedData);
                 localStorage.setItem(localKey, dataString);
                 if (pendingKey) localStorage.removeItem(pendingKey);
                 removeMonthFromPendingList(docId);
                 parseAndApplyWorkData(dataString);
                 showSaveNotification('Dáta boli úspešne načítané z cloudu.');
             } else {
-                console.log("Dokument NEEXISTUJE podľa docSnap.exists()"); // <-- DÔLEŽITÝ LOG
-                const localKey = getLocalStorageKeyForWorkData(docId);
-                const pendingKey = getPendingSyncKeyForMonth(docId);
                 localStorage.removeItem(localKey);
                 if (pendingKey) localStorage.removeItem(pendingKey);
                 removeMonthFromPendingList(docId);
                 parseAndApplyWorkData(null);
-                showWarningNotification('Pre tento mesiac neboli v cloude nájdené žiadne dáta (docSnap.exists() je false).');
+                showWarningNotification('Pre tento mesiac neboli v cloude nájdené žiadne dáta.');
             }
-        } catch (error) { 
-            console.error("Chyba pri načítaní dát z cloudu:", error); // <-- DÔLEŽITÝ LOG
-            showErrorNotification('Chyba pri načítaní dát z cloudu: ' + error.message); 
-        }
+        } catch (error) { showErrorNotification('Chyba pri načítaní dát z cloudu: ' + error.message); }
         finally { setLoadingState(btn, false, "Načítať z Cloudu"); }
     };
-    // ---------- KONIEC FUNKCIE S ROZŠÍRENÝM LOGOVANÍM ----------
 
     function loadWorkDataFromLocalStorage() {
         const docId = getFirestoreDocId(currentYear, currentMonth);
