@@ -860,6 +860,7 @@
         if (!confirm('Naozaj chcete prepísať lokálne dáta pre tento mesiac dátami z cloudu? Vaše neuložené lokálne zmeny môžu byť stratené.')) { setLoadingState(btn, false, "Načítať z Cloudu"); return; }
 
         const docId = getFirestoreDocId(currentYear, currentMonth);
+        console.log("Pokúšam sa načítať z cloudu dokument s ID:", docId); // <--- PRIDANÝ LOG
         const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
         try {
             const docSnap = await getDoc(docRef);
