@@ -409,13 +409,13 @@
         messagingSenderId: "456105865458",
         appId: "1:456105865458:web:101f0a4dcb455f174b606b",
     };
-    const RECAPTCHA_V3_SITE_KEY = "YOUR_RECAPTCHA_V3_SITE_KEY";
+    const RECAPTCHA_V3_SITE_KEY ="6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v";
 
 
     const app = initializeApp(firebaseConfig);
     try {
        const appCheck = initializeAppCheck(app, {
-            provider: new ReCaptchaV3Provider('6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v'), // Váš reCAPTCHA v3 site key
+            provider: new ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
             isTokenAutoRefreshEnabled: true
         });
     } catch (e) {
