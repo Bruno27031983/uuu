@@ -10,18 +10,10 @@
   <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
   <meta name="theme-color" content="#7c3aed"/>
 
-  <!-- Preload kľúčových zdrojov -->
-  <link rel="preload" href="https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js" as="script" crossorigin>
-  <link rel="preload" href="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js" as="script" crossorigin>
-  <link rel="preload" href="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js" as="script" crossorigin>
-  <link rel="preload" href="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js" as="script" crossorigin>
-  <link rel="preload" href="https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2" as="font" type="font/woff2" crossorigin>
-
-  <!-- Exportné knižnice sa teraz načítavajú dynamicky, odstránené z <head>
+  <!-- ZMENENÉ: Pridaný atribút defer -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
-  -->
 
   <style>
     :root {
@@ -462,8 +454,8 @@
         loginFieldset: document.getElementById('login-fieldset'),
         userInfo: document.getElementById('user-info'),
         userEmailSpan: document.getElementById('user-email'),
-        appLoader: document.getElementById('app-loader'), 
-        mainContainer: document.querySelector('.container') 
+        appLoader: document.getElementById('app-loader'), // Referencia na loader
+        mainContainer: document.querySelector('.container') // Referencia na hlavný kontajner
     };
 
     const currentDate = new Date();
@@ -476,67 +468,6 @@
 
     const MONTH_NAMES = ["Január", "Február", "Marec", "Apríl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
     const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Št", "Pi", "So"];
-
-    // --- Dynamic script loading & Export library flags ---
-    let jspdfLibLoaded = false;
-    let jspdfAutoTableLibLoaded = false;
-    let xlsxLibLoaded = false;
-
-    function loadScript(src) {
-        return new Promise((resolve, reject) => {
-            const existingScript = document.querySelector(`script[src="${src}"]`);
-            if (existingScript && existingScript.dataset.loaded === "true") {
-                resolve(); // Already loaded and marked
-                return;
-            }
-            if (existingScript && !existingScript.dataset.loaded) { // Loading in progress by another call
-                const checkInterval = setInterval(() => {
-                    if (existingScript.dataset.loaded === "true") {
-                        clearInterval(checkInterval);
-                        resolve();
-                    }
-                }, 100);
-                return;
-            }
-
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = () => {
-                script.dataset.loaded = "true";
-                resolve();
-            };
-            script.onerror = () => {
-                console.error(`Failed to load script: ${src}`);
-                reject(new Error(`Failed to load script: ${src}`));
-            };
-            document.head.appendChild(script);
-        });
-    }
-
-    async function ensureJspdfLibs() {
-        if (!jspdfLibLoaded) {
-            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
-            jspdfLibLoaded = true;
-        }
-        // Wait for jspdf to be available on window object if it was just loaded
-        while(typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-            await new Promise(r => setTimeout(r, 50));
-        }
-        if (!jspdfAutoTableLibLoaded) {
-            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js");
-            jspdfAutoTableLibLoaded = true;
-        }
-    }
-
-    async function ensureXlsxLib() {
-        if (!xlsxLibLoaded) {
-            await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js");
-            xlsxLibLoaded = true;
-        }
-        while(typeof window.XLSX === 'undefined') {
-            await new Promise(r => setTimeout(r, 50));
-        }
-    }
 
     // --- Badging API Funkcie ---
     const PENDING_SYNC_MONTHS_LS_KEY = 'pendingSyncMonthsList';
@@ -618,7 +549,7 @@
         } else {
             button.disabled = false;
             if (button.dataset.originalText) button.innerHTML = button.dataset.originalText;
-            else button.textContent = originalText; // Fallback if originalText wasn't set on button
+            else button.textContent = originalText;
             button.classList.remove('is-loading');
         }
     }
@@ -791,7 +722,7 @@
 
     function setupFirestoreWorkDataListener() {
         if (currentListenerUnsubscribe) currentListenerUnsubscribe();
-        if (!currentUser) { loadWorkDataFromLocalStorage(); return; } 
+        if (!currentUser) { loadWorkDataFromLocalStorage(); return; } // Ak nie je user, načítaj len lokálne (guest)
 
         if (!navigator.onLine) {
             loadWorkDataFromLocalStorage();
@@ -849,9 +780,10 @@
         calculateTotal();
     }, 1200);
     window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
-    
-    function getFirestoreDocId(year, month) { 
-        return `${year}-${String(month + 1).padStart(2, '0')}`; 
+
+    // OPRAVA: Firestore ID s 1-indexovaným mesiacom
+    function getFirestoreDocId(year, month) { // 'month' je tu stále 0-indexed (0 pre Január, 11 pre December)
+        return `${year}-${String(month + 1).padStart(2, '0')}`; // Kľúčová zmena: month + 1
     }
     function getLocalStorageKeyForWorkData(docId) { return currentUser ? `workData-${currentUser.uid}-${docId}` : `workData-guest-${docId}`; }
     function getPendingSyncKeyForMonth(docId) { return currentUser ? `pendingSync-workData-${currentUser.uid}-${docId}` : null; }
@@ -902,7 +834,7 @@
                     console.error(`Chyba synchronizácie dát pre ${monthId}:`, error);
                 }
             } else {
-                successfullySyncedMonths.push(monthId); // Ak nie sú dáta v pendingKey, považujeme za synchronizované
+                successfullySyncedMonths.push(monthId);
             }
         }
 
@@ -993,9 +925,6 @@
         uiRefs.workDaysTbody.innerHTML = ''; const today = new Date();
         const currentDayInMonth = today.getDate(), currentMonthIdx = today.getMonth(), currentFullYear = today.getFullYear();
         const days = getDaysInMonth(currentMonth, currentYear);
-        // Použitie DocumentFragment pre potenciálne rýchlejšie vkladanie, hoci pri 30 riadkoch to nemusí byť výrazný rozdiel
-        // Nechal som pôvodný prístup pre jednoduchosť, keďže inline handlery sú zachované.
-        // Ak by sa ukázalo ako bottleneck, zvážiť DocumentFragment + delegáciu udalostí.
         for (let i = 1; i <= days; i++) {
             const row = uiRefs.workDaysTbody.insertRow(); const dayStr = String(i);
             const isCurrDay = (i === currentDayInMonth && currentMonth === currentMonthIdx && currentYear === currentFullYear);
@@ -1157,15 +1086,11 @@
     }
 
     window.exportToPDF = async function() {
-        const btn = event.target; setLoadingState(btn, true, "Exportujem PDF...");
+        const btn = event.target; setLoadingState(btn, true, "Exportujem PDF..."); calculateTotal();
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
         try {
-            await ensureJspdfLibs();
-            calculateTotal();
-            const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            
             try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
-            catch (e) { console.warn("Roboto font for PDF not loaded, using helvetica."); doc.setFont('helvetica'); }
-
+            catch (e) { doc.setFont('helvetica'); }
             doc.setFontSize(16); doc.text(`Výkaz práce - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
             doc.setFontSize(12); doc.text(`Pracovník: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
             doc.setFontSize(10); doc.text(`Hodinová mzda: ${appSettings.hourlyWage.toFixed(appSettings.decimalPlaces)} €/h, Daňové percento: ${(appSettings.taxRate * 100).toFixed(1)}%`, 14, 36);
@@ -1193,23 +1118,19 @@
                 didParseCell: (data) => { if (data.column.index === 5) data.cell.styles.cellWidth = 'wrap'; }
             });
             const totalY = doc.lastAutoTable.finalY + 8; doc.setFontSize(9);
-            const totalTextContent = uiRefs.totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/?strong>/gi, '').replace(/  +/g, ' ').replace(/€/g, 'EUR');
+            const totalTextContent = uiRefs.totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/?strong>/gi, '').replace(/ /g, ' ').replace(/€/g, 'EUR');
             doc.text(totalTextContent, 14, totalY);
             const safeName = (appSettings.employeeName || 'Pracovnik').replace(/[^a-zA-Z0-9]/g, '_');
             doc.save(`Vykaz_Prace_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`); showSaveNotification('PDF súbor bol úspešne vygenerovaný.');
-        } catch (error) { showErrorNotification("Nastala chyba pri exporte do PDF: " + error.message); console.error("PDF Export Error:", error); }
+        } catch (error) { showErrorNotification("Nastala chyba pri exporte do PDF: " + error.message); }
         finally { setLoadingState(btn, false, "Exportovať do PDF"); }
     }
     window.sendPDF = async function() {
-        const btn = event.target; setLoadingState(btn, true, "Pripravujem PDF na odoslanie...");
+        const btn = event.target; setLoadingState(btn, true, "Pripravujem PDF na odoslanie..."); calculateTotal();
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
         try {
-            await ensureJspdfLibs();
-            calculateTotal();
-            const { jsPDF } = window.jspdf; const doc = new jsPDF();
-
             try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
-            catch (e) { console.warn("Roboto font for PDF not loaded, using helvetica."); doc.setFont('helvetica'); }
-
+            catch (e) { doc.setFont('helvetica'); }
             doc.setFontSize(16); doc.text(`Prehľad dochádzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
             doc.setFontSize(12); doc.text(`Pracovník: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
             const workedDaysMatch = (uiRefs.totalSalaryDiv.textContent || "").match(/Započítaných dní s aktivitou:\s*(\d+)/i);
@@ -1234,20 +1155,16 @@
                 await navigator.share({ files: [pdfFile], title: `Dochádzka ${MONTH_NAMES[currentMonth]} ${currentYear}`, text: `Záznam dochádzky pre pracovníka ${appSettings.employeeName || 'Nezadané'}.` });
             } else { showWarningNotification('Zdieľanie súborov nie je podporované. Súbor sa stiahne.'); doc.save(pdfFileName); }
         } catch (error) {
-            if (error.name !== 'AbortError') { showErrorNotification('Nastala chyba pri zdieľaní PDF: ' + error.message); console.error("PDF Share Error:", error); }
+            if (error.name !== 'AbortError') { showErrorNotification('Nastala chyba pri zdieľaní PDF: ' + error.message); }
         } finally { setLoadingState(btn, false, "Odoslať PDF (s pozn.)"); }
     }
 
-    window.createBackup = async function() {
-        const btn = event.target; setLoadingState(btn, true, "Vytváram zálohu...");
+    window.createBackup = function() {
+        const btn = event.target; setLoadingState(btn, true, "Vytváram zálohu..."); const workData = collectWorkDataForStorage();
+        if (!workData.data.some(d => d.start || d.end || d.breakTime || d.note) && !appSettings.employeeName) {
+            showWarningNotification('Nie sú zadané žiadne dáta na vytvorenie zálohy.'); setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); return;
+        }
         try {
-            await ensureXlsxLib();
-            const XLSX = window.XLSX; // XLSX should be global now
-
-            const workData = collectWorkDataForStorage();
-            if (!workData.data.some(d => d.start || d.end || d.breakTime || d.note) && !appSettings.employeeName) {
-                showWarningNotification('Nie sú zadané žiadne dáta na vytvorenie zálohy.'); setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); return;
-            }
             const wb = XLSX.utils.book_new();
             const settings_ws_data = [["Nastavenie", "Hodnota"]]; Object.entries(appSettings).forEach(([key, value]) => settings_ws_data.push([key, value]));
             const settings_ws = XLSX.utils.aoa_to_sheet(settings_ws_data); settings_ws['!cols'] = [{wch:25}, {wch:30}]; XLSX.utils.book_append_sheet(wb, settings_ws, "NastaveniaAplikacie");
@@ -1259,96 +1176,90 @@
             const work_ws = XLSX.utils.aoa_to_sheet(work_ws_data); work_ws['!cols'] = [{wch:15}, {wch:10}, {wch:10}, {wch:15}, {wch:40}]; XLSX.utils.book_append_sheet(wb, work_ws, `Vykaz ${MONTH_NAMES[currentMonth]} ${currentYear}`);
             const safeName = (appSettings.employeeName || 'VseobecnaZaloha').replace(/[^a-zA-Z0-9]/g, '_');
             XLSX.writeFile(wb, `Zaloha_BrunoCalcPro_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.xlsx`); showSaveNotification('Záloha bola úspešne vytvorená a stiahnutá.');
-        } catch(error) { showErrorNotification('Nastala chyba pri vytváraní zálohy: ' + error.message); console.error("Backup Error:", error); }
+        } catch(error) { showErrorNotification('Nastala chyba pri vytváraní zálohy: ' + error.message); }
         finally { setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); }
     };
     window.restoreBackup = function() {
         const btn = event.target; const input = document.createElement('input'); input.type = 'file'; input.accept = '.xlsx';
         input.onchange = async (event) => {
-            setLoadingState(btn, true, "Spracúvam súbor zálohy...");
-            try {
-                await ensureXlsxLib();
-                const XLSX = window.XLSX;
-
-                const file = event.target.files[0];
-                if (!file) { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return; }
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    try {
-                        const fileData = new Uint8Array(e.target.result); const workbook = XLSX.read(fileData, {type:'array'});
-                        let restoredAppSettings = {}, restoredWorkData = { data: [] }, backupMonth = currentMonth, backupYear = currentYear;
-                        const settingsSheetName = workbook.SheetNames.find(name => name.toLowerCase().includes("nastaveniaaplikacie"));
-                        if (settingsSheetName) {
-                            const ws = workbook.Sheets[settingsSheetName]; const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-                            for (let i = 1; i < jsonData.length; i++) {
-                                const row = jsonData[i]; if (row && row[0] && appSettings.hasOwnProperty(row[0])) {
-                                    const key = row[0]; let value = row[1];
-                                    if (['hourlyWage', 'taxRate'].includes(key)) value = parseFloat(value) || appSettings[key];
-                                    else if (key === 'decimalPlaces') value = parseInt(value) || appSettings[key];
-                                    else if (key === 'employeeName') value = String(value);
-                                    restoredAppSettings[key] = value;
-                                }
-                            }
-                        } else showWarningNotification("List 'NastaveniaAplikacie' nebol nájdený. Nastavenia nebudú obnovené.");
-                        const workSheetName = workbook.SheetNames.find(name => name.toLowerCase().startsWith("vykaz"));
-                        if (workSheetName) {
-                            const ws = workbook.Sheets[workSheetName]; const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-                            const headerRowIndex = jsonData.findIndex(row => row && row[0] && row[0].toString().toLowerCase().includes("deň"));
-                            if (headerRowIndex !== -1) {
-                                const colMap = { day: 0, start: 1, end: 2, break: 3, note: 4 };
-                                for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
-                                    const row = jsonData[i];
-                                    if (!row || !row[colMap.day] || !row[colMap.day].toString().match(/^\d+\./)) {
-                                        if (row && row[0] && row[0].toString().toLowerCase().includes("mesiac zálohy")) backupMonth = parseInt(row[1]) ?? currentMonth;
-                                        if (row && row[0] && row[0].toString().toLowerCase().includes("rok zálohy")) backupYear = parseInt(row[1]) ?? currentYear;
-                                        continue;
-                                    }
-                                    restoredWorkData.data.push({ start: row[colMap.start] || "", end: row[colMap.end] || "", breakTime: row[colMap.break] ? row[colMap.break].toString().replace(',', '.') : "", note: row[colMap.note] || ""});
-                                }
-                            } else showWarningNotification(`List '${workSheetName}' nemá správnu hlavičku. Dáta mesiaca nebudú obnovené.`);
-                        } else showWarningNotification("List s dátami mesiaca ('Vykaz...') nebol nájdený. Dáta nebudú obnovené.");
-                        if (Object.keys(restoredAppSettings).length === 0 && restoredWorkData.data.length === 0 && !workSheetName && !settingsSheetName) {
-                            showErrorNotification("Záloha neobsahuje platné dáta alebo má nesprávny formát."); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
-                        }
-
-                        const restoreMonthDocId = getFirestoreDocId(backupYear, backupMonth); 
-                        if (!confirm(`Obnoviť dáta? ${Object.keys(restoredAppSettings).length > 0 ? 'Nastavenia budú aktualizované. ' : ''}${restoredWorkData.data.length > 0 || workSheetName ? `Dáta pre ${MONTH_NAMES[backupMonth]} ${backupYear} budú obnovené (${restoredWorkData.data.length} dní). ` : ''}Neuložené zmeny môžu byť prepísané.`)) {
-                            setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
-                        }
-
-                        if (Object.keys(restoredAppSettings).length > 0) {
-                            Object.assign(appSettings, restoredAppSettings); Object.entries(appSettings).forEach(([key, value]) => localStorage.setItem(key, value));
-                            updateSettingsUIInputs(); await saveAppSettingsToFirestore();
-                        }
-                        if (restoredWorkData.data.length > 0 || (workSheetName && restoredWorkData.data.length === 0 )) {
-                            if (backupMonth !== currentMonth || backupYear !== currentYear) {
-                                currentMonth = backupMonth; currentYear = backupYear; uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear; createTable();
-                            }
-                            const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
-                            const workDataString = JSON.stringify(workDataToApply);
-                            localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
-                            parseAndApplyWorkData(workDataString); 
-
-                            if (currentUser) {
-                                if (navigator.onLine) {
-                                    await saveWorkDataToFirestore(workDataToApply, restoreMonthDocId);
-                                    removeMonthFromPendingList(restoreMonthDocId);
-                                    const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
-                                    if(pendingKey) localStorage.removeItem(pendingKey);
-                                } else {
-                                    addMonthToPendingList(restoreMonthDocId);
-                                    const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
-                                    if(pendingKey) localStorage.setItem(pendingKey, workDataString);
-                                }
+            setLoadingState(btn, true, "Spracúvam súbor zálohy..."); const file = event.target.files[0];
+            if (!file) { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return; }
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const fileData = new Uint8Array(e.target.result); const workbook = XLSX.read(fileData, {type:'array'});
+                    let restoredAppSettings = {}, restoredWorkData = { data: [] }, backupMonth = currentMonth, backupYear = currentYear;
+                    const settingsSheetName = workbook.SheetNames.find(name => name.toLowerCase().includes("nastaveniaaplikacie"));
+                    if (settingsSheetName) {
+                        const ws = workbook.Sheets[settingsSheetName]; const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+                        for (let i = 1; i < jsonData.length; i++) {
+                            const row = jsonData[i]; if (row && row[0] && appSettings.hasOwnProperty(row[0])) {
+                                const key = row[0]; let value = row[1];
+                                if (['hourlyWage', 'taxRate'].includes(key)) value = parseFloat(value) || appSettings[key];
+                                else if (key === 'decimalPlaces') value = parseInt(value) || appSettings[key];
+                                else if (key === 'employeeName') value = String(value);
+                                restoredAppSettings[key] = value;
                             }
                         }
-                        showSaveNotification('Záloha bola úspešne obnovená.');
-                    } catch (error) { showErrorNotification('Chyba pri obnove zálohy: ' + error.message); console.error("Restore backup processing error:", error); }
-                    finally { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); input.value = ''; }
-                };
-                reader.onerror = () => { showErrorNotification('Chyba pri čítaní súboru.'); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); }
-                reader.readAsArrayBuffer(file);
-            } catch (error) { showErrorNotification('Chyba pri príprave na obnovu zálohy: ' + error.message); console.error("Restore backup initial error:", error); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); input.value = ''; }
+                    } else showWarningNotification("List 'NastaveniaAplikacie' nebol nájdený. Nastavenia nebudú obnovené.");
+                    const workSheetName = workbook.SheetNames.find(name => name.toLowerCase().startsWith("vykaz"));
+                    if (workSheetName) {
+                        const ws = workbook.Sheets[workSheetName]; const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+                        const headerRowIndex = jsonData.findIndex(row => row && row[0] && row[0].toString().toLowerCase().includes("deň"));
+                        if (headerRowIndex !== -1) {
+                            const colMap = { day: 0, start: 1, end: 2, break: 3, note: 4 };
+                            for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
+                                const row = jsonData[i];
+                                if (!row || !row[colMap.day] || !row[colMap.day].toString().match(/^\d+\./)) {
+                                    if (row && row[0] && row[0].toString().toLowerCase().includes("mesiac zálohy")) backupMonth = parseInt(row[1]) ?? currentMonth;
+                                    if (row && row[0] && row[0].toString().toLowerCase().includes("rok zálohy")) backupYear = parseInt(row[1]) ?? currentYear;
+                                    continue;
+                                }
+                                restoredWorkData.data.push({ start: row[colMap.start] || "", end: row[colMap.end] || "", breakTime: row[colMap.break] ? row[colMap.break].toString().replace(',', '.') : "", note: row[colMap.note] || ""});
+                            }
+                        } else showWarningNotification(`List '${workSheetName}' nemá správnu hlavičku. Dáta mesiaca nebudú obnovené.`);
+                    } else showWarningNotification("List s dátami mesiaca ('Vykaz...') nebol nájdený. Dáta nebudú obnovené.");
+                    if (Object.keys(restoredAppSettings).length === 0 && restoredWorkData.data.length === 0 && !workSheetName && !settingsSheetName) {
+                        showErrorNotification("Záloha neobsahuje platné dáta alebo má nesprávny formát."); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
+                    }
+
+                    const restoreMonthDocId = getFirestoreDocId(backupYear, backupMonth); // Toto už použije novú logiku (month+1)
+                    if (!confirm(`Obnoviť dáta? ${Object.keys(restoredAppSettings).length > 0 ? 'Nastavenia budú aktualizované. ' : ''}${restoredWorkData.data.length > 0 || workSheetName ? `Dáta pre ${MONTH_NAMES[backupMonth]} ${backupYear} budú obnovené (${restoredWorkData.data.length} dní). ` : ''}Neuložené zmeny môžu byť prepísané.`)) {
+                        setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
+                    }
+
+                    if (Object.keys(restoredAppSettings).length > 0) {
+                        Object.assign(appSettings, restoredAppSettings); Object.entries(appSettings).forEach(([key, value]) => localStorage.setItem(key, value));
+                        updateSettingsUIInputs(); await saveAppSettingsToFirestore();
+                    }
+                    if (restoredWorkData.data.length > 0 || (workSheetName && restoredWorkData.data.length === 0 )) {
+                        if (backupMonth !== currentMonth || backupYear !== currentYear) {
+                            currentMonth = backupMonth; currentYear = backupYear; uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear; createTable();
+                        }
+                        const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
+                        const workDataString = JSON.stringify(workDataToApply);
+                        localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
+                        parseAndApplyWorkData(workDataString); 
+
+                        if (currentUser) {
+                            if (navigator.onLine) {
+                                await saveWorkDataToFirestore(workDataToApply, restoreMonthDocId);
+                                removeMonthFromPendingList(restoreMonthDocId);
+                                const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
+                                if(pendingKey) localStorage.removeItem(pendingKey);
+                            } else {
+                                addMonthToPendingList(restoreMonthDocId);
+                                const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
+                                if(pendingKey) localStorage.setItem(pendingKey, workDataString);
+                            }
+                        }
+                    }
+                    showSaveNotification('Záloha bola úspešne obnovená.');
+                } catch (error) { showErrorNotification('Chyba pri obnove zálohy: ' + error.message); }
+                finally { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); input.value = ''; }
+            };
+            reader.onerror = () => { showErrorNotification('Chyba pri čítaní súboru.'); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); }
+            reader.readAsArrayBuffer(file);
         };
         input.click();
     };
@@ -1364,11 +1275,8 @@
     window.addEventListener('online', () => {
         handleOnlineStatusChange(true);
         if(currentUser) {
-            // Synchronizácia a ukladanie nastavení po pripojení
-            setTimeout(() => { // Mierne oneskorenie, aby sa neblokovalo UI hneď po pripojení
-                syncPendingWorkData();
-                saveAppSettingsToFirestore(); // Uloží aktuálne nastavenia, ak boli zmenené offline
-            }, 1000);
+            syncPendingWorkData();
+            saveAppSettingsToFirestore();
         }
     });
     window.addEventListener('offline', () => {
@@ -1381,50 +1289,37 @@
 
     onAuthStateChanged(auth, async (user) => {
         currentUser = user;
-        updateUIForAuthStateChange(); // Zobrazí/skryje login/user info
+        updateUIForAuthStateChange();
 
-        // ---- KROK 1: Zobraziť hlavné UI čo najrýchlejšie ----
+        const authContainerElement = document.getElementById('auth-container');
+        if (authContainerElement) {
+            authContainerElement.style.display = 'block';
+        }
+
+        if (user) {
+            const settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
+            if (!settingsLoadedFromFS) {
+                loadAppSettingsFromLocalStorage();
+                updateSettingsUIInputs();
+                if (navigator.onLine) await saveAppSettingsToFirestore();
+            }
+            syncPendingWorkData();
+        } else {
+            loadAppSettingsFromLocalStorage();
+            updateSettingsUIInputs();
+            localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY);
+            updateAppBadge(0);
+        }
+        createTable();
+        setupFirestoreWorkDataListener(); 
+        updatePageTitleAndGreeting();
+
+        // Skry loader a zobraz hlavný kontajner aplikácie
         if (uiRefs.appLoader) {
             uiRefs.appLoader.style.display = 'none';
         }
         if (uiRefs.mainContainer) {
             uiRefs.mainContainer.style.display = 'block';
-        }
-        // Auth container sa rieši cez updateUIForAuthStateChange a CSS
-
-        // ---- KROK 2: Načítať základné nastavenia a vytvoriť tabuľku ----
-        let settingsLoadedFromFS = false;
-        if (user) {
-            settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
-            if (!settingsLoadedFromFS) {
-                loadAppSettingsFromLocalStorage(); // Fallback ak z FS nič alebo chyba
-            }
-        } else {
-            loadAppSettingsFromLocalStorage();
-            localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY);
-            updateAppBadge(0);
-        }
-        updateSettingsUIInputs(); 
-        updatePageTitleAndGreeting();
-
-        createTable(); // Vytvorí štruktúru tabuľky
-
-        // ---- KROK 3: Naplniť tabuľku dátami a nastaviť synchronizáciu ----
-        // setupFirestoreWorkDataListener sa postará o načítanie dát (cache-first) a počúvanie zmien pre prihláseného usera.
-        // Pre neprihláseného alebo offline sa spolieha na loadWorkDataFromLocalStorage volané vnútri setupFirestoreWorkDataListener.
-        setupFirestoreWorkDataListener(); 
-
-        // ---- KROK 4: Dokončovacie práce na pozadí ----
-        if (user) {
-            if (navigator.onLine && !settingsLoadedFromFS) {
-                // Ak sme online a nepodarilo sa načítať nastavenia z FS (napr. nový user),
-                // uložiť aktuálne (default/LS) nastavenia do FS.
-                // Toto by sa malo diať až po tom, čo sa UI zobrazí.
-                setTimeout(() => saveAppSettingsToFirestore(), 500);
-            }
-            // syncPendingWorkData je už volaný v setupFirestoreWorkDataListener a pri online evente
-            // Prípadne môžeme explicitne zavolať ešte raz s oneskorením pre istotu
-            // setTimeout(() => { if (navigator.onLine) syncPendingWorkData(); }, 1500);
         }
     });
 
