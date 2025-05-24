@@ -795,9 +795,6 @@
                 if(pendingKey) localStorage.setItem(pendingKey, JSON.stringify(dataToSave));
             }
         }
-        // calculateTotal() sa volá explicitne po zmenách inputov a po debouncedSave.
-        // Tu by sa mohol volať tiež, ale je to už pokryté v onblur/oninput eventoch,
-        // ktoré vedú k tomuto debounced savu. Pre istotu a konzistenciu ho tu môžeme nechať.
         calculateTotal();
     }, 1200);
     window.debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
@@ -964,7 +961,7 @@
                     <input type="tel" id="end-${dayStr}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" aria-label="Odchod dňa ${dayStr}" onblur="validateAndFormatTimeBlur(this, ${i}); debouncedSaveWorkDataAndSync();">
                     <button class="time-btn" onclick="setCurrentTime('end-${dayStr}', ${i})" title="Zadať aktuálny čas" aria-label="Zadať aktuálny čas pre odchod dňa ${dayStr}">🕒</button>
                 </div></td>
-                <td><input type="text" inputmode="decimal" id="break-${dayStr}" placeholder="hod." aria-label="Prestávka v hodinách dňa ${dayStr}" oninput="handleNumericInput(this);" onblur="handleBreakInput(${i}); debouncedSaveWorkDataAndSync();"></td>
+                <td><input type="text" inputmode="decimal" id="break-${dayStr}" placeholder="hod." aria-label="Prestávka v hodinách dňa ${dayStr}" oninput="handleNumericInput(this); handleBreakLiveInput(this, ${i});" onblur="validateBreakInputOnBlur(${i}); debouncedSaveWorkDataAndSync();"></td>
                 <td id="total-${dayStr}">0h 0m (${(0).toFixed(appSettings.decimalPlaces)} h)</td>
                 <td><textarea id="note-${dayStr}" placeholder="Poznámka..." aria-label="Poznámka ku dňu ${dayStr}" oninput="handleNoteInput(this)" onblur="debouncedSaveWorkDataAndSync()"></textarea></td>
                 <td><input type="number" id="gross-${dayStr}" readonly aria-label="Hrubá mzda dňa ${dayStr}"></td>
@@ -986,7 +983,7 @@
 
         if (input.value.length === 5 && isValidTimeFormat(input.value)) {
             calculateRow(day);
-            if (input.id.startsWith('end-') || input.id.startsWith('start-')) { // Prepočítaj total ak je start alebo end validný
+            if (input.id.startsWith('end-') || input.id.startsWith('start-')) {
                 calculateTotal();
             }
 
@@ -997,9 +994,9 @@
                     nextElement.select();
                 }
             }
-        } else if (input.value.length < 5) { // Ak čas nie je kompletný (napr. používateľ maže)
+        } else if (input.value.length < 5) {
             calculateRow(day);
-            if (input.id.startsWith('end-') || input.id.startsWith('start-')) { // Prepočítaj total, aby sa odrážalo mazanie
+            if (input.id.startsWith('end-') || input.id.startsWith('start-')) {
                 calculateTotal();
             }
         }
@@ -1019,9 +1016,6 @@
             }
             if(day) {
                 calculateRow(day);
-                // Celkové sumy sa prepočítavajú už v handleTimeInput pri písaní,
-                // ale pre istotu aj tu, ak by sa blur spustil bez predchádzajúceho inputu
-                // alebo ak sa pole vymaže
                 if ( (input.id.startsWith('start-') || input.id.startsWith('end-')) && (isValid || input.value === '') ) {
                      calculateTotal();
                 }
@@ -1035,26 +1029,38 @@
         if (input.value !== formattedValue && formattedValue.length <= 5) input.value = formattedValue;
     }
 
-    window.handleBreakInput = function(day) {
+    window.handleBreakLiveInput = function(inputElement, day) {
+        // handleNumericInput(inputElement) sa už volá z HTML
+        calculateRow(day);
+        calculateTotal();
+    }
+
+    window.validateBreakInputOnBlur = function(day) {
         const breakInput = document.getElementById(`break-${day}`);
         let value = breakInput.value.replace(',', '.');
         const numericValue = parseFloat(value);
         breakInput.classList.remove('invalid-value');
 
         if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) {
-            breakInput.value = value;
+            // Ak je hodnota platná alebo prázdna, nič nemeníme, len sa uistíme o formáte
+            // Prípadne tu môžeme formátovať, napr. na jedno desatinné miesto
+            // if (value !== '' && !isNaN(numericValue)) breakInput.value = numericValue.toFixed(1);
         } else {
             breakInput.value = '';
             breakInput.classList.add('invalid-value');
             showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}. Zadajte kladné číslo (napr. 0.5 pre 30 minút).`);
         }
-        calculateRow(day);
-        calculateTotal(); // Okamžitý prepočet celkových súm po zmene prestávky
+        calculateRow(day); // Pre istotu
+        calculateTotal();  // Pre istotu
     }
+
 
     window.handleNoteInput = function(textarea) {
         autoResizeTextarea(textarea);
-        // Poznámka mení `daysWithEntries`, takže `calculateTotal` sa zavolá po `debouncedSaveWorkDataAndSync` (pri onblur)
+        // Po zmene poznámky sa `calculateTotal` zavolá až po `debouncedSaveWorkDataAndSync` (onblur),
+        // pretože `daysWithEntries` sa aktualizuje v `calculateTotal`.
+        // Ak by si chcel okamžitý prepočet aj tu (napr. ak by pridanie poznámky malo hneď zmeniť `daysWithEntries` v UI),
+        // mohol by si sem pridať `calculateTotal()`.
     }
     function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px'; }
 
@@ -1324,6 +1330,7 @@
                         setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return;
                     }
 
+                    let monthOrYearChanged = false;
                     if (Object.keys(restoredAppSettings).length > 0) {
                         Object.assign(appSettings, restoredAppSettings); Object.entries(appSettings).forEach(([key, value]) => localStorage.setItem(key, value));
                         updateSettingsUIInputs();
@@ -1333,16 +1340,30 @@
 
                     if (restoredWorkData.data.length > 0 || (workSheetName && restoredWorkData.data.length === 0 )) {
                         if (backupMonth !== currentMonth || backupYear !== currentYear) {
+                            monthOrYearChanged = true;
                             currentMonth = backupMonth; currentYear = backupYear;
                             uiRefs.monthSelect.value = currentMonth; uiRefs.yearSelect.value = currentYear;
-                            // createTable() a setupFirestoreWorkDataListener() sa zavolajú cez changeMonth/Year
-                            changeMonth(); // alebo changeYear(), záleží čo sa zmenilo, alebo oboje ak obe
                         }
+
+                        if(monthOrYearChanged){
+                            // createTable a setupFirestoreWorkDataListener sa zavolajú cez changeMonth/Year
+                            // ak sa zmenil rok, treba volať changeYear, ak len mesiac, tak changeMonth
+                            if (parseInt(uiRefs.yearSelect.value) !== backupYear) changeYear();
+                            else if (parseInt(uiRefs.monthSelect.value) !== backupMonth) changeMonth();
+                            else { // ak sa nemenil ani rok ani mesiac (malo by byť pokryté `monthOrYearChanged = false`)
+                                createTable();
+                                setupFirestoreWorkDataListener();
+                            }
+                        } else {
+                            // Ak sa mesiac/rok nemenili, ale dáta áno, stačí aplikovať dáta a obnoviť listener pre aktuálny pohľad
+                            createTable(); // Načisto tabuľku
+                        }
+
                         const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
                         const workDataString = JSON.stringify(workDataToApply);
 
                         localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
-                        parseAndApplyWorkData(workDataString);
+                        parseAndApplyWorkData(workDataString); // Aplikuje dáta do UI a zavolá calculateTotal
 
                         const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
                         if (currentUser) {
@@ -1360,9 +1381,8 @@
                                 if (pendingKey) localStorage.setItem(pendingKey, workDataString);
                             }
                         }
-                         // Ak sa mesiac/rok nemenil, ale dáta áno, je dôležité zavolať listener manuálne, ak to `changeMonth/Year` neurobilo
-                        if (parseInt(uiRefs.monthSelect.value) === backupMonth && parseInt(uiRefs.yearSelect.value) === backupYear && (backupMonth !== currentMonth || backupYear !== currentYear) === false) {
-                           setupFirestoreWorkDataListener();
+                        if (!monthOrYearChanged) { // Ak sa mesiac/rok nemenil, ale dáta áno
+                            setupFirestoreWorkDataListener();
                         }
                     }
                     showSaveNotification('Záloha bola úspešne obnovená.');
