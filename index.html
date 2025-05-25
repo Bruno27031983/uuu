@@ -42,12 +42,15 @@
       --border-radius: 8px;
       --box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
       --box-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+      /* --- ÚPRAVA: Použitie systémových fontov ako primárne --- */
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       --base-font-size: 16px;
       --focus-outline-color: var(--btn-primary-bg);
       --transition-speed: 0.2s;
     }
 
+    /* --- ÚPRAVA: Zakomentovanie alebo odstránenie @font-face pre 'Inter' --- */
+    /*
     @font-face {
       font-family: 'Inter';
       src: url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2') format('woff2');
@@ -55,6 +58,7 @@
       font-style: normal;
       font-display: swap;
     }
+    */
 
     html { font-size: var(--base-font-size); scroll-behavior: smooth; }
     body {
@@ -256,7 +260,7 @@
     #errorNotification { background-color: var(--btn-danger-bg); color: white; }
     #warningNotification { background-color: var(--btn-highlight-bg); color: var(--primary-text-color); }
     @media print {
-      body { padding: 0; font-size: 10pt; color: #000; background-color: #fff; font-family: Arial, sans-serif;}
+      body { padding: 0; font-size: 10pt; color: #000; background-color: #fff; font-family: var(--font-family); /* Použije systémové fonty */}
       .container { max-width: 100%; margin: 0; padding: 10px; box-shadow: none; border: none;}
       #app-loader, #auth-container, .settings, .btn-container, #localStorageIndicator, #saveNotification, #errorNotification, #warningNotification, .time-btn, .reset-btn { display: none !important; }
       h1 { font-size: 18pt; margin-bottom: 5mm; background: none !important; -webkit-background-clip: unset !important; background-clip: unset !important; color: black !important;}
@@ -1043,24 +1047,18 @@
 
         if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) {
             // Ak je hodnota platná alebo prázdna, nič nemeníme, len sa uistíme o formáte
-            // Prípadne tu môžeme formátovať, napr. na jedno desatinné miesto
-            // if (value !== '' && !isNaN(numericValue)) breakInput.value = numericValue.toFixed(1);
         } else {
             breakInput.value = '';
             breakInput.classList.add('invalid-value');
             showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}. Zadajte kladné číslo (napr. 0.5 pre 30 minút).`);
         }
-        calculateRow(day); // Pre istotu
-        calculateTotal();  // Pre istotu
+        calculateRow(day);
+        calculateTotal();
     }
 
 
     window.handleNoteInput = function(textarea) {
         autoResizeTextarea(textarea);
-        // Po zmene poznámky sa `calculateTotal` zavolá až po `debouncedSaveWorkDataAndSync` (onblur),
-        // pretože `daysWithEntries` sa aktualizuje v `calculateTotal`.
-        // Ak by si chcel okamžitý prepočet aj tu (napr. ak by pridanie poznámky malo hneď zmeniť `daysWithEntries` v UI),
-        // mohol by si sem pridať `calculateTotal()`.
     }
     function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px'; }
 
@@ -1185,8 +1183,7 @@
         const btn = event.target; setLoadingState(btn, true, "Exportujem PDF..."); calculateTotal();
         const { jsPDF } = window.jspdf; const doc = new jsPDF();
         try {
-            try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
-            catch (e) { console.warn("Roboto font not loaded for PDF, using helvetica."); doc.setFont('helvetica'); }
+            doc.setFont('helvetica'); // Použije štandardný PDF font
             doc.setFontSize(16); doc.text(`Výkaz práce - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
             doc.setFontSize(12); doc.text(`Pracovník: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
             doc.setFontSize(10); doc.text(`Hodinová mzda: ${appSettings.hourlyWage.toFixed(appSettings.decimalPlaces)} €/h, Daňové percento: ${(appSettings.taxRate * 100).toFixed(1)}%`, 14, 36);
@@ -1204,7 +1201,7 @@
             doc.autoTable({
                 head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Odpracované', 'Poznámka', 'Hrubá Mzda (€)', 'Čistá Mzda (€)']],
                 body: tableData, startY: 42, theme: 'grid',
-                styles: { font: doc.getFont().fontName || 'helvetica', fontSize: 7.5, cellPadding: 1.2, valign: 'middle' },
+                styles: { font: 'helvetica', fontSize: 7.5, cellPadding: 1.2, valign: 'middle' },
                 headStyles: { fillColor: [230,230,230], textColor: [0,0,0], fontStyle: 'bold', fontSize: 8, halign: 'center' },
                 columnStyles: {
                     0: { cellWidth: 16, halign: 'left' }, 1: { cellWidth: 12, halign: 'center' }, 2: { cellWidth: 12, halign: 'center' },
@@ -1225,8 +1222,7 @@
         const btn = event.target; setLoadingState(btn, true, "Pripravujem PDF na odoslanie..."); calculateTotal();
         const { jsPDF } = window.jspdf; const doc = new jsPDF();
         try {
-            try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
-            catch (e) { console.warn("Roboto font not loaded for PDF, using helvetica."); doc.setFont('helvetica'); }
+            doc.setFont('helvetica'); // Použije štandardný PDF font
             doc.setFontSize(16); doc.text(`Prehľad dochádzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
             doc.setFontSize(12); doc.text(`Pracovník: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
             const workedDaysMatch = (uiRefs.totalSalaryDiv.textContent || "").match(/Započítaných dní s aktivitou:\s*(\d+)/i);
@@ -1240,7 +1236,7 @@
             }
             doc.autoTable({
                 head: [['Deň', 'Príchod', 'Odchod', 'Prestávka (h)', 'Poznámka']], body: tableData, startY: 42, theme: 'grid',
-                styles: { font: doc.getFont().fontName || 'helvetica', fontSize: 8.5, cellPadding: 1.8, valign: 'middle' },
+                styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 1.8, valign: 'middle' },
                 headStyles: { fillColor: [230,230,230], textColor: [0,0,0], fontStyle: 'bold', fontSize: 9, halign: 'center'},
                 columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 22, halign: 'center' }, 2: { cellWidth: 22, halign: 'center' }, 3: { cellWidth: 22, halign: 'center' }, 4: { cellWidth: 'auto' }},
                 didParseCell: (data) => { if (data.column.index === 4) data.cell.styles.cellWidth = 'wrap'; }
@@ -1346,24 +1342,21 @@
                         }
 
                         if(monthOrYearChanged){
-                            // createTable a setupFirestoreWorkDataListener sa zavolajú cez changeMonth/Year
-                            // ak sa zmenil rok, treba volať changeYear, ak len mesiac, tak changeMonth
                             if (parseInt(uiRefs.yearSelect.value) !== backupYear) changeYear();
                             else if (parseInt(uiRefs.monthSelect.value) !== backupMonth) changeMonth();
-                            else { // ak sa nemenil ani rok ani mesiac (malo by byť pokryté `monthOrYearChanged = false`)
+                            else {
                                 createTable();
                                 setupFirestoreWorkDataListener();
                             }
                         } else {
-                            // Ak sa mesiac/rok nemenili, ale dáta áno, stačí aplikovať dáta a obnoviť listener pre aktuálny pohľad
-                            createTable(); // Načisto tabuľku
+                            createTable();
                         }
 
                         const workDataToApply = { data: restoredWorkData.data, lastUpdated: new Date().toISOString() };
                         const workDataString = JSON.stringify(workDataToApply);
 
                         localStorage.setItem(getLocalStorageKeyForWorkData(restoreMonthDocId), workDataString);
-                        parseAndApplyWorkData(workDataString); // Aplikuje dáta do UI a zavolá calculateTotal
+                        parseAndApplyWorkData(workDataString);
 
                         const pendingKey = getPendingSyncKeyForMonth(restoreMonthDocId);
                         if (currentUser) {
@@ -1381,7 +1374,7 @@
                                 if (pendingKey) localStorage.setItem(pendingKey, workDataString);
                             }
                         }
-                        if (!monthOrYearChanged) { // Ak sa mesiac/rok nemenil, ale dáta áno
+                        if (!monthOrYearChanged) {
                             setupFirestoreWorkDataListener();
                         }
                     }
