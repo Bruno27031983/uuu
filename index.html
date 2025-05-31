@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="sk">
 <head>
@@ -1127,13 +1126,25 @@
         // calculateTotal() will be called by debouncedSaveWorkDataAndSync
     }
 
-
+    // =================================================================================
+    // === ZAČIATOK ÚPRAVY PRE PROBLÉM S PLACEHOLDEROM V POZNÁMKE (16. RIADOK) ===
+    // =================================================================================
     window.handleNoteInput = function(textarea) {
+        // Ak je hodnota po odstránení bielych znakov na začiatku/konci prázdna,
+        // nastav ju na úplne prázdny reťazec. To pomôže zobraziť placeholder
+        // a správne vypočítať scrollHeight pre autoResizeTextarea.
+        if (textarea.value.trim() === '') {
+            textarea.value = '';
+        }
         autoResizeTextarea(textarea);
         // `calculateTotal` is called by `debouncedSaveWorkDataAndSync` on blur.
         // Adding/removing a note might affect `daysWithEntries`, so if immediate total update is desired,
         // `calculateTotal()` could be called here. For now, it updates on blur.
     }
+    // ===============================================================================
+    // === KONIEC ÚPRAVY PRE PROBLÉM S PLACEHOLDEROM V POZNÁMKE (16. RIADOK) ===
+    // ===============================================================================
+
     function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px'; }
 
     function calculateRow(day) {
