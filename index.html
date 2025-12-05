@@ -3,6 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Content Security Policy - ochrana proti XSS a neautorizovaným zdrojom -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: blob: https:;
+    connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com wss://*.firebaseio.com;
+    frame-src 'self' https://*.firebaseapp.com https://www.google.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+  ">
   <title>Bruno's Calculator Pro</title>
 
   <link rel="manifest" href="./manifest.json" />
