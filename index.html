@@ -3,6 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Content Security Policy - ochrana proti XSS a neautorizovaným zdrojom -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com;
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+    font-src 'self' https://fonts.gstatic.com;
+    img-src 'self' data: blob: https:;
+    connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com wss://*.firebaseio.com;
+    frame-src 'self' https://*.firebaseapp.com https://www.google.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+  ">
   <title>Bruno's Calculator Pro</title>
 
   <link rel="manifest" href="./manifest.json" />
@@ -589,6 +603,27 @@
     const debounce = (func, wait) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; };
     function isValidTimeFormat(timeString) { return typeof timeString === 'string' && /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeString); }
 
+    // Validácia hesla - bezpečnostné požiadavky
+    function validatePassword(password) {
+        if (!password || password.length < 8) {
+            return 'Heslo musí mať aspoň 8 znakov.';
+        }
+        if (!/[A-Z]/.test(password)) {
+            return 'Heslo musí obsahovať aspoň jedno veľké písmeno.';
+        }
+        if (!/[a-z]/.test(password)) {
+            return 'Heslo musí obsahovať aspoň jedno malé písmeno.';
+        }
+        if (!/\d/.test(password)) {
+            return 'Heslo musí obsahovať aspoň jedno číslo.';
+        }
+        // Voliteľné: kontrola špeciálnych znakov
+        // if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        //     return 'Heslo musí obsahovať aspoň jeden špeciálny znak.';
+        // }
+        return null; // Heslo je platné
+    }
+
     function showNotification(id, message, duration = 3500) { const notification = document.getElementById(id); if (!notification) { console.warn(`Notification element with ID '${id}' not found.`); return; } notification.textContent = message; notification.classList.add('show'); setTimeout(() => notification.classList.remove('show'), duration); }
     window.showSaveNotification = (message = 'Dáta boli úspešne uložené.') => showNotification('saveNotification', message);
     window.showErrorNotification = (message) => showNotification('errorNotification', message, 5000);
@@ -749,7 +784,8 @@
         if (!navigator.onLine) { showErrorNotification('Ste offline. Registrácia je možná iba v online režime.'); setLoadingState(btn, false, "Registrovať"); return; }
         const email = document.getElementById('email').value; const password = document.getElementById('password').value;
         if (!email || !password) { showErrorNotification('Prosím, zadajte email aj heslo.'); setLoadingState(btn, false, "Registrovať"); return; }
-        if (password.length < 6) { showErrorNotification('Heslo musí mať aspoň 6 znakov.'); setLoadingState(btn, false, "Registrovať"); return; }
+        const passwordError = validatePassword(password);
+        if (passwordError) { showErrorNotification(passwordError); setLoadingState(btn, false, "Registrovať"); return; }
         try {
             await createUserWithEmailAndPassword(auth, email, password); await createUserCollectionAndSettings();
             showSaveNotification('Úspešne zaregistrovaný a prihlásený.');
