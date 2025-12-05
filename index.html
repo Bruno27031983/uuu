@@ -1102,7 +1102,38 @@
         const avgMinutesPart = Math.round(avgWorkMinutes % 60);
         const avgDecimalHours = avgWorkMinutes / 60;
 
-        let goalHtml = '';
+        // Bezpečné vytváranie DOM elementov (XSS prevencia)
+        const createTextWithStrong = (text, strongValue, suffix = '') => {
+            const fragment = document.createDocumentFragment();
+            fragment.appendChild(document.createTextNode(text));
+            const strong = document.createElement('strong');
+            strong.textContent = strongValue;
+            fragment.appendChild(strong);
+            if (suffix) fragment.appendChild(document.createTextNode(suffix));
+            return fragment;
+        };
+
+        // Vyčistenie a naplnenie totalSalaryDiv bezpečným spôsobom
+        uiRefs.totalSalaryDiv.textContent = '';
+
+        // Riadok 1: Započítané dni
+        uiRefs.totalSalaryDiv.appendChild(createTextWithStrong('Započítaných dní s aktivitou: ', String(daysWithEntries)));
+        uiRefs.totalSalaryDiv.appendChild(document.createElement('br'));
+
+        // Riadok 2: Celkový čas
+        uiRefs.totalSalaryDiv.appendChild(createTextWithStrong('Celkový odpracovaný čas: ', `${totalHoursPart}h ${totalMinutesPart}m`, ` (${totalExactDecimalHours.toFixed(appSettings.decimalPlaces)} h)`));
+        uiRefs.totalSalaryDiv.appendChild(document.createElement('br'));
+
+        // Riadok 3: Mzdy
+        uiRefs.totalSalaryDiv.appendChild(createTextWithStrong('Celková hrubá mzda: ', `${totalGrossSalaryCalculated.toFixed(appSettings.decimalPlaces)} €`, ' | '));
+        uiRefs.totalSalaryDiv.appendChild(createTextWithStrong('Celková čistá mzda: ', `${totalNetSalaryCalculated.toFixed(appSettings.decimalPlaces)} €`));
+        uiRefs.totalSalaryDiv.appendChild(document.createElement('br'));
+
+        // Riadok 4: Priemery
+        uiRefs.totalSalaryDiv.appendChild(createTextWithStrong('Priemerná čistá mzda na deň: ', `${avgNetSalary.toFixed(appSettings.decimalPlaces)} €`, ' | '));
+        uiRefs.totalSalaryDiv.appendChild(createTextWithStrong('Priemerný čas na deň: ', `${avgHoursPart}h ${avgMinutesPart}m`, ` (${avgDecimalHours.toFixed(appSettings.decimalPlaces)} h)`));
+
+        // Mesačný cieľ (ak je nastavený)
         if (appSettings.monthlyEarningsGoal !== null && appSettings.monthlyEarningsGoal > 0) {
             const goal = appSettings.monthlyEarningsGoal;
             const percentage = goal > 0 ? (totalNetSalaryCalculated / goal) * 100 : 0;
@@ -1110,18 +1141,12 @@
             if (percentage >= 100) progressClass = 'good';
             else if (percentage >= 50) progressClass = 'medium';
 
-            goalHtml = `<div class="goal-progress ${progressClass}">
-                Mesačný cieľ: <strong>${totalNetSalaryCalculated.toFixed(appSettings.decimalPlaces)} €</strong> / ${goal.toFixed(appSettings.decimalPlaces)} €
-                (Splnené na <strong>${percentage.toFixed(1)}%</strong>)
-            </div>`;
+            const goalDiv = document.createElement('div');
+            goalDiv.className = `goal-progress ${progressClass}`;
+            goalDiv.appendChild(createTextWithStrong('Mesačný cieľ: ', `${totalNetSalaryCalculated.toFixed(appSettings.decimalPlaces)} €`, ` / ${goal.toFixed(appSettings.decimalPlaces)} € (`));
+            goalDiv.appendChild(createTextWithStrong('Splnené na ', `${percentage.toFixed(1)}%`, ')'));
+            uiRefs.totalSalaryDiv.appendChild(goalDiv);
         }
-
-        uiRefs.totalSalaryDiv.innerHTML = `
-            Započítaných dní s aktivitou: <strong>${daysWithEntries}</strong><br>
-            Celkový odpracovaný čas: <strong>${totalHoursPart}h ${totalMinutesPart}m</strong> (${totalExactDecimalHours.toFixed(appSettings.decimalPlaces)} h)<br>
-            Celková hrubá mzda: <strong>${totalGrossSalaryCalculated.toFixed(appSettings.decimalPlaces)} €</strong> | Celková čistá mzda: <strong>${totalNetSalaryCalculated.toFixed(appSettings.decimalPlaces)} €</strong><br>
-            Priemerná čistá mzda na deň: <strong>${avgNetSalary.toFixed(appSettings.decimalPlaces)} €</strong> | Priemerný čas na deň: <strong>${avgHoursPart}h ${avgMinutesPart}m</strong> (${avgDecimalHours.toFixed(appSettings.decimalPlaces)} h)
-            ${goalHtml}`;
     }
     // KONIEC UPRAVENEJ FUNKCIE calculateTotal()
 
