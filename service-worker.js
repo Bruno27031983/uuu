@@ -2,17 +2,15 @@
 
 const CACHE_NAME = 'brunos-calculator-v1';
 
-// súbory, ktoré sa prednačítajú do cache (prispôsob podľa potreby)
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/app.js',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/uuu/',
+  '/uuu/index.html',
+  '/uuu/app.js',
+  '/uuu/manifest.json',
+  '/uuu/icons/icon-192x192.png',
+  '/uuu/icons/icon-512x512.png'
 ];
 
-// Install – prednačítanie
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS_TO_CACHE))
@@ -20,44 +18,32 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Activate – cleanup starých cache
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       )
     )
   );
   self.clients.claim();
 });
 
-// Fetch – cache-first pre statické súbory, inak sieť
+// Cache-first stratégia pre GET požiadavky
 self.addEventListener('fetch', event => {
-  const request = event.request;
-
-  // iba GET požiadavky
-  if (request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
 
   event.respondWith(
-    caches.match(request).then(cached => {
+    caches.match(req).then(cached => {
       if (cached) return cached;
 
-      return fetch(request).then(response => {
-        // uložíme len úspešné odpovede
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, responseToCache);
-        });
-
-        return response;
-      });
+      return fetch(req).then(res => {
+        if (!res || res.status !== 200 || res.type !== 'basic') return res;
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
+        return res;
+      }).catch(() => cached);
     })
   );
 });
