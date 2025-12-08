@@ -118,7 +118,7 @@ const ThemeManager = {
     },
     applyTheme: (theme) => {
         document.documentElement.setAttribute('data-theme', theme);
-        uiRefs.themeIcon.textContent = theme === 'dark' ? 'ÔśÇ´ŞĆ' : '­čîÖ';
+        uiRefs.themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
         appSettings.theme = theme;
         if (uiRefs.themeMeta) {
             uiRefs.themeMeta.content = getComputedStyle(document.documentElement).getPropertyValue('--theme-color-meta').trim();
