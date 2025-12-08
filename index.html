@@ -10,8 +10,7 @@
       https://www.gstatic.com/firebasejs/ 
       https://www.google.com/recaptcha/ 
       https://www.gstatic.com/recaptcha/
-      https://cdn.jsdelivr.net
-      'unsafe-inline';
+      https://cdn.jsdelivr.net;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: blob: https:;
@@ -357,17 +356,29 @@
       gap: 12px;
     }
 
+    /* TABUĽKA - Fixné šírky stĺpcov ako v pôvodnej aplikácii */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 20px;
+      border: 1px solid var(--table-border-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+    
     table { 
       width: 100%; 
       border-collapse: collapse; 
-      margin-top: 15px;
     }
+    
     th, td {
       padding: 10px 12px;
       border: 1px solid var(--table-border-color);
       text-align: left;
       font-size: 0.875rem;
+      vertical-align: middle;
     }
+    
     th {
       background-color: var(--table-header-bg-color);
       font-weight: 600;
@@ -376,6 +387,18 @@
       top: 0;
       z-index: 10;
     }
+    
+    /* Fixné šírky stĺpcov - rovnaké ako pôvodná aplikácia */
+    th:nth-child(1), td:nth-child(1) { width: 95px; } /* Deň */
+    th:nth-child(2), td:nth-child(2) { width: 105px; } /* Príchod */
+    th:nth-child(3), td:nth-child(3) { width: 105px; } /* Odchod */
+    th:nth-child(4), td:nth-child(4) { width: 85px; } /* Prestávka */
+    th:nth-child(5), td:nth-child(5) { width: 110px; } /* Odpracované */
+    th:nth-child(6), td:nth-child(6) { min-width: 150px; width: auto; } /* Projekt */
+    th:nth-child(7), td:nth-child(7) { min-width: 200px; width: auto; } /* Poznámka */
+    th:nth-child(8), td:nth-child(8) { width: 90px; } /* Hrubá (€) */
+    th:nth-child(9), td:nth-child(9) { width: 90px; } /* Čistá (€) */
+    th:nth-child(10), td:nth-child(10) { width: 45px; text-align: center; } /* Akcie */
     
     tr.weekend-day {
       background-color: rgba(124, 58, 237, 0.05);
@@ -392,21 +415,29 @@
       border-color: rgba(255, 255, 255, 0.3);
     }
     
+    /* Time input wrapper - väčšie inputy */
     .time-input-wrapper {
       display: flex;
       gap: 5px;
       align-items: center;
     }
-    .time-input {
-      flex: 1;
+    
+    .time-input-wrapper input[type="tel"] {
+      flex-grow: 1;
+      min-width: 65px;
+      padding: 8px 6px;
+      font-size: 0.875rem;
     }
+    
     .time-btn {
       background: var(--btn-secondary-bg);
       border: none;
       border-radius: 4px;
-      padding: 4px 8px;
+      padding: 4px 5px;
       cursor: pointer;
-      font-size: 1.1em;
+      font-size: 1.1rem;
+      line-height: 1;
+      color: var(--btn-text-color);
       transition: background-color var(--transition-speed);
     }
     .time-btn:hover {
@@ -490,63 +521,57 @@
       text-decoration: underline;
     }
     
-    /* MOBILE OPTIMIZATION - Väčšie inputy a tlačidlá */
+    /* MOBILE OPTIMIZÁCIA - ako v pôvodnej aplikácii */
     @media (max-width: 768px) {
-      body { padding: 8px; }
-      .container { padding: 12px; }
-      h1 { font-size: 1.5rem; }
+      body { padding: 8px; font-size: 0.9rem; }
+      .container { padding: 15px; margin: 10px auto; }
+      h1 { font-size: 1.8rem; }
+      h2 { font-size: 0.95rem; }
       
-      /* Väčšie inputy na mobile */
-      input[type="tel"], 
-      input[type="number"], 
-      input[type="text"], 
-      input[type="email"], 
-      input[type="password"], 
-      select,
-      textarea {
-        padding: 12px 14px;
-        font-size: 1rem;
-        min-height: 44px;
+      th, td { 
+        padding: 8px; 
+        font-size: 0.85rem; 
       }
       
-      /* Väčšie tlačidlá kamier */
-      .time-btn {
-        padding: 8px 12px;
-        font-size: 1.3em;
-        min-width: 44px;
-        min-height: 44px;
-      }
-      
-      /* Tlačidlá na spodku */
       .btn-container { flex-direction: column; }
       .btn { 
         width: 100%;
-        padding: 14px 20px;
-        font-size: 1rem;
+        font-size: 0.9rem;
+        padding: 12px 18px;
+        margin: 5px 0;
       }
       
-      /* Tabuľka */
-      table { 
-        font-size: 0.8rem;
-        display: block;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+      .settings {
+        flex-direction: column;
+        align-items: stretch;
       }
+      .settings div {
+        flex-basis: auto;
+        width: 100%;
+      }
+      #settings-collapsible-content.visible {
+        max-height: 950px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      body { padding: 6px; }
+      .container { padding: 10px; }
+      h1 { font-size: 1.6rem; }
+      h2 { font-size: 0.9rem; }
+      
       th, td { 
-        padding: 8px 6px;
-        min-width: 60px;
+        padding: 7px; 
+        font-size: 0.82rem; 
       }
       
-      /* Špeciálne pre Príchod/Odchod/Prestávka stĺpce */
-      th:nth-child(2), th:nth-child(3), th:nth-child(4),
-      td:nth-child(2), td:nth-child(3), td:nth-child(4) {
-        min-width: 90px;
+      .btn { 
+        font-size: 0.88rem;
+        padding: 11px 16px;
       }
       
-      /* Poznámka a projekt širšie */
-      th:nth-child(6), th:nth-child(7),
-      td:nth-child(6), td:nth-child(7) {
-        min-width: 120px;
+      #settings-collapsible-content.visible {
+        max-height: 1100px;
       }
     }
   </style>
