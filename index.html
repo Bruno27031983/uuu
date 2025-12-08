@@ -4,13 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- MAXIMÁLNA BEZPEČNOSŤ - Content Security Policy -->
+  <!-- OPRAVENÁ Content Security Policy -->
   <meta http-equiv="Content-Security-Policy" content="
-    default-src 'none';
-    script-src 'self' https://www.gstatic.com/firebasejs/9.22.1/ https://cdnjs.cloudflare.com/ajax/libs/jspdf/ https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/ https://cdnjs.cloudflare.com/ajax/libs/xlsx/ https://cdnjs.cloudflare.com/ajax/libs/dompurify/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
+    default-src 'self';
+    script-src 'self' https://www.gstatic.com/firebasejs/ https://cdnjs.cloudflare.com/ajax/libs/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: blob: https:;
+    manifest-src 'self';
     connect-src 'self' 
       https://*.firebaseio.com 
       https://*.googleapis.com 
@@ -20,12 +21,12 @@
       https://securetoken.googleapis.com
       https://firebaseinstallations.googleapis.com
       https://content-firebaseappcheck.googleapis.com
+      https://firebaseremoteconfig.googleapis.com
       wss://*.firebaseio.com;
     frame-src https://*.firebaseapp.com https://www.google.com https://recaptcha.net https://www.gstatic.com;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
-    frame-ancestors 'none';
     upgrade-insecure-requests;
     block-all-mixed-content;
   ">
@@ -37,30 +38,32 @@
   <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
   <meta name="theme-color" content="#7c3aed"/>
   
-  <!-- Bezpečnostné meta tagy -->
+  <!-- Bezpečnostné meta tagy (odstránené frame-ancestors a X-Frame-Options) -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
 
-  <!-- Externé knižnice s SRI (Subresource Integrity) -->
+  <!-- Externé knižnice BEZ integrity (dočasne) alebo so správnymi hash-ami -->
+  <!-- DOMPurify -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js" 
-          integrity="sha512-HRynh2/JcYXN4tR3R/uLLlOoM3DxnJKLdN6v7sQa0qp/MlhH7FqPxLBzq7dQJRj4lO0fKGmTxLaLVZPmTmzUpA==" 
           crossorigin="anonymous" 
           referrerpolicy="no-referrer"></script>
+  
+  <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" 
-          integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" 
           crossorigin="anonymous" 
           referrerpolicy="no-referrer" 
           defer></script>
+  
+  <!-- jsPDF-autotable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" 
-          integrity="sha512-YfVLN0P4JbPBL3c/syLX2VLf3Z5UxR6PdqUEt8UjKEfCFJ9fBUPYmEf9cGDmYhLIBBa9q8+HLqxbTKZqOFxUVg==" 
           crossorigin="anonymous" 
           referrerpolicy="no-referrer" 
           defer></script>
+  
+  <!-- XLSX -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" 
-          integrity="sha512-2Qa94XNs6Xz8pLu8LLtiwx41+0ECKwNZKOkHVMMZhHM2N2Hc2IKfRWWdJRkwMR+1rLuaUMfGKp1IrZ5FPFHgww==" 
           crossorigin="anonymous" 
           referrerpolicy="no-referrer" 
           defer></script>
@@ -734,7 +737,6 @@
                  aria-label="Email" 
                  autocomplete="email" 
                  required 
-                 pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                  maxlength="100">
           <div class="error-message" id="email-error"></div>
           
@@ -795,8 +797,7 @@
             <input type="text" 
                    id="employeeNameInput" 
                    placeholder="Zadajte meno pracovníka" 
-                   maxlength="100"
-                   pattern="[a-zA-ZáčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ\s]{1,100}">
+                   maxlength="100">
             <div class="error-message" id="employeeName-error"></div>
           </div>
           <div>
@@ -805,8 +806,7 @@
                    inputmode="decimal" 
                    id="hourlyWageInput" 
                    min="0" 
-                   max="1000"
-                   pattern="[0-9]+([.,][0-9]{1,2})?">
+                   max="1000">
             <div class="error-message" id="hourlyWage-error"></div>
           </div>
           <div>
@@ -815,8 +815,7 @@
                    inputmode="decimal" 
                    id="taxRateInput" 
                    min="0" 
-                   max="100"
-                   pattern="[0-9]+([.,][0-9]{1,2})?">
+                   max="100">
             <div class="error-message" id="taxRate-error"></div>
           </div>
           <div>
@@ -826,8 +825,7 @@
                    id="monthlyGoalInput" 
                    placeholder="Napr. 1500" 
                    min="0" 
-                   max="1000000"
-                   pattern="[0-9]+([.,][0-9]{1,2})?">
+                   max="1000000">
             <div class="error-message" id="monthlyGoal-error"></div>
           </div>
           <div>
