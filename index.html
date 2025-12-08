@@ -4,18 +4,29 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Content Security Policy -->
+  <!-- Content Security Policy - Bezpečnostná konfigurácia -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' https://cdnjs.cloudflare.com https://www.gstatic.com https://apis.google.com https://www.google.com;
+    script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://www.google.com https://apis.google.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    font-src 'self' https://fonts.gstatic.com;
+    font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: blob: https:;
-    connect-src 'self' https://cdnjs.cloudflare.com https://*.firebaseio.com https://*.googleapis.com https://*.firebaseapp.com https://www.gstatic.com https://apis.google.com https://www.google.com wss://*.firebaseio.com;
-    frame-src 'self' https://*.firebaseapp.com https://www.google.com;
+    connect-src 'self' 
+      https://*.firebaseio.com 
+      https://*.googleapis.com 
+      https://*.cloudfunctions.net
+      https://identitytoolkit.googleapis.com
+      https://*.firebaseapp.com 
+      https://www.gstatic.com
+      https://www.google.com
+      https://securetoken.googleapis.com
+      wss://*.firebaseio.com;
+    frame-src 'self' https://*.firebaseapp.com https://www.google.com https://recaptcha.net https://www.recaptcha.net;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
   ">
 
   <title>Bruno's Calculator Pro</title>
@@ -25,11 +36,29 @@
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
   <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
   <meta name="theme-color" content="#7c3aed"/>
+  
+  <!-- Bezpečnostné meta tagy -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
 
-  <!-- externé knižnice -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
+  <!-- Externé knižnice -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" 
+          integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer" 
+          defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" 
+          integrity="sha512-YfVLN0P4JbPBL3c/syLX2VLf3Z5UxR6PdqUEt8UjKEfCFJ9fBUPYmEf9cGDmYhLIBBa9q8+HLqxbTKZqOFxUVg==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer" 
+          defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" 
+          integrity="sha512-2Qa94XNs6Xz8pLu8LLtiwx41+0ECKwNZKOkHVMMZhHM2N2Hc2IKfRWWdJRkwMR+1rLuaUMfGKp1IrZ5FPFHgww==" 
+          crossorigin="anonymous" 
+          referrerpolicy="no-referrer" 
+          defer></script>
 
   <style>
     :root {
@@ -195,12 +224,12 @@
     th:nth-child(9), td:nth-child(9) { width: 90px;}
     th:nth-child(10), td:nth-child(10) { width: 45px; text-align: center;}
 
-    input[type="tel"], input[type="number"], input[type="text"], select, textarea {
+    input[type="tel"], input[type="number"], input[type="text"], input[type="email"], input[type="password"], select, textarea {
       width: 100%; padding: 9px 12px; box-sizing: border-box; background-color: var(--input-bg-color);
       font-size: 0.9rem; border: 1px solid var(--table-border-color); border-radius: var(--border-radius); vertical-align: middle;
       font-family: var(--font-family); transition: border-color var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed); color: var(--primary-text-color);
     }
-    input[type="tel"]:focus, input[type="number"]:focus, input[type="text"]:focus, select:focus, textarea:focus {
+    input[type="tel"]:focus, input[type="number"]:focus, input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, select:focus, textarea:focus {
       border-color: var(--focus-outline-color); box-shadow: 0 0 0 1px var(--focus-outline-color);
     }
     input[type="tel"].invalid-time, input[type="number"].invalid-value, input[type="text"].invalid-value {
@@ -356,10 +385,10 @@
       <fieldset id="login-fieldset">
         <legend>Prihlásenie / Registrácia</legend>
         <div id="login-form">
-          <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email">
-          <input type="password" id="password" placeholder="Heslo" aria-label="Heslo" autocomplete="current-password">
-          <button id="loginBtn" class="btn export-btn">Prihlásiť sa</button>
-          <button id="registerBtn" class="btn export-btn">Registrovať</button>
+          <input type="email" id="email" placeholder="Email" aria-label="Email" autocomplete="email" required>
+          <input type="password" id="password" placeholder="Heslo (min. 8 znakov)" aria-label="Heslo" autocomplete="current-password" required minlength="8">
+          <button id="loginBtn" class="btn export-btn" type="button">Prihlásiť sa</button>
+          <button id="registerBtn" class="btn export-btn" type="button">Registrovať</button>
           <a href="#" id="resetPasswordLink">Zabudli ste heslo?</a>
         </div>
       </fieldset>
@@ -368,10 +397,11 @@
              style="display: none; justify-content: flex-start; align-items: center; gap: 15px; margin-top:10px; flex-grow: 1;">
           <span id="user-email" style="font-weight:500;"></span>
           <button id="logoutBtn" class="btn reset-btn"
-                  style="padding: 8px 15px; font-size: 0.85rem; margin:0;">Odhlásiť sa</button>
+                  style="padding: 8px 15px; font-size: 0.85rem; margin:0;" type="button">Odhlásiť sa</button>
         </div>
         <button id="themeToggleBtn" class="btn"
                 title="Prepnúť svetlý/tmavý režim"
+                type="button"
                 style="margin-left: auto; background-color: var(--btn-secondary-bg); padding: 8px 12px;">
           <span id="themeIcon">🌙</span>
         </button>
@@ -383,6 +413,7 @@
 
     <div class="settings">
       <button id="toggleSettingsBtn" class="btn"
+              type="button"
               aria-expanded="false"
               aria-controls="settings-collapsible-content">
         Zobraziť nastavenia aplikácie ▼
@@ -392,19 +423,19 @@
           <legend>Základné nastavenia</legend>
           <div>
             <label for="employeeNameInput">Meno pracovníka:</label>
-            <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka">
+            <input type="text" id="employeeNameInput" placeholder="Zadajte meno pracovníka" maxlength="100">
           </div>
           <div>
             <label for="hourlyWageInput">Hodinová mzda (€):</label>
-            <input type="text" inputmode="decimal" id="hourlyWageInput">
+            <input type="text" inputmode="decimal" id="hourlyWageInput" min="0" max="1000">
           </div>
           <div>
             <label for="taxRateInput">Daňové percento (%):</label>
-            <input type="text" inputmode="decimal" id="taxRateInput">
+            <input type="text" inputmode="decimal" id="taxRateInput" min="0" max="100">
           </div>
           <div>
             <label for="monthlyGoalInput">Mesačný cieľ zárobku (€):</label>
-            <input type="text" inputmode="decimal" id="monthlyGoalInput" placeholder="Napr. 1500">
+            <input type="text" inputmode="decimal" id="monthlyGoalInput" placeholder="Napr. 1500" min="0" max="1000000">
           </div>
           <div>
             <label for="decimalPlacesSelect">Počet desatinných miest:</label>
@@ -453,12 +484,12 @@
     <div id="localStorageIndicator"></div>
 
     <div class="btn-container">
-      <button id="exportPDFBtn" class="btn export-btn">Exportovať do PDF</button>
-      <button id="sendPDFBtn" class="btn export-btn">Odoslať PDF (s pozn.)</button>
-      <button id="createBackupBtn" class="btn backup-btn">Vytvoriť zálohu (XLSX)</button>
-      <button id="restoreBackupBtn" class="btn backup-btn">Obnoviť zálohu (XLSX)</button>
-      <button id="loadFromFirestoreBtn" class="btn export-btn">Načítať z Cloudu</button>
-      <button id="clearMonthBtn" class="btn warning-btn"
+      <button id="exportPDFBtn" class="btn export-btn" type="button">Exportovať do PDF</button>
+      <button id="sendPDFBtn" class="btn export-btn" type="button">Odoslať PDF (s pozn.)</button>
+      <button id="createBackupBtn" class="btn backup-btn" type="button">Vytvoriť zálohu (XLSX)</button>
+      <button id="restoreBackupBtn" class="btn backup-btn" type="button">Obnoviť zálohu (XLSX)</button>
+      <button id="loadFromFirestoreBtn" class="btn export-btn" type="button">Načítať z Cloudu</button>
+      <button id="clearMonthBtn" class="btn warning-btn" type="button"
               title="Vymazať všetky dáta pre aktuálny mesiac">Vymazať Mesiac</button>
     </div>
   </div>
@@ -467,7 +498,7 @@
   <div id="errorNotification" role="alert" aria-live="assertive">Nastala chyba.</div>
   <div id="warningNotification" role="alert" aria-live="assertive">Upozornenie.</div>
 
-  <!-- externý modulový skript -->
+  <!-- Externý modulový skript -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
