@@ -289,7 +289,7 @@ window.changeDecimalPlaces = function () {
 function recalculateAllRowsAndUpdateTotal() { const days = getDaysInMonth(currentMonth, currentYear); for (let i = 1; i <= days; i++) calculateRow(i); calculateTotal(); }
 
 function updatePageTitleAndGreeting() {
-    const wavingHand = "­čĹő"; const namePart = appSettings.employeeName ? `${appSettings.employeeName.split(' ')[0]}` : "";
+    const wavingHand = "👋"; const namePart = appSettings.employeeName ? `${appSettings.employeeName.split(' ')[0]}` : "";
     uiRefs.mainTitle.textContent = `Vitaj${namePart ? ' ' + namePart : ''} ${wavingHand}`;
     const monthName = MONTH_NAMES[currentMonth]; const titleNamePart = appSettings.employeeName ? `${appSettings.employeeName} - ` : "";
     document.title = `${titleNamePart}${monthName} ${currentYear} | Bruno's Calc Pro+`; uiRefs.subTitle.textContent = `${monthName} ${currentYear}`;
