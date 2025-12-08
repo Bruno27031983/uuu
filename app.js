@@ -7,7 +7,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js';
 
-// POZN├üMKA: TOTO S├Ü PLACEHOLDER K─Ż├Ü─îE. Nahra─Ćte va┼íimi skuto─Źn├Żmi k─ż├║─Źmi pre produkciu.
+// POZNÁMKA: TOTO S├Ü PLACEHOLDER K─Ż├ÜČE. Nahra─Ćte vašimi skutočnými k─żúčmi pre produkciu.
 const firebaseConfig = {
     apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
     authDomain: "uuuuu-f7ef9.firebaseapp.com",
@@ -16,7 +16,7 @@ const firebaseConfig = {
     messagingSenderId: "456105865458",
     appId: "1:456105865458:web:101f0a4dcb455f174b606b",
 };
-// POZN├üMKA: TOTO JE PLACEHOLDER K─Ż├Ü─î. Nahra─Ćte va┼íim skuto─Źn├Żm k─ż├║─Źom pre produkciu.
+// POZNÁMKA: TOTO JE PLACEHOLDER K─Ż├ÜČ. Nahra─Ćte vašim skutočným k─żúčom pre produkciu.
 const RECAPTCHA_V3_SITE_KEY = "6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v";
 
 
@@ -29,7 +29,7 @@ try {
     });
 } catch (e) {
     console.warn("App Check initialization failed.", e);
-    showWarningNotification("Inicializ├ícia App Check zlyhala. Niektor├ę funkcie m├┤┼żu by┼ą obmedzen├ę.");
+    showWarningNotification("Inicializácia App Check zlyhala. Niektoré funkcie m├┤┼żu byť obmedzené.");
 }
 */
 const auth = getAuth(app);
@@ -41,7 +41,7 @@ try {
     });
 } catch (error) {
     console.warn("Failed to initialize Firestore with persistent cache. Falling back to in-memory cache.", error);
-    showWarningNotification("Chyba pri inicializ├ícii offline ├║lo┼żiska. D├íta nebud├║ dostupn├ę offline.");
+    showWarningNotification("Chyba pri inicializácii offline úlo┼żiska. Dáta nebudú dostupné offline.");
     db = initializeFirestore(app, {}); // Fallback to default (in-memory) cache
 }
 
@@ -86,13 +86,13 @@ const currentDate = new Date();
 let currentMonth = currentDate.getMonth();
 let currentYear = currentDate.getFullYear();
 
-let appSettings = { // Roz┼í├şren├ę appSettings
+let appSettings = { // Rozš├şrené appSettings
     decimalPlaces: 2, employeeName: '', hourlyWage: 10, taxRate: 0.02,
     theme: 'light', // NOV├ë: 'light' alebo 'dark'
-    monthlyEarningsGoal: null // NOV├ë: cie─żov├í suma alebo null
+    monthlyEarningsGoal: null // NOV├ë: cie─żová suma alebo null
 };
 
-const MONTH_NAMES = ["Janu├ír", "Febru├ír", "Marec", "Apr├şl", "M├íj", "J├║n", "J├║l", "August", "September", "Okt├│ber", "November", "December"];
+const MONTH_NAMES = ["Január", "Február", "Marec", "Apr├şl", "Máj", "Jún", "Júl", "August", "September", "Október", "November", "December"];
 const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "┼át", "Pi", "So"];
 const PENDING_SYNC_MONTHS_LS_KEY = 'pendingSyncMonthsList';
 
@@ -153,11 +153,11 @@ const debounce = (func, wait) => { let timeout; return (...args) => { clearTimeo
 function isValidTimeFormat(timeString) { return typeof timeString === 'string' && /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeString); }
 
 function showNotification(id, message, duration = 3500) { const notification = document.getElementById(id); if (!notification) { console.warn(`Notification element with ID '${id}' not found.`); return; } notification.textContent = message; notification.classList.add('show'); setTimeout(() => notification.classList.remove('show'), duration); }
-window.showSaveNotification = (message = 'D├íta boli ├║spe┼íne ulo┼żen├ę.') => showNotification('saveNotification', message);
+window.showSaveNotification = (message = 'Dáta boli úspešne ulo┼żené.') => showNotification('saveNotification', message);
 window.showErrorNotification = (message) => showNotification('errorNotification', message, 5000);
 window.showWarningNotification = (message) => showNotification('warningNotification', message, 4500);
 
-function setLoadingState(button, isLoading, textParam = "Sprac├║vam...") {
+function setLoadingState(button, isLoading, textParam = "Spracúvam...") {
     if (!button) return;
     if (isLoading) {
         button.disabled = true;
@@ -181,7 +181,7 @@ function loadAppSettingsFromLocalStorage() {
     appSettings.monthlyEarningsGoal = localStorage.getItem('monthlyEarningsGoal') ? parseFloat(localStorage.getItem('monthlyEarningsGoal')) : null;
 }
 function saveAppSettingToLocalStorage(key, value) { localStorage.setItem(key, value); appSettings[key] = value; }
-async function saveAppSettingsToFirestore() { if (!currentUser || !navigator.onLine) return; const userDocRef = doc(db, 'users', currentUser.uid); try { await setDoc(userDocRef, { appSettings: appSettings }, { merge: true }); } catch (error) { console.error("Error saving app settings to Firestore:", error); showErrorNotification("Nepodarilo sa ulo┼żi┼ą nastavenia aplik├ície do cloudu."); } }
+async function saveAppSettingsToFirestore() { if (!currentUser || !navigator.onLine) return; const userDocRef = doc(db, 'users', currentUser.uid); try { await setDoc(userDocRef, { appSettings: appSettings }, { merge: true }); } catch (error) { console.error("Error saving app settings to Firestore:", error); showErrorNotification("Nepodarilo sa ulo┼żiť nastavenia aplikácie do cloudu."); } }
 const debouncedSaveAppSettingsToFirestore = debounce(saveAppSettingsToFirestore, 1800);
 
 async function loadUserAppSettingsFromFirestore() {
@@ -205,7 +205,7 @@ async function loadUserAppSettingsFromFirestore() {
             ThemeManager.applyTheme(appSettings.theme);
             return true;
         }
-    } catch (error) { console.error("Error loading app settings from Firestore:", error); showErrorNotification("Chyba na─Ź├ştania nastaven├ş aplik├ície z cloudu."); }
+    } catch (error) { console.error("Error loading app settings from Firestore:", error); showErrorNotification("Chyba nač├ştania nastaven├ş aplikácie z cloudu."); }
     return false;
 }
 
@@ -270,12 +270,12 @@ const handleWageOrTaxOrGoalBlur = function (inputElement) {
         if (!isNaN(value) && value >= 0) {
             appSettings.hourlyWage = value; inputElement.value = value.toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1);
             saveAppSettingToLocalStorage('hourlyWage', appSettings.hourlyWage);
-        } else { inputElement.value = (appSettings.hourlyWage || 0).toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1); showErrorNotification("Neplatn├í hodinov├í mzda."); inputElement.classList.add('invalid-value'); validChange = false; }
+        } else { inputElement.value = (appSettings.hourlyWage || 0).toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1); showErrorNotification("Neplatná hodinová mzda."); inputElement.classList.add('invalid-value'); validChange = false; }
     } else if (id === 'taxRateInput') {
         if (!isNaN(value) && value >= 0 && value <= 100) {
             appSettings.taxRate = value / 100; inputElement.value = value.toFixed(1);
             saveAppSettingToLocalStorage('taxRate', appSettings.taxRate);
-        } else { inputElement.value = ((appSettings.taxRate || 0) * 100).toFixed(1); showErrorNotification("Neplatn├ę da┼łov├ę percento."); inputElement.classList.add('invalid-value'); validChange = false; }
+        } else { inputElement.value = ((appSettings.taxRate || 0) * 100).toFixed(1); showErrorNotification("Neplatné daňové percento."); inputElement.classList.add('invalid-value'); validChange = false; }
     }
     if (validChange) { recalculateAllRowsAndUpdateTotal(); debouncedSaveAppSettingsToFirestore(); }
 }
@@ -296,38 +296,38 @@ function updatePageTitleAndGreeting() {
 }
 function updateLocalStorageSizeIndicator() {
     let total = 0; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); total += (key.length + (localStorage.getItem(key)?.length || 0)) * 2; }
-    uiRefs.localStorageIndicator.textContent = `Lok├ílne ulo┼żen├ę: ~${(total / 1024).toFixed(1)}KB`;
+    uiRefs.localStorageIndicator.textContent = `Lokálne ulo┼żené: ~${(total / 1024).toFixed(1)}KB`;
 }
 
 const authErrorMap = {
-    'auth/invalid-email': 'Neplatn├Ż form├ít emailu.', 'auth/user-disabled': 'Tento ├║─Źet bol deaktivovan├Ż.',
-    'auth/user-not-found': 'Pou┼ż├şvate─ż s t├Żmto emailom nebol n├íjden├Ż.', 'auth/wrong-password': 'Nespr├ívne heslo.',
-    'auth/email-already-in-use': 'Tento email je u┼ż zaregistrovan├Ż.', 'auth/weak-password': 'Heslo je pr├şli┼í slab├ę (mus├ş ma┼ą aspo┼ł 6 znakov).',
-    'auth/requires-recent-login': 'Vy┼żaduje sa ned├ívne prihl├ísenie. Odhl├íste sa a prihl├íste znova.',
-    'auth/network-request-failed': 'Chyba sie┼ąov├ęho pripojenia. Skontrolujte internetov├ę pripojenie.',
-    'auth/too-many-requests': 'Pr├şli┼í ve─ża ne├║spe┼ín├Żch pokusov o prihl├ísenie. Sk├║ste nesk├┤r.', 'auth/missing-email': 'Pros├şm, zadajte emailov├║ adresu.',
+    'auth/invalid-email': 'Neplatný formát emailu.', 'auth/user-disabled': 'Tento účet bol deaktivovaný.',
+    'auth/user-not-found': 'Pou┼ż├şvate─ż s týmto emailom nebol nájdený.', 'auth/wrong-password': 'Nesprávne heslo.',
+    'auth/email-already-in-use': 'Tento email je u┼ż zaregistrovaný.', 'auth/weak-password': 'Heslo je pr├şliš slabé (mus├ş mať aspoň 6 znakov).',
+    'auth/requires-recent-login': 'Vy┼żaduje sa nedávne prihlásenie. Odhláste sa a prihláste znova.',
+    'auth/network-request-failed': 'Chyba sieťového pripojenia. Skontrolujte internetové pripojenie.',
+    'auth/too-many-requests': 'Pr├şliš ve─ża neúspešných pokusov o prihlásenie. Skúste nesk├┤r.', 'auth/missing-email': 'Pros├şm, zadajte emailovú adresu.',
 };
-function mapFirebaseAuthError(code) { return authErrorMap[code] || `Nezn├íma chyba (${code}). Sk├║ste pros├şm znova.`; }
+function mapFirebaseAuthError(code) { return authErrorMap[code] || `Neznáma chyba (${code}). Skúste pros├şm znova.`; }
 window.loginUser = async function () {
     const btn = event.target; setLoadingState(btn, true, "Prihlasujem...");
-    if (!navigator.onLine) { showErrorNotification('Ste offline. Prihl├ísenie je mo┼żn├ę iba v online re┼żime.'); setLoadingState(btn, false, "Prihl├ísi┼ą sa"); return; }
+    if (!navigator.onLine) { showErrorNotification('Ste offline. Prihlásenie je mo┼żné iba v online re┼żime.'); setLoadingState(btn, false, "Prihlásiť sa"); return; }
     const email = document.getElementById('email').value; const password = document.getElementById('password').value;
-    if (!email || !password) { showErrorNotification('Pros├şm, zadajte email aj heslo.'); setLoadingState(btn, false, "Prihl├ísi┼ą sa"); return; }
-    try { await signInWithEmailAndPassword(auth, email, password); showSaveNotification('├Üspe┼íne prihl├ísen├Ż.'); }
-    catch (error) { showErrorNotification('Chyba pri prihl├ísen├ş: ' + mapFirebaseAuthError(error.code)); }
-    finally { setLoadingState(btn, false, "Prihl├ísi┼ą sa"); }
+    if (!email || !password) { showErrorNotification('Pros├şm, zadajte email aj heslo.'); setLoadingState(btn, false, "Prihlásiť sa"); return; }
+    try { await signInWithEmailAndPassword(auth, email, password); showSaveNotification('├Üspešne prihlásený.'); }
+    catch (error) { showErrorNotification('Chyba pri prihlásen├ş: ' + mapFirebaseAuthError(error.code)); }
+    finally { setLoadingState(btn, false, "Prihlásiť sa"); }
 };
 window.registerUser = async function () {
     const btn = event.target; setLoadingState(btn, true, "Registrujem...");
-    if (!navigator.onLine) { showErrorNotification('Ste offline. Registr├ícia je mo┼żn├í iba v online re┼żime.'); setLoadingState(btn, false, "Registrova┼ą"); return; }
+    if (!navigator.onLine) { showErrorNotification('Ste offline. Registrácia je mo┼żná iba v online re┼żime.'); setLoadingState(btn, false, "Registrovať"); return; }
     const email = document.getElementById('email').value; const password = document.getElementById('password').value;
-    if (!email || !password) { showErrorNotification('Pros├şm, zadajte email aj heslo.'); setLoadingState(btn, false, "Registrova┼ą"); return; }
-    if (password.length < 6) { showErrorNotification('Heslo mus├ş ma┼ą aspo┼ł 6 znakov.'); setLoadingState(btn, false, "Registrova┼ą"); return; }
+    if (!email || !password) { showErrorNotification('Pros├şm, zadajte email aj heslo.'); setLoadingState(btn, false, "Registrovať"); return; }
+    if (password.length < 6) { showErrorNotification('Heslo mus├ş mať aspoň 6 znakov.'); setLoadingState(btn, false, "Registrovať"); return; }
     try {
         await createUserWithEmailAndPassword(auth, email, password); await createUserCollectionAndSettings();
-        showSaveNotification('├Üspe┼íne zaregistrovan├Ż a prihl├ísen├Ż.');
-    } catch (error) { showErrorNotification('Chyba pri registr├ícii: ' + mapFirebaseAuthError(error.code)); }
-    finally { setLoadingState(btn, false, "Registrova┼ą"); }
+        showSaveNotification('├Üspešne zaregistrovaný a prihlásený.');
+    } catch (error) { showErrorNotification('Chyba pri registrácii: ' + mapFirebaseAuthError(error.code)); }
+    finally { setLoadingState(btn, false, "Registrovať"); }
 };
 async function createUserCollectionAndSettings() {
     if (auth.currentUser) {
@@ -338,38 +338,38 @@ async function createUserCollectionAndSettings() {
         batch.set(userDocRef, { email: auth.currentUser.email, createdAt: new Date().toISOString(), appSettings: appSettings }, { merge: true });
         batch.set(initialMonthDocRef, { data: [], lastUpdated: new Date().toISOString() }, { merge: true });
         try { await batch.commit(); }
-        catch (error) { console.error("Error creating user collection/settings:", error); showErrorNotification('Nepodarilo sa inicializova┼ą pou┼ż├şvate─żsk├ę d├íta v cloude.'); }
+        catch (error) { console.error("Error creating user collection/settings:", error); showErrorNotification('Nepodarilo sa inicializovať pou┼ż├şvate─żské dáta v cloude.'); }
     }
 }
 window.logoutUser = async function () {
     const btn = event.target; setLoadingState(btn, true, "Odhlasujem...");
     if (currentListenerUnsubscribe) { currentListenerUnsubscribe(); currentListenerUnsubscribe = null; }
-    try { await signOut(auth); showSaveNotification('├Üspe┼íne odhl├ísen├Ż.'); }
-    catch (error) { showErrorNotification('Chyba pri odhl├ísen├ş: ' + error.message); }
-    finally { setLoadingState(btn, false, "Odhl├ísi┼ą sa"); }
+    try { await signOut(auth); showSaveNotification('├Üspešne odhlásený.'); }
+    catch (error) { showErrorNotification('Chyba pri odhlásen├ş: ' + error.message); }
+    finally { setLoadingState(btn, false, "Odhlásiť sa"); }
 };
 window.resetUserPassword = async function () {
-    if (!navigator.onLine) { showErrorNotification('Ste offline. Obnova hesla je mo┼żn├í iba v online re┼żime.'); return; }
+    if (!navigator.onLine) { showErrorNotification('Ste offline. Obnova hesla je mo┼żná iba v online re┼żime.'); return; }
     const emailInput = document.getElementById('email'); const email = emailInput.value;
-    if (!email) { emailInput.style.border = '1px solid red'; showErrorNotification('Pros├şm, zadajte Va┼íu emailov├║ adresu pre obnovu hesla.'); setTimeout(() => { emailInput.style.border = ''; }, 3000); return; }
+    if (!email) { emailInput.style.border = '1px solid red'; showErrorNotification('Pros├şm, zadajte Vašu emailovú adresu pre obnovu hesla.'); setTimeout(() => { emailInput.style.border = ''; }, 3000); return; }
     emailInput.style.border = '';
-    try { await sendPasswordResetEmail(auth, email); showSaveNotification(`Email na obnovu hesla bol odoslan├Ż na adresu ${email}. Skontrolujte si doru─Źen├║ po┼ítu.`); }
+    try { await sendPasswordResetEmail(auth, email); showSaveNotification(`Email na obnovu hesla bol odoslaný na adresu ${email}. Skontrolujte si doručenú poštu.`); }
     catch (error) { showErrorNotification('Chyba pri odosielan├ş emailu na obnovu hesla: ' + mapFirebaseAuthError(error.code)); }
 };
 function updateUIForAuthStateChange() {
     const isLoggedIn = !!currentUser;
     if (uiRefs.loginFieldset) uiRefs.loginFieldset.style.display = isLoggedIn ? 'none' : 'block';
     uiRefs.userInfo.style.display = isLoggedIn ? 'flex' : 'none';
-    if (isLoggedIn && uiRefs.userEmailSpan) uiRefs.userEmailSpan.textContent = `Prihl├ísen├Ż: ${currentUser.email}`;
+    if (isLoggedIn && uiRefs.userEmailSpan) uiRefs.userEmailSpan.textContent = `Prihlásený: ${currentUser.email}`;
     const logoutBtn = uiRefs.userInfo.querySelector('.reset-btn');
-    if (logoutBtn && logoutBtn.classList.contains('is-loading')) { setLoadingState(logoutBtn, false, "Odhl├ísi┼ą sa"); }
+    if (logoutBtn && logoutBtn.classList.contains('is-loading')) { setLoadingState(logoutBtn, false, "Odhlásiť sa"); }
     updateAppBadge(getPendingSyncCount());
 }
 
 function setupFirestoreWorkDataListener() {
     if (currentListenerUnsubscribe) currentListenerUnsubscribe();
     if (!currentUser) { loadWorkDataFromLocalStorage(); return; }
-    if (!navigator.onLine) { loadWorkDataFromLocalStorage(); showWarningNotification("Ste offline. Zobrazujem lok├ílne d├íta. Synchroniz├ícia prebehne po pripojen├ş."); return; }
+    if (!navigator.onLine) { loadWorkDataFromLocalStorage(); showWarningNotification("Ste offline. Zobrazujem lokálne dáta. Synchronizácia prebehne po pripojen├ş."); return; }
     const docId = getFirestoreDocId(currentYear, currentMonth);
     const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
     currentListenerUnsubscribe = onSnapshot(docRef, (docSnap) => {
@@ -386,7 +386,7 @@ function setupFirestoreWorkDataListener() {
             const pendingKey = getPendingSyncKeyForMonth(docId); if (pendingKey) localStorage.removeItem(pendingKey);
             removeMonthFromPendingList(docId); parseAndApplyWorkData(null);
         }
-    }, (error) => { console.error("Firestore listener error:", error); showErrorNotification(`Chyba synchroniz├ície d├ít s cloudom: ${error.message}. Zobrazujem lok├ílne ulo┼żen├ę d├íta.`); loadWorkDataFromLocalStorage(); });
+    }, (error) => { console.error("Firestore listener error:", error); showErrorNotification(`Chyba synchronizácie dát s cloudom: ${error.message}. Zobrazujem lokálne ulo┼żené dáta.`); loadWorkDataFromLocalStorage(); });
     syncPendingWorkData();
 }
 function getFirestoreDocId(year, month) { return `${year}-${String(month + 1).padStart(2, '0')}`; }
@@ -440,13 +440,13 @@ async function syncPendingWorkData() {
         const pendingDataString = localStorage.getItem(pendingKey);
         if (pendingDataString) {
             try { const dataToSync = JSON.parse(pendingDataString); dataToSync.lastUpdated = new Date().toISOString(); await saveWorkDataToFirestore(dataToSync, monthId); localStorage.removeItem(pendingKey); successfullySyncedMonths.push(monthId); }
-            catch (error) { console.error(`Chyba synchroniz├ície d├ít pre mesiac ${monthId}:`, error); failedMonths.push(monthId); }
+            catch (error) { console.error(`Chyba synchronizácie dát pre mesiac ${monthId}:`, error); failedMonths.push(monthId); }
         } else { successfullySyncedMonths.push(monthId); }
     }
     if (successfullySyncedMonths.length > 0) { let currentPendingList = getPendingSyncMonths(); currentPendingList = currentPendingList.filter(id => !successfullySyncedMonths.includes(id)); savePendingSyncMonths(currentPendingList); }
     const finalPendingCount = getPendingSyncCount();
-    if (pendingMonths.length > 0 && finalPendingCount === 0 && failedMonths.length === 0) { showSaveNotification('V┼íetky lok├ílne zmeny boli ├║spe┼íne synchronizovan├ę s cloudom.'); }
-    else if (finalPendingCount > 0 || failedMonths.length > 0) { showWarningNotification(`Niektor├ę d├íta sa nepodarilo synchronizova┼ą. Zost├íva ${finalPendingCount} mesiac(ov) na synchroniz├íciu.`); }
+    if (pendingMonths.length > 0 && finalPendingCount === 0 && failedMonths.length === 0) { showSaveNotification('Všetky lokálne zmeny boli úspešne synchronizované s cloudom.'); }
+    else if (finalPendingCount > 0 || failedMonths.length > 0) { showWarningNotification(`Niektoré dáta sa nepodarilo synchronizovať. Zostáva ${finalPendingCount} mesiac(ov) na synchronizáciu.`); }
     updateAppBadge(finalPendingCount);
 }
 
@@ -468,7 +468,7 @@ function parseAndApplyWorkData(dataString) {
                     calculateRow(dayNum);
                 });
             } else { resetTableInputsOnly(); }
-        } catch (error) { console.error("Error parsing work data:", error); showErrorNotification('Chyba pri spracovan├ş ulo┼żen├Żch d├ít: ' + error.message); resetTableInputsOnly(); }
+        } catch (error) { console.error("Error parsing work data:", error); showErrorNotification('Chyba pri spracovan├ş ulo┼żených dát: ' + error.message); resetTableInputsOnly(); }
     } else { resetTableInputsOnly(); }
     calculateTotal();
 }
@@ -494,22 +494,22 @@ function createTable() {
         if (isCurrDay) row.classList.add('current-day');
         if (isWeekend(currentYear, currentMonth, i)) row.classList.add('weekend-day');
         row.innerHTML = `
-                <td>${i}. ${getDayName(currentYear, currentMonth, i)} ${isCurrDay ? '<span aria-hidden="true" style="font-style: normal; filter: grayscale(0.1) brightness(1.3);"> ÔşÉ</span>' : ''}</td>
+                <td>${i}. ${getDayName(currentYear, currentMonth, i)} ${isCurrDay ? '<span aria-hidden="true" style="font-style: normal; filter: grayscale(0.1) brightness(1.3);"> ⭐</span>' : ''}</td>
                 <td><div class="time-input-wrapper">
-                    <input type="tel" id="start-${dayStr}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" aria-label="Pr├şchod d┼ła ${dayStr}">
-                    <button class="time-btn" id="btn-start-${dayStr}" title="Zada┼ą aktu├ílny ─Źas" aria-label="Zada┼ą aktu├ílny ─Źas pre pr├şchod d┼ła ${dayStr}">­čĽĺ</button>
+                    <input type="tel" id="start-${dayStr}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" aria-label="Pr├şchod dňa ${dayStr}">
+                    <button class="time-btn" id="btn-start-${dayStr}" title="Zadať aktuálny čas" aria-label="Zadať aktuálny čas pre pr├şchod dňa ${dayStr}">🕒</button>
                 </div></td>
                 <td><div class="time-input-wrapper">
-                    <input type="tel" id="end-${dayStr}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" aria-label="Odchod d┼ła ${dayStr}">
-                    <button class="time-btn" id="btn-end-${dayStr}" title="Zada┼ą aktu├ílny ─Źas" aria-label="Zada┼ą aktu├ílny ─Źas pre odchod d┼ła ${dayStr}">­čĽĺ</button>
+                    <input type="tel" id="end-${dayStr}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" aria-label="Odchod dňa ${dayStr}">
+                    <button class="time-btn" id="btn-end-${dayStr}" title="Zadať aktuálny čas" aria-label="Zadať aktuálny čas pre odchod dňa ${dayStr}">🕒</button>
                 </div></td>
-                <td><input type="text" inputmode="decimal" id="break-${dayStr}" placeholder="hod." aria-label="Prest├ívka v hodin├ích d┼ła ${dayStr}"></td>
+                <td><input type="text" inputmode="decimal" id="break-${dayStr}" placeholder="hod." aria-label="Prestávka v hodinách dňa ${dayStr}"></td>
                 <td id="total-${dayStr}">0h 0m (${(0).toFixed(appSettings.decimalPlaces)} h)</td>
-                <td><input type="text" id="project-${dayStr}" class="project-input" placeholder="Projekt/├Üloha" aria-label="Projekt alebo ├║loha pre de┼ł ${dayStr}"></td>
-                <td><textarea id="note-${dayStr}" placeholder="Pozn├ímka..." aria-label="Pozn├ímka ku d┼łu ${dayStr}"></textarea></td>
-                <td><input type="number" id="gross-${dayStr}" readonly aria-label="Hrub├í mzda d┼ła ${dayStr}" step="0.01"></td>
-                <td><input type="number" id="net-${dayStr}" readonly aria-label="─îist├í mzda d┼ła ${dayStr}" step="0.01"></td>
-                <td style="text-align:center;"><button class="btn reset-btn" id="btn-reset-${dayStr}" style="padding:4px 6px; font-size:0.8rem;" aria-label="Resetova┼ą ├║daje pre de┼ł ${dayStr}">X</button></td>`;
+                <td><input type="text" id="project-${dayStr}" class="project-input" placeholder="Projekt/├Üloha" aria-label="Projekt alebo úloha pre deň ${dayStr}"></td>
+                <td><textarea id="note-${dayStr}" placeholder="Poznámka..." aria-label="Poznámka ku dňu ${dayStr}"></textarea></td>
+                <td><input type="number" id="gross-${dayStr}" readonly aria-label="Hrubá mzda dňa ${dayStr}" step="0.01"></td>
+                <td><input type="number" id="net-${dayStr}" readonly aria-label="Čistá mzda dňa ${dayStr}" step="0.01"></td>
+                <td style="text-align:center;"><button class="btn reset-btn" id="btn-reset-${dayStr}" style="padding:4px 6px; font-size:0.8rem;" aria-label="Resetovať údaje pre deň ${dayStr}">X</button></td>`;
         fragment.appendChild(row);
 
         const startInput = row.querySelector(`#start-${dayStr}`);
@@ -568,7 +568,7 @@ window.validateAndFormatTimeBlur = function (input, day) {
     formatTimeInputOnly(input); const isValid = isValidTimeFormat(input.value);
     const isDefaultSettingInput = input.id.startsWith('default');
     if (isDefaultSettingInput) { input.classList.toggle('invalid-time', input.value.length > 0 && !isValid); }
-    else { input.classList.toggle('invalid-time', input.value.length > 0 && !isValid); if (input.value.length > 0 && !isValid && day) { showWarningNotification(`Neplatn├Ż form├ít ─Źasu pre ${input.id.startsWith('start') ? 'pr├şchod' : 'odchod'} d┼ła ${day}. Pou┼żite form├ít HH:MM.`); } if (day) { calculateRow(day); } }
+    else { input.classList.toggle('invalid-time', input.value.length > 0 && !isValid); if (input.value.length > 0 && !isValid && day) { showWarningNotification(`Neplatný formát času pre ${input.id.startsWith('start') ? 'pr├şchod' : 'odchod'} dňa ${day}. Pou┼żite formát HH:MM.`); } if (day) { calculateRow(day); } }
 }
 function formatTimeInputOnly(input) {
     const rawValue = input.value; let digits = rawValue.replace(/[^\d]/g, ''); let formattedValue = "";
@@ -580,7 +580,7 @@ window.handleBreakLiveInput = function (inputElement, day) { calculateRow(day); 
 window.validateBreakInputOnBlur = function (day) {
     const breakInput = document.getElementById(`break-${day}`); let value = breakInput.value.replace(',', '.'); const numericValue = parseFloat(value); breakInput.classList.remove('invalid-value');
     if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) { /* valid */ }
-    else { breakInput.value = ''; breakInput.classList.add('invalid-value'); showWarningNotification(`Neplatn├í hodnota pre prest├ívku d┼ła ${day}.`); }
+    else { breakInput.value = ''; breakInput.classList.add('invalid-value'); showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}.`); }
     calculateRow(day);
 }
 window.handleNoteInput = function (textarea) { autoResizeTextarea(textarea); }
@@ -610,30 +610,30 @@ function calculateRow(day) {
     const netSalary = grossSalary * (1 - currentTaxRate); netInput.value = Math.max(0, netSalary).toFixed(appSettings.decimalPlaces);
 }
 window.resetRow = function (day) {
-    if (!confirm(`Naozaj chcete vymaza┼ą z├íznam pre ${day}. de┼ł? T├íto akcia je nezvratn├í.`)) return;
+    if (!confirm(`Naozaj chcete vymazať záznam pre ${day}. deň? Táto akcia je nezvratná.`)) return;
     const dayStr = String(day); const startEl = document.getElementById(`start-${dayStr}`); if (startEl) startEl.value = '';
     const endEl = document.getElementById(`end-${dayStr}`); if (endEl) endEl.value = '';
     const breakEl = document.getElementById(`break-${dayStr}`); if (breakEl) breakEl.value = '';
     const projectEl = document.getElementById(`project-${dayStr}`); if (projectEl) projectEl.value = '';
     const noteEl = document.getElementById(`note-${dayStr}`); if (noteEl) { noteEl.value = ''; autoResizeTextarea(noteEl); }
-    calculateRow(day); debouncedSaveWorkDataAndSync(); showSaveNotification(`Z├íznam pre ${day}. de┼ł bol ├║spe┼íne vymazan├Ż.`);
+    calculateRow(day); debouncedSaveWorkDataAndSync(); showSaveNotification(`Záznam pre ${day}. deň bol úspešne vymazaný.`);
 }
 window.clearMonthData = async function () {
-    const btn = event.target; if (!confirm(`Naozaj chcete vymaza┼ą V┼áETKY d├íta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear}? T├íto akcia je nezvratn├í!`)) return;
-    setLoadingState(btn, true, "Mazanie d├ít..."); resetTableInputsOnly();
+    const btn = event.target; if (!confirm(`Naozaj chcete vymazať V┼áETKY dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear}? Táto akcia je nezvratná!`)) return;
+    setLoadingState(btn, true, "Mazanie dát..."); resetTableInputsOnly();
     const emptyMonthData = { data: [], lastUpdated: new Date().toISOString() };
     const docId = getFirestoreDocId(currentYear, currentMonth); const localKey = getLocalStorageKeyForWorkData(docId);
     const emptyDataString = JSON.stringify(emptyMonthData); localStorage.setItem(localKey, emptyDataString); updateLocalStorageSizeIndicator();
     const pendingKey = getPendingSyncKeyForMonth(docId);
     if (currentUser) {
-        if (navigator.onLine) { try { await saveWorkDataToFirestore(emptyMonthData, docId); removeMonthFromPendingList(docId); if (pendingKey) localStorage.removeItem(pendingKey); } catch (error) { showErrorNotification('Chyba pri mazan├ş d├ít v cloude: ' + error.message); addMonthToPendingList(docId); if (pendingKey) localStorage.setItem(pendingKey, emptyDataString); } }
+        if (navigator.onLine) { try { await saveWorkDataToFirestore(emptyMonthData, docId); removeMonthFromPendingList(docId); if (pendingKey) localStorage.removeItem(pendingKey); } catch (error) { showErrorNotification('Chyba pri mazan├ş dát v cloude: ' + error.message); addMonthToPendingList(docId); if (pendingKey) localStorage.setItem(pendingKey, emptyDataString); } }
         else { addMonthToPendingList(docId); if (pendingKey) localStorage.setItem(pendingKey, emptyDataString); }
     }
-    showSaveNotification(`V┼íetky d├íta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear} boli ├║spe┼íne vymazan├ę.`);
-    setLoadingState(btn, false, "Vymaza┼ą Mesiac");
+    showSaveNotification(`Všetky dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear} boli úspešne vymazané.`);
+    setLoadingState(btn, false, "Vymazať Mesiac");
 }
 
-// UPREVEN├ü FUNKCIA calculateTotal()
+// UPREVENÁ FUNKCIA calculateTotal()
 function calculateTotal() {
     let totalExactDecimalHours = 0;
     let totalGrossSalaryCalculated;
@@ -689,10 +689,10 @@ function calculateTotal() {
     const avgDecimalHours = avgWorkMinutes / 60;
 
     uiRefs.totalSalaryDiv.innerHTML = `
-            Zapo─Ź├ştan├Żch dn├ş s aktivitou: <strong>${daysWithEntries}</strong><br>
-            Celkov├Ż odpracovan├Ż ─Źas: <strong>${totalHoursPart}h ${totalMinutesPart}m</strong> (${totalExactDecimalHours.toFixed(appSettings.decimalPlaces)} h)<br>
-            Celkov├í hrub├í mzda: <strong>${totalGrossSalaryCalculated.toFixed(appSettings.decimalPlaces)} ÔéČ</strong> | Celkov├í ─Źist├í mzda: <strong>${totalNetSalaryCalculated.toFixed(appSettings.decimalPlaces)} ÔéČ</strong><br>
-            Priemern├í ─Źist├í mzda na de┼ł: <strong>${avgNetSalary.toFixed(appSettings.decimalPlaces)} ÔéČ</strong> | Priemern├Ż ─Źas na de┼ł: <strong>${avgHoursPart}h ${avgMinutesPart}m</strong> (${avgDecimalHours.toFixed(appSettings.decimalPlaces)} h)`;
+            Započ├ştaných dn├ş s aktivitou: <strong>${daysWithEntries}</strong><br>
+            Celkový odpracovaný čas: <strong>${totalHoursPart}h ${totalMinutesPart}m</strong> (${totalExactDecimalHours.toFixed(appSettings.decimalPlaces)} h)<br>
+            Celková hrubá mzda: <strong>${totalGrossSalaryCalculated.toFixed(appSettings.decimalPlaces)} €</strong> | Celková čistá mzda: <strong>${totalNetSalaryCalculated.toFixed(appSettings.decimalPlaces)} €</strong><br>
+            Priemerná čistá mzda na deň: <strong>${avgNetSalary.toFixed(appSettings.decimalPlaces)} €</strong> | Priemerný čas na deň: <strong>${avgHoursPart}h ${avgMinutesPart}m</strong> (${avgDecimalHours.toFixed(appSettings.decimalPlaces)} h)`;
 }
 // KONIEC UPRAVENEJ FUNKCIE calculateTotal()
 
@@ -703,11 +703,11 @@ window.exportToPDF = async function () {
     try {
         try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
         catch (e) { console.warn("Roboto font not loaded for PDF, using helvetica."); doc.setFont('helvetica'); }
-        doc.setFontSize(16); doc.text(`V├Żkaz pr├íce - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
-        doc.setFontSize(12); doc.text(`Pracovn├şk: ${appSettings.employeeName || 'Nezadan├ę'}`, 14, 30);
+        doc.setFontSize(16); doc.text(`Výkaz práce - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
+        doc.setFontSize(12); doc.text(`Pracovn├şk: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
         const currentHourlyWage = typeof appSettings.hourlyWage === 'number' ? appSettings.hourlyWage : 0;
         const currentTaxRate = typeof appSettings.taxRate === 'number' ? appSettings.taxRate : 0;
-        doc.setFontSize(10); doc.text(`Hodinov├í mzda: ${currentHourlyWage.toFixed(appSettings.decimalPlaces)} ÔéČ/h, Da┼łov├ę percento: ${(currentTaxRate * 100).toFixed(1)}%`, 14, 36);
+        doc.setFontSize(10); doc.text(`Hodinová mzda: ${currentHourlyWage.toFixed(appSettings.decimalPlaces)} €/h, Daňové percento: ${(currentTaxRate * 100).toFixed(1)}%`, 14, 36);
         const tableData = []; const days = getDaysInMonth(currentMonth, currentYear);
         for (let i = 1; i <= days; i++) {
             const dayName = getDayName(currentYear, currentMonth, i); const startTime = document.getElementById(`start-${i}`)?.value || '';
@@ -717,11 +717,11 @@ window.exportToPDF = async function () {
             const grossSalary = parseFloat(document.getElementById(`gross-${i}`)?.value || '0').toFixed(appSettings.decimalPlaces);
             const netSalary = parseFloat(document.getElementById(`net-${i}`)?.value || '0').toFixed(appSettings.decimalPlaces);
             if (startTime || endTime || (breakTime && parseFloat(breakTime.replace(',', '.')) > 0) || projectTag.trim() !== '' || note.trim() !== "") {
-                tableData.push([`${i}. ${dayName}`, startTime, endTime, breakTime || '0', totalTimeText, projectTag, note, `${grossSalary} ÔéČ`, `${netSalary} ÔéČ`]);
+                tableData.push([`${i}. ${dayName}`, startTime, endTime, breakTime || '0', totalTimeText, projectTag, note, `${grossSalary} €`, `${netSalary} €`]);
             }
         }
         doc.autoTable({
-            head: [['De┼ł', 'Pr├şchod', 'Odchod', 'Prest├ívka (h)', 'Odpracovan├ę', 'Projekt', 'Pozn├ímka', 'Hrub├í (ÔéČ)', '─îist├í (ÔéČ)']],
+            head: [['Deň', 'Pr├şchod', 'Odchod', 'Prestávka (h)', 'Odpracované', 'Projekt', 'Poznámka', 'Hrubá (€)', 'Čistá (€)']],
             body: tableData, startY: 42, theme: 'grid',
             styles: { font: doc.getFont().fontName || 'helvetica', fontSize: 7, cellPadding: 1, valign: 'middle' },
             headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7.5, halign: 'center' },
@@ -734,12 +734,12 @@ window.exportToPDF = async function () {
             didParseCell: (data) => { if ((data.column.index === 5 || data.column.index === 6) && data.cell.section === 'body') data.cell.styles.cellWidth = 'wrap'; }
         });
         const totalY = doc.lastAutoTable.finalY + 8; doc.setFontSize(9);
-        const totalTextContent = uiRefs.totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<div class="goal-progress.*?>.*?<\/div>/gi, '').replace(/<\/?strong>/gi, '').replace(/&nbsp;/g, ' ').replace(/ÔéČ/g, 'EUR');
+        const totalTextContent = uiRefs.totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<div class="goal-progress.*?>.*?<\/div>/gi, '').replace(/<\/?strong>/gi, '').replace(/&nbsp;/g, ' ').replace(/€/g, 'EUR');
         doc.text(totalTextContent, 14, totalY);
         const safeName = (appSettings.employeeName || 'Pracovnik').replace(/[^a-zA-Z0-9]/g, '_');
-        doc.save(`Vykaz_Prace_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`); showSaveNotification('PDF s├║bor bol ├║spe┼íne vygenerovan├Ż.');
+        doc.save(`Vykaz_Prace_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`); showSaveNotification('PDF súbor bol úspešne vygenerovaný.');
     } catch (error) { console.error("Error exporting to PDF:", error); showErrorNotification("Nastala chyba pri exporte do PDF: " + error.message); }
-    finally { setLoadingState(btn, false, "Exportova┼ą do PDF"); }
+    finally { setLoadingState(btn, false, "Exportovať do PDF"); }
 }
 window.sendPDF = async function () {
     const btn = event.target; setLoadingState(btn, true, "Pripravujem PDF na odoslanie..."); calculateTotal();
@@ -747,11 +747,11 @@ window.sendPDF = async function () {
     try {
         try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
         catch (e) { console.warn("Roboto font not loaded for PDF, using helvetica."); doc.setFont('helvetica'); }
-        doc.setFontSize(16); doc.text(`Preh─żad doch├ídzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
-        doc.setFontSize(12); doc.text(`Pracovn├şk: ${appSettings.employeeName || 'Nezadan├ę'}`, 14, 30);
-        const workedDaysMatch = (uiRefs.totalSalaryDiv.textContent || "").match(/Zapo─Ź├ştan├Żch dn├ş s aktivitou:\s*(\d+)/i);
+        doc.setFontSize(16); doc.text(`Preh─żad dochádzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
+        doc.setFontSize(12); doc.text(`Pracovn├şk: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
+        const workedDaysMatch = (uiRefs.totalSalaryDiv.textContent || "").match(/Započ├ştaných dn├ş s aktivitou:\s*(\d+)/i);
         const workedDaysCount = workedDaysMatch && workedDaysMatch[1] ? parseInt(workedDaysMatch[1]) : 0;
-        doc.setFontSize(10); doc.text(`Celkov├Ż po─Źet dn├ş s aktivitou: ${workedDaysCount}`, 14, 36);
+        doc.setFontSize(10); doc.text(`Celkový počet dn├ş s aktivitou: ${workedDaysCount}`, 14, 36);
         const tableData = []; const days = getDaysInMonth(currentMonth, currentYear);
         for (let i = 1; i <= days; i++) {
             const dayName = getDayName(currentYear, currentMonth, i); const startTime = document.getElementById(`start-${i}`)?.value || '';
@@ -763,7 +763,7 @@ window.sendPDF = async function () {
             }
         }
         doc.autoTable({
-            head: [['De┼ł', 'Pr├şchod', 'Odchod', 'Prest├ívka (h)', 'Projekt', 'Pozn├ímka']],
+            head: [['Deň', 'Pr├şchod', 'Odchod', 'Prestávka (h)', 'Projekt', 'Poznámka']],
             body: tableData, startY: 42, theme: 'grid',
             styles: { font: doc.getFont().fontName || 'helvetica', fontSize: 8, cellPadding: 1.5, valign: 'middle' },
             headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 8.5, halign: 'center' },
@@ -776,16 +776,16 @@ window.sendPDF = async function () {
         const pdfBlob = doc.output('blob'); const safeName = (appSettings.employeeName || 'Pracovnik').replace(/[^a-zA-Z0-9]/g, '_');
         const pdfFileName = `Dochadzka_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`; const pdfFile = new File([pdfBlob], pdfFileName, { type: 'application/pdf' });
         if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-            await navigator.share({ files: [pdfFile], title: `Doch├ídzka ${MONTH_NAMES[currentMonth]} ${currentYear}`, text: `Z├íznam doch├ídzky pre pracovn├şka ${appSettings.employeeName || 'Nezadan├ę'}.` });
-        } else { showWarningNotification('Zdie─żanie s├║borov nie je podporovan├ę. S├║bor sa stiahne.'); doc.save(pdfFileName); }
+            await navigator.share({ files: [pdfFile], title: `Dochádzka ${MONTH_NAMES[currentMonth]} ${currentYear}`, text: `Záznam dochádzky pre pracovn├şka ${appSettings.employeeName || 'Nezadané'}.` });
+        } else { showWarningNotification('Zdie─żanie súborov nie je podporované. Súbor sa stiahne.'); doc.save(pdfFileName); }
     } catch (error) { if (error.name !== 'AbortError') { console.error("Error sharing PDF:", error); showErrorNotification('Nastala chyba pri zdie─żan├ş PDF: ' + error.message); } }
-    finally { setLoadingState(btn, false, "Odosla┼ą PDF (s pozn.)"); }
+    finally { setLoadingState(btn, false, "Odoslať PDF (s pozn.)"); }
 }
 
 window.createBackup = function () {
-    const btn = event.target; setLoadingState(btn, true, "Vytv├íram z├ílohu..."); const workData = collectWorkDataForStorage();
+    const btn = event.target; setLoadingState(btn, true, "Vytváram zálohu..."); const workData = collectWorkDataForStorage();
     if (!workData.data.some(d => d.start || d.end || d.breakTime || d.projectTag || d.note) && !appSettings.employeeName && Object.values(appSettings).every(val => val === '' || val === 0 || val === 2 || val === null || val === 'light')) {
-        showWarningNotification('Nie s├║ zadan├ę ┼żiadne d├íta na vytvorenie z├ílohy.'); setLoadingState(btn, false, "Vytvori┼ą z├ílohu (XLSX)"); return;
+        showWarningNotification('Nie sú zadané ┼żiadne dáta na vytvorenie zálohy.'); setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); return;
     }
     try {
         const wb = XLSX.utils.book_new();
@@ -793,23 +793,23 @@ window.createBackup = function () {
         Object.entries(appSettings).forEach(([key, value]) => settings_ws_data.push([key, value === null ? "" : value]));
         const settings_ws = XLSX.utils.aoa_to_sheet(settings_ws_data); settings_ws['!cols'] = [{ wch: 25 }, { wch: 30 }]; XLSX.utils.book_append_sheet(wb, settings_ws, "NastaveniaAplikacie");
 
-        const work_ws_data = [["De┼ł", "Pr├şchod", "Odchod", "Prest├ívka (h)", "Projekt/├Üloha", "Pozn├ímka"]];
+        const work_ws_data = [["Deň", "Pr├şchod", "Odchod", "Prestávka (h)", "Projekt/├Üloha", "Poznámka"]];
         if (workData.data && Array.isArray(workData.data)) {
             workData.data.forEach((row, index) => work_ws_data.push([`${index + 1}. ${getDayName(currentYear, currentMonth, index + 1)}`, row.start || "", row.end || "", row.breakTime || "", row.projectTag || "", row.note || ""]));
         }
-        work_ws_data.push([]); work_ws_data.push(["Mesiac z├ílohy (index 0-11)", currentMonth]); work_ws_data.push(["Rok z├ílohy", currentYear]);
+        work_ws_data.push([]); work_ws_data.push(["Mesiac zálohy (index 0-11)", currentMonth]); work_ws_data.push(["Rok zálohy", currentYear]);
         const work_ws = XLSX.utils.aoa_to_sheet(work_ws_data); work_ws['!cols'] = [{ wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 15 }, { wch: 30 }, { wch: 40 }]; XLSX.utils.book_append_sheet(wb, work_ws, `Vykaz ${MONTH_NAMES[currentMonth]} ${currentYear}`);
 
         const safeName = (appSettings.employeeName || 'VseobecnaZaloha').replace(/[^a-zA-Z0-9]/g, '_');
-        XLSX.writeFile(wb, `Zaloha_BrunoCalcPro_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.xlsx`); showSaveNotification('Z├íloha bola ├║spe┼íne vytvoren├í a stiahnut├í.');
-    } catch (error) { console.error("Error creating backup:", error); showErrorNotification('Nastala chyba pri vytv├íran├ş z├ílohy: ' + error.message); }
-    finally { setLoadingState(btn, false, "Vytvori┼ą z├ílohu (XLSX)"); }
+        XLSX.writeFile(wb, `Zaloha_BrunoCalcPro_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.xlsx`); showSaveNotification('Záloha bola úspešne vytvorená a stiahnutá.');
+    } catch (error) { console.error("Error creating backup:", error); showErrorNotification('Nastala chyba pri vytváran├ş zálohy: ' + error.message); }
+    finally { setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); }
 };
 window.restoreBackup = function () {
     const btn = event.target; const input = document.createElement('input'); input.type = 'file'; input.accept = '.xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     input.onchange = async (event) => {
-        setLoadingState(btn, true, "Sprac├║vam s├║bor z├ílohy..."); const file = event.target.files[0];
-        if (!file) { setLoadingState(btn, false, "Obnovi┼ą z├ílohu (XLSX)"); return; }
+        setLoadingState(btn, true, "Spracúvam súbor zálohy..."); const file = event.target.files[0];
+        if (!file) { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return; }
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
@@ -834,31 +834,31 @@ window.restoreBackup = function () {
                     }
                     if (restoredAppSettings.monthlyEarningsGoal !== undefined && isNaN(restoredAppSettings.monthlyEarningsGoal)) restoredAppSettings.monthlyEarningsGoal = null;
 
-                } else showWarningNotification("List 'NastaveniaAplikacie' nebol n├íjden├Ż. Nastavenia nebud├║ obnoven├ę.");
+                } else showWarningNotification("List 'NastaveniaAplikacie' nebol nájdený. Nastavenia nebudú obnovené.");
 
                 const workSheetName = workbook.SheetNames.find(name => name.toLowerCase().startsWith("vykaz"));
                 if (workSheetName) {
                     const ws = workbook.Sheets[workSheetName]; const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-                    const headerRowIndex = jsonData.findIndex(row => row && row[0] && row[0].toString().toLowerCase().includes("de┼ł"));
+                    const headerRowIndex = jsonData.findIndex(row => row && row[0] && row[0].toString().toLowerCase().includes("deň"));
                     if (headerRowIndex !== -1) {
                         const colMap = { day: 0, start: 1, end: 2, break: 3, project: 4, note: 5 };
                         for (let i = headerRowIndex + 1; i < jsonData.length; i++) {
                             const row = jsonData[i];
                             if (!row || !row[colMap.day] || !row[colMap.day].toString().match(/^\d+\./)) {
-                                if (row && row[0] && row[0].toString().toLowerCase().includes("mesiac z├ílohy")) backupMonth = parseInt(row[1]);
-                                if (row && row[0] && row[0].toString().toLowerCase().includes("rok z├ílohy")) backupYear = parseInt(row[1]);
+                                if (row && row[0] && row[0].toString().toLowerCase().includes("mesiac zálohy")) backupMonth = parseInt(row[1]);
+                                if (row && row[0] && row[0].toString().toLowerCase().includes("rok zálohy")) backupYear = parseInt(row[1]);
                                 if (isNaN(backupMonth) || backupMonth < 0 || backupMonth > 11) backupMonth = currentMonth;
                                 if (isNaN(backupYear) || backupYear < 2000) backupYear = currentYear;
                                 continue;
                             }
                             restoredWorkDataArray.push({ start: row[colMap.start] || "", end: row[colMap.end] || "", breakTime: row[colMap.break] ? row[colMap.break].toString().replace(',', '.') : "", projectTag: row[colMap.project] || "", note: row[colMap.note] || "" });
                         }
-                    } else showWarningNotification(`List '${workSheetName}' nem├í spr├ívnu hlavi─Źku. D├íta mesiaca nebud├║ obnoven├ę.`);
-                } else showWarningNotification("List s d├ítami mesiaca ('Vykaz...') nebol n├íjden├Ż. D├íta nebud├║ obnoven├ę.");
+                    } else showWarningNotification(`List '${workSheetName}' nemá správnu hlavičku. Dáta mesiaca nebudú obnovené.`);
+                } else showWarningNotification("List s dátami mesiaca ('Vykaz...') nebol nájdený. Dáta nebudú obnovené.");
 
-                if (Object.keys(restoredAppSettings).length === 0 && restoredWorkDataArray.length === 0 && !workSheetName && !settingsSheetName) { showErrorNotification("Z├íloha neobsahuje platn├ę d├íta alebo m├í nespr├ívny form├ít."); setLoadingState(btn, false, "Obnovi┼ą z├ílohu (XLSX)"); return; }
-                const confirmMsg = `Obnovi┼ą d├íta? ${Object.keys(restoredAppSettings).length > 0 ? 'Nastavenia bud├║ aktualizovan├ę. ' : ''}${restoredWorkDataArray.length > 0 || workSheetName ? `D├íta pre ${MONTH_NAMES[backupMonth]} ${backupYear} bud├║ obnoven├ę (${restoredWorkDataArray.length} dn├ş). ` : ''}Neulo┼żen├ę zmeny m├┤┼żu by┼ą prep├şsan├ę.`;
-                if (!confirm(confirmMsg)) { setLoadingState(btn, false, "Obnovi┼ą z├ílohu (XLSX)"); return; }
+                if (Object.keys(restoredAppSettings).length === 0 && restoredWorkDataArray.length === 0 && !workSheetName && !settingsSheetName) { showErrorNotification("Záloha neobsahuje platné dáta alebo má nesprávny formát."); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return; }
+                const confirmMsg = `Obnoviť dáta? ${Object.keys(restoredAppSettings).length > 0 ? 'Nastavenia budú aktualizované. ' : ''}${restoredWorkDataArray.length > 0 || workSheetName ? `Dáta pre ${MONTH_NAMES[backupMonth]} ${backupYear} budú obnovené (${restoredWorkDataArray.length} dn├ş). ` : ''}Neulo┼żené zmeny m├┤┼żu byť prep├şsané.`;
+                if (!confirm(confirmMsg)) { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return; }
 
                 let settingsChanged = false;
                 if (Object.keys(restoredAppSettings).length > 0) {
@@ -892,11 +892,11 @@ window.restoreBackup = function () {
                         else { addMonthToPendingList(restoreMonthDocId); if (pendingKey) localStorage.setItem(pendingKey, workDataString); }
                     }
                 } else if (settingsChanged) { recalculateAllRowsAndUpdateTotal(); }
-                showSaveNotification('Z├íloha bola ├║spe┼íne obnoven├í.');
-            } catch (error) { console.error("Error restoring backup:", error); showErrorNotification('Chyba pri obnove z├ílohy: ' + error.message); }
-            finally { setLoadingState(btn, false, "Obnovi┼ą z├ílohu (XLSX)"); input.value = ''; }
+                showSaveNotification('Záloha bola úspešne obnovená.');
+            } catch (error) { console.error("Error restoring backup:", error); showErrorNotification('Chyba pri obnove zálohy: ' + error.message); }
+            finally { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); input.value = ''; }
         };
-        reader.onerror = () => { showErrorNotification('Chyba pri ─Ź├ştan├ş s├║boru.'); setLoadingState(btn, false, "Obnovi┼ą z├ílohu (XLSX)"); }
+        reader.onerror = () => { showErrorNotification('Chyba pri č├ştan├ş súboru.'); setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); }
         reader.readAsArrayBuffer(file);
     };
     input.click();
@@ -909,12 +909,12 @@ uiRefs.toggleSettingsBtn.addEventListener('click', () => {
     const settingsSection = document.getElementById('settings-section');
     const isVisible = settingsSection.style.display !== 'none';
     settingsSection.style.display = isVisible ? 'none' : 'block';
-    uiRefs.toggleSettingsBtn.textContent = isVisible ? 'Zobrazi┼ą nastavenia aplik├ície Ôľ╝' : 'Skry┼ą nastavenia aplik├ície Ôľ▓';
+    uiRefs.toggleSettingsBtn.textContent = isVisible ? 'Zobraziť nastavenia aplikácie ▼' : 'Skryť nastavenia aplikácie ▲';
     uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', !isVisible);
 });
 window.addEventListener('online', () => { handleOnlineStatusChange(true); if (currentUser) { syncPendingWorkData(); debouncedSaveAppSettingsToFirestore(); } });
 window.addEventListener('offline', () => { handleOnlineStatusChange(false); });
-function handleOnlineStatusChange(online) { const message = online ? 'Ste op├Ą┼ą online. Synchroniz├ícia d├ít m├┤┼że prebieha┼ą.' : 'Ste offline. Zmeny sa bud├║ uklada┼ą lok├ílne a synchronizuj├║ sa po pripojen├ş.'; showNotification(online ? 'saveNotification' : 'warningNotification', message, online ? 3000 : 4000); }
+function handleOnlineStatusChange(online) { const message = online ? 'Ste opäť online. Synchronizácia dát m├┤┼że prebiehať.' : 'Ste offline. Zmeny sa budú ukladať lokálne a synchronizujú sa po pripojen├ş.'; showNotification(online ? 'saveNotification' : 'warningNotification', message, online ? 3000 : 4000); }
 
 onAuthStateChanged(auth, async (user) => {
     currentUser = user; updateUIForAuthStateChange();
