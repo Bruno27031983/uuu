@@ -50,14 +50,236 @@
   <script src="./libs/jspdf-autotable.min.js" defer></script>
   <script src="./libs/xlsx.full.min.js" defer></script>
 
-  <!-- Váš CSS ostáva rovnaký... -->
   <style>
-    /* Celý CSS kód z predchádzajúcej verzie */
+    :root {
+      --primary-bg-color: #f0f2f5;
+      --secondary-bg-color: #ffffff;
+      --primary-text-color: #1f2937;
+      --secondary-text-color: #4b5563;
+      --input-bg-color: #fefcbf;
+      --input-note-bg-color: #e0f2fe;
+      --input-project-bg-color: #e0fef2;
+      --table-header-bg-color: #f9fafb;
+      --table-border-color: #e5e7eb;
+      --current-day-bg-color: #7c3aed;
+      --current-day-text-color: #ffffff;
+      --btn-primary-bg: #2563eb;
+      --btn-primary-hover-bg: #1d4ed8;
+      --btn-secondary-bg: #7c3aed;
+      --btn-secondary-hover-bg: #6d28d9;
+      --btn-danger-bg: #dc2626;
+      --btn-danger-hover-bg: #b91c1c;
+      --btn-warning-bg: #f59e0b;
+      --btn-warning-hover-bg: #d97706;
+      --btn-highlight-bg: #f59e0b;
+      --btn-success-bg: #10b981;
+      --btn-success-hover-bg: #059669;
+      --btn-text-color: #ffffff;
+      --total-salary-bg: #eff6ff;
+      --link-color: #2563eb;
+      --link-hover-color: #1d4ed8;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --box-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --base-font-size: 16px;
+      --focus-outline-color: var(--btn-primary-bg);
+      --transition-speed: 0.2s;
+      --theme-color-meta: #7c3aed;
+    }
+
+    html[data-theme='dark'] {
+      --primary-bg-color: #111827;
+      --secondary-bg-color: #1f2937;
+      --primary-text-color: #f3f4f6;
+      --secondary-text-color: #9ca3af;
+      --input-bg-color: #374151;
+      --input-note-bg-color: #2c3a4b;
+      --input-project-bg-color: #2c4b3a;
+      --table-header-bg-color: #374151;
+      --table-border-color: #4b5563;
+      --current-day-bg-color: #8b5cf6;
+      --current-day-text-color: #ffffff;
+      --btn-primary-bg: #3b82f6;
+      --btn-primary-hover-bg: #2563eb;
+      --btn-secondary-bg: #8b5cf6;
+      --btn-secondary-hover-bg: #7c3aed;
+      --btn-danger-bg: #ef4444;
+      --btn-danger-hover-bg: #dc2626;
+      --btn-warning-bg: #f97316;
+      --btn-warning-hover-bg: #ea580c;
+      --btn-highlight-bg: #f97316;
+      --btn-success-bg: #34d399;
+      --btn-success-hover-bg: #10b981;
+      --total-salary-bg: #374151;
+      --link-color: #60a5fa;
+      --link-hover-color: #3b82f6;
+      --focus-outline-color: var(--btn-primary-bg);
+      --theme-color-meta: #1f2937;
+    }
+
+    * { box-sizing: border-box; }
+    html { font-size: var(--base-font-size); scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-family); line-height: 1.6; margin: 0; padding: 12px;
+      background-color: var(--primary-bg-color); color: var(--primary-text-color);
+      font-size: 0.92rem; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      transition: background-color var(--transition-speed), color var(--transition-speed);
+    }
+    
+    .security-badge {
+      position: fixed; top: 10px; left: 10px; background: var(--btn-success-bg);
+      color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem;
+      font-weight: 600; z-index: 10001; box-shadow: var(--box-shadow);
+      display: flex; align-items: center; gap: 5px;
+    }
+    
+    #app-loader {
+      display: flex; justify-content: center; align-items: center; height: 100vh;
+      font-size: 1.2em; color: var(--secondary-text-color); text-align: center;
+      flex-direction: column; background-color: var(--primary-bg-color);
+    }
+    #app-loader p { margin: 5px 0; }
+    #app-loader .loader-emoji { font-size: 2em; margin-bottom: 10px; animation: pulse 1.5s ease-in-out infinite; }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .container {
+      max-width: 1600px; margin: 20px auto; background: var(--secondary-bg-color);
+      padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow-lg); position: relative;
+      transition: background-color var(--transition-speed);
+    }
+    
+    h1 { text-align: center; font-size: 2rem; color: var(--primary-text-color); margin-bottom: 10px; font-weight: 700; }
+    h1#mainTitle {
+      background: linear-gradient(45deg, #7c3aed, #db2777, #f59e0b);
+      -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 3px;
+    }
+    h2 {
+      text-align: center; color: var(--secondary-text-color); margin-top: -5px;
+      font-size: 1rem; font-weight: 500; margin-bottom: 20px;
+    }
+    
+    fieldset { 
+      border: 1px solid var(--table-border-color); 
+      border-radius: var(--border-radius); 
+      padding: 15px; 
+      margin-bottom: 20px; 
+    }
+    legend { 
+      font-weight: 600; 
+      color: var(--primary-text-color); 
+      padding: 0 8px; 
+      font-size: 0.95rem; 
+    }
+    
+    .header-controls { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 15px; 
+      flex-wrap: wrap; 
+      gap: 10px;
+    }
+    
+    #themeToggleBtn { 
+      font-size: 1.3rem; 
+      padding: 6px 10px; 
+      line-height: 1; 
+      background-color: var(--secondary-bg-color); 
+      color: var(--primary-text-color); 
+      border: 1px solid var(--table-border-color); 
+    }
+    #themeToggleBtn:hover { background-color: var(--primary-bg-color); }
+
+    .btn {
+      flex: 0 1 auto; 
+      padding: 10px 20px; 
+      color: var(--btn-text-color); 
+      border: none;
+      border-radius: var(--border-radius); 
+      cursor: pointer; 
+      font-size: 0.92rem; 
+      font-weight: 500;
+      margin: 0; 
+      transition: background-color var(--transition-speed) ease, transform 0.1s ease, box-shadow var(--transition-speed) ease;
+      text-align: center; 
+      box-shadow: var(--box-shadow);
+    }
+    .btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 7px 10px -3px rgba(0,0,0,0.1), 0 4px 5px -2px rgba(0,0,0,0.06); 
+    }
+
+    #saveNotification, #errorNotification, #warningNotification {
+      display: none; 
+      position: fixed; 
+      bottom: 25px; 
+      right: 25px; 
+      padding: 15px 22px;
+      border-radius: var(--border-radius); 
+      font-size: 0.95rem; 
+      box-shadow: var(--box-shadow-lg);
+      z-index: 10000; 
+      opacity: 0; 
+      transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+      transform: translateY(30px); 
+      font-weight: 500;
+      max-width: 350px;
+    }
+    #saveNotification.show, #errorNotification.show, #warningNotification.show { 
+      display: block; 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+    #saveNotification { background-color: var(--btn-success-bg); color: white; }
+    #errorNotification { background-color: var(--btn-danger-bg); color: white; }
+    #warningNotification { background-color: var(--btn-highlight-bg); color: var(--primary-text-color); }
   </style>
 </head>
 <body>
-  <!-- Celé HTML body ostáva rovnaké... -->
-  
+  <!-- Bezpečnostný indikátor -->
+  <div class="security-badge">
+    <span>🔒</span>
+    <span>Secure</span>
+  </div>
+
+  <div id="app-loader">
+    <p class="loader-emoji">🔒</p>
+    <p>Bruno's Calculator Pro - Secure Edition</p>
+    <p style="font-size: 0.8em;">Inicializácia bezpečného pripojenia...</p>
+  </div>
+
+  <div class="container" style="display: none;">
+    <div id="auth-container">
+      <div class="header-controls">
+        <div id="user-info" style="display: none; justify-content: flex-start; align-items: center; gap: 15px; flex-grow: 1;">
+          <span>👤</span>
+          <span id="user-email" style="font-weight:500;"></span>
+          <button id="logoutBtn" class="btn" style="padding: 8px 15px; font-size: 0.85rem; margin:0; background: var(--btn-danger-bg);" type="button">
+            🚪 Odhlásiť sa
+          </button>
+        </div>
+        <button id="themeToggleBtn" class="btn" title="Prepnúť svetlý/tmavý režim" type="button" style="margin-left: auto; background-color: var(--btn-secondary-bg); padding: 8px 12px;">
+          <span id="themeIcon">🌙</span>
+        </button>
+      </div>
+    </div>
+
+    <h1 id="mainTitle">Vitaj 👋</h1>
+    <h2 id="subTitle">Pracovník - December 2025</h2>
+
+    <div id="totalSalary" aria-live="polite">Výpočet celkovej mzdy...</div>
+  </div>
+
+  <div id="saveNotification" role="status" aria-live="polite">✅ Dáta boli úspešne uložené.</div>
+  <div id="errorNotification" role="alert" aria-live="assertive">❌ Nastala chyba.</div>
+  <div id="warningNotification" role="alert" aria-live="assertive">⚠️ Upozornenie.</div>
+
+  <!-- Externý modulový skript - zabezpečený -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
