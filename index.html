@@ -10,7 +10,8 @@
       https://www.gstatic.com/firebasejs/ 
       https://www.google.com/recaptcha/ 
       https://www.gstatic.com/recaptcha/
-      https://cdn.jsdelivr.net;
+      https://cdn.jsdelivr.net
+      https://cdnjs.cloudflare.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: blob: https:;
@@ -20,6 +21,7 @@
       https://*.googleapis.com 
       https://*.gstatic.com
       https://cdn.jsdelivr.net
+      https://cdnjs.cloudflare.com
       https://*.cloudfunctions.net
       https://identitytoolkit.googleapis.com
       https://*.firebaseapp.com 
@@ -48,13 +50,13 @@
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
 
-  <!-- DOMPurify z CDN (auto-update) -->
+  <!-- DOMPurify z CDN (XSS ochrana, auto-update) -->
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js" crossorigin="anonymous"></script>
 
-  <!-- jsPDF a xlsx.js self-hosted -->
-  <script src="./libs/jspdf.umd.min.js" defer></script>
-  <script src="./libs/jspdf-autotable.min.js" defer></script>
-  <script src="./libs/xlsx.full.min.js" defer></script>
+  <!-- jsPDF a xlsx.js z CDN (rýchle načítanie) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
 
   <style>
     :root {
@@ -356,7 +358,7 @@
       gap: 12px;
     }
 
-    /* TABUĽKA - Fixné šírky stĺpcov ako v pôvodnej aplikácii */
+    /* TABUĽKA - Optimalizovaná pre mobile aj desktop */
     .table-container {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
@@ -388,7 +390,7 @@
       z-index: 10;
     }
     
-    /* Fixné šírky stĺpcov - rovnaké ako pôvodná aplikácia */
+    /* Fixné šírky stĺpcov */
     th:nth-child(1), td:nth-child(1) { width: 95px; } /* Deň */
     th:nth-child(2), td:nth-child(2) { width: 105px; } /* Príchod */
     th:nth-child(3), td:nth-child(3) { width: 105px; } /* Odchod */
@@ -415,7 +417,7 @@
       border-color: rgba(255, 255, 255, 0.3);
     }
     
-    /* Time input wrapper - väčšie inputy */
+    /* Time input wrapper */
     .time-input-wrapper {
       display: flex;
       gap: 5px;
@@ -521,7 +523,7 @@
       text-decoration: underline;
     }
     
-    /* MOBILE OPTIMIZÁCIA - ako v pôvodnej aplikácii */
+    /* MOBILE OPTIMALIZÁCIA */
     @media (max-width: 768px) {
       body { padding: 8px; font-size: 0.9rem; }
       .container { padding: 15px; margin: 10px auto; }
@@ -584,7 +586,7 @@
 
   <div id="app-loader">
     <p class="loader-emoji">🔒</p>
-    <p>Bruno's Calculator Pro - Secure Edition</p>
+    <p>Bruno's Calculator Pro - Ultimate Edition</p>
     <p style="font-size: 0.8em;">Inicializácia...</p>
   </div>
 
