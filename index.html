@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- MAXIMÁLNA BEZPEČNOSŤ - CSP so self-hosted knižnicami -->
   <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
     script-src 'self' https://www.gstatic.com/firebasejs/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/;
@@ -38,13 +37,11 @@
   <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
   <meta name="theme-color" content="#7c3aed"/>
   
-  <!-- Bezpečnostné meta tagy -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
 
-  <!-- SELF-HOSTED knižnice - MAXIMÁLNA BEZPEČNOSŤ -->
   <script src="./libs/dompurify.min.js"></script>
   <script src="./libs/jspdf.umd.min.js" defer></script>
   <script src="./libs/jspdf-autotable.min.js" defer></script>
@@ -123,8 +120,7 @@
     body {
       font-family: var(--font-family); line-height: 1.6; margin: 0; padding: 12px;
       background-color: var(--primary-bg-color); color: var(--primary-text-color);
-      font-size: 0.92rem; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
-      transition: background-color var(--transition-speed), color var(--transition-speed);
+      font-size: 0.92rem; transition: background-color var(--transition-speed), color var(--transition-speed);
     }
     
     .security-badge {
@@ -149,14 +145,14 @@
 
     .container {
       max-width: 1600px; margin: 20px auto; background: var(--secondary-bg-color);
-      padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow-lg); position: relative;
+      padding: 20px; border-radius: var(--border-radius); box-shadow: var(--box-shadow-lg);
       transition: background-color var(--transition-speed);
     }
     
     h1 { text-align: center; font-size: 2rem; color: var(--primary-text-color); margin-bottom: 10px; font-weight: 700; }
     h1#mainTitle {
       background: linear-gradient(45deg, #7c3aed, #db2777, #f59e0b);
-      -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: 3px;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
     }
     h2 {
       text-align: center; color: var(--secondary-text-color); margin-top: -5px;
@@ -191,12 +187,82 @@
       line-height: 1; 
       background-color: var(--secondary-bg-color); 
       color: var(--primary-text-color); 
-      border: 1px solid var(--table-border-color); 
+      border: 1px solid var(--table-border-color);
+      cursor: pointer;
+      border-radius: var(--border-radius);
     }
     #themeToggleBtn:hover { background-color: var(--primary-bg-color); }
 
+    .settings {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    
+    .settings label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--secondary-text-color);
+    }
+    
+    #toggleSettingsBtn {
+      flex-basis: 100%;
+      margin-bottom: 10px;
+      background-color: var(--secondary-bg-color);
+      color: var(--primary-text-color);
+      border: 1px solid var(--table-border-color);
+      text-align: left;
+      padding: 10px 15px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--border-radius);
+    }
+    
+    #settings-collapsible-content {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
+      gap: 10px;
+    }
+    #settings-collapsible-content.visible {
+      max-height: 800px;
+      opacity: 1;
+      margin-top: 10px;
+    }
+    #settings-collapsible-content > fieldset {
+      display: contents;
+    }
+    #settings-collapsible-content > fieldset > div {
+      flex: 1 1 220px;
+      margin: 0;
+    }
+
+    input[type="tel"], 
+    input[type="number"], 
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"], 
+    select {
+      width: 100%; 
+      padding: 9px 12px; 
+      box-sizing: border-box; 
+      background-color: var(--input-bg-color);
+      font-size: 0.9rem; 
+      border: 1px solid var(--table-border-color); 
+      border-radius: var(--border-radius); 
+      font-family: var(--font-family); 
+      color: var(--primary-text-color);
+    }
+
     .btn {
-      flex: 0 1 auto; 
       padding: 10px 20px; 
       color: var(--btn-text-color); 
       border: none;
@@ -204,14 +270,53 @@
       cursor: pointer; 
       font-size: 0.92rem; 
       font-weight: 500;
-      margin: 0; 
-      transition: background-color var(--transition-speed) ease, transform 0.1s ease, box-shadow var(--transition-speed) ease;
-      text-align: center; 
+      transition: background-color var(--transition-speed) ease, transform 0.1s ease;
       box-shadow: var(--box-shadow);
     }
     .btn:hover { 
       transform: translateY(-2px); 
-      box-shadow: 0 7px 10px -3px rgba(0,0,0,0.1), 0 4px 5px -2px rgba(0,0,0,0.06); 
+    }
+    
+    .export-btn { background-color: var(--btn-primary-bg); }
+    .export-btn:hover { background-color: var(--btn-primary-hover-bg); }
+    .backup-btn { background-color: var(--btn-secondary-bg); }
+    .backup-btn:hover { background-color: var(--btn-secondary-hover-bg); }
+    .reset-btn { background-color: var(--btn-danger-bg); }
+    .reset-btn:hover { background-color: var(--btn-danger-hover-bg); }
+    .warning-btn { background-color: var(--btn-warning-bg); }
+    .warning-btn:hover { background-color: var(--btn-warning-hover-bg); }
+    
+    .btn-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 25px;
+      gap: 12px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 10px 12px;
+      border: 1px solid var(--table-border-color);
+      text-align: left;
+      font-size: 0.875rem;
+    }
+    th {
+      background-color: var(--table-header-bg-color);
+      font-weight: 600;
+      color: var(--primary-text-color);
+    }
+
+    #totalSalary {
+      font-size: 1rem;
+      font-weight: 500;
+      text-align: center;
+      margin-top: 25px;
+      padding: 15px;
+      background-color: var(--total-salary-bg);
+      border-radius: var(--border-radius);
+      color: var(--primary-text-color);
+      box-shadow: var(--box-shadow);
     }
 
     #saveNotification, #errorNotification, #warningNotification {
@@ -228,7 +333,6 @@
       transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
       transform: translateY(30px); 
       font-weight: 500;
-      max-width: 350px;
     }
     #saveNotification.show, #errorNotification.show, #warningNotification.show { 
       display: block; 
@@ -238,10 +342,19 @@
     #saveNotification { background-color: var(--btn-success-bg); color: white; }
     #errorNotification { background-color: var(--btn-danger-bg); color: white; }
     #warningNotification { background-color: var(--btn-highlight-bg); color: var(--primary-text-color); }
+    
+    .error-message {
+      color: var(--btn-danger-bg);
+      font-size: 0.75rem;
+      margin-top: 4px;
+      display: none;
+    }
+    .error-message.show {
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <!-- Bezpečnostný indikátor -->
   <div class="security-badge">
     <span>🔒</span>
     <span>Secure</span>
@@ -250,20 +363,33 @@
   <div id="app-loader">
     <p class="loader-emoji">🔒</p>
     <p>Bruno's Calculator Pro - Secure Edition</p>
-    <p style="font-size: 0.8em;">Inicializácia bezpečného pripojenia...</p>
+    <p style="font-size: 0.8em;">Inicializácia...</p>
   </div>
 
   <div class="container" style="display: none;">
     <div id="auth-container">
+      <fieldset id="login-fieldset">
+        <legend>🔐 Prihlásenie</legend>
+        <div id="login-form">
+          <input type="email" id="email" placeholder="Email" autocomplete="email">
+          <div class="error-message" id="email-error"></div>
+          
+          <input type="password" id="password" placeholder="Heslo" autocomplete="current-password">
+          <div class="error-message" id="password-error"></div>
+          
+          <button id="loginBtn" class="btn export-btn">🔓 Prihlásiť</button>
+          <button id="registerBtn" class="btn backup-btn">📝 Registrovať</button>
+          <a href="#" id="resetPasswordLink">Zabudli ste heslo?</a>
+        </div>
+      </fieldset>
+      
       <div class="header-controls">
-        <div id="user-info" style="display: none; justify-content: flex-start; align-items: center; gap: 15px; flex-grow: 1;">
+        <div id="user-info" style="display: none; gap: 15px;">
           <span>👤</span>
           <span id="user-email" style="font-weight:500;"></span>
-          <button id="logoutBtn" class="btn" style="padding: 8px 15px; font-size: 0.85rem; margin:0; background: var(--btn-danger-bg);" type="button">
-            🚪 Odhlásiť sa
-          </button>
+          <button id="logoutBtn" class="btn reset-btn" style="padding: 8px 15px; font-size: 0.85rem;">🚪 Odhlásiť</button>
         </div>
-        <button id="themeToggleBtn" class="btn" title="Prepnúť svetlý/tmavý režim" type="button" style="margin-left: auto; background-color: var(--btn-secondary-bg); padding: 8px 12px;">
+        <button id="themeToggleBtn" title="Prepnúť tému">
           <span id="themeIcon">🌙</span>
         </button>
       </div>
@@ -272,14 +398,92 @@
     <h1 id="mainTitle">Vitaj 👋</h1>
     <h2 id="subTitle">Pracovník - December 2025</h2>
 
-    <div id="totalSalary" aria-live="polite">Výpočet celkovej mzdy...</div>
+    <div class="settings">
+      <button id="toggleSettingsBtn">⚙️ Zobraziť nastavenia ▼</button>
+      <div id="settings-collapsible-content">
+        <fieldset>
+          <legend>⚡ Nastavenia</legend>
+          <div>
+            <label for="employeeNameInput">Meno:</label>
+            <input type="text" id="employeeNameInput" maxlength="100">
+            <div class="error-message" id="employeeName-error"></div>
+          </div>
+          <div>
+            <label for="hourlyWageInput">Hodinová mzda (€):</label>
+            <input type="text" id="hourlyWageInput" inputmode="decimal">
+            <div class="error-message" id="hourlyWage-error"></div>
+          </div>
+          <div>
+            <label for="taxRateInput">Daň (%):</label>
+            <input type="text" id="taxRateInput" inputmode="decimal">
+            <div class="error-message" id="taxRate-error"></div>
+          </div>
+          <div>
+            <label for="monthlyGoalInput">Mesačný cieľ (€):</label>
+            <input type="text" id="monthlyGoalInput" inputmode="decimal">
+            <div class="error-message" id="monthlyGoal-error"></div>
+          </div>
+          <div>
+            <label for="decimalPlacesSelect">Desatinné miesta:</label>
+            <select id="decimalPlacesSelect">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>📅 Navigácia</legend>
+          <div>
+            <label for="monthSelect">Mesiac:</label>
+            <select id="monthSelect"></select>
+          </div>
+          <div>
+            <label for="yearSelect">Rok:</label>
+            <select id="yearSelect"></select>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Deň</th>
+            <th>Príchod</th>
+            <th>Odchod</th>
+            <th>Prestávka</th>
+            <th>Odpracované</th>
+            <th>Projekt</th>
+            <th>Poznámka</th>
+            <th>Hrubá (€)</th>
+            <th>Čistá (€)</th>
+            <th>Akcie</th>
+          </tr>
+        </thead>
+        <tbody id="workDays"></tbody>
+      </table>
+    </div>
+
+    <div id="totalSalary">Výpočet...</div>
+    <div id="localStorageIndicator"></div>
+
+    <div class="btn-container">
+      <button id="exportPDFBtn" class="btn export-btn">📄 Export PDF</button>
+      <button id="sendPDFBtn" class="btn export-btn">📧 Poslať PDF</button>
+      <button id="createBackupBtn" class="btn backup-btn">💾 Záloha (XLSX)</button>
+      <button id="restoreBackupBtn" class="btn backup-btn">📂 Obnoviť</button>
+      <button id="saveToFirestoreBtn" class="btn export-btn">☁️ Uložiť do cloudu</button>
+      <button id="loadFromFirestoreBtn" class="btn export-btn">📥 Načítať z cloudu</button>
+      <button id="clearMonthBtn" class="btn warning-btn">🗑️ Vymazať mesiac</button>
+    </div>
   </div>
 
-  <div id="saveNotification" role="status" aria-live="polite">✅ Dáta boli úspešne uložené.</div>
-  <div id="errorNotification" role="alert" aria-live="assertive">❌ Nastala chyba.</div>
-  <div id="warningNotification" role="alert" aria-live="assertive">⚠️ Upozornenie.</div>
+  <div id="saveNotification">✅ Uložené.</div>
+  <div id="errorNotification">❌ Chyba.</div>
+  <div id="warningNotification">⚠️ Upozornenie.</div>
 
-  <!-- Externý modulový skript - zabezpečený -->
   <script type="module" src="./app.js"></script>
 </body>
 </html>
