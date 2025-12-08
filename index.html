@@ -19,7 +19,7 @@
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: https:;
-    connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.firebaseapp.com https://*.cloudfunctions.net https://identitytoolkit.googleapis.com https://firestore.googleapis.com;
+    connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.firebaseapp.com https://*.cloudfunctions.net https://identitytoolkit.googleapis.com https://firestore.googleapis.com https://cdnjs.cloudflare.com;
     frame-src https://www.google.com;
     manifest-src 'self';
     worker-src 'self';
@@ -33,8 +33,13 @@
         defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
+            --font-family: 'Inter', sans-serif;
             --primary-bg-color: #f0f2f5;
             --secondary-bg-color: #ffffff;
             --primary-text-color: #1f2937;
