@@ -21,7 +21,6 @@ const RECAPTCHA_V3_SITE_KEY = "6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v";
 
 
 const app = initializeApp(firebaseConfig);
-/*
 try {
     const appCheck = initializeAppCheck(app, {
         provider: new ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),
@@ -31,7 +30,6 @@ try {
     console.warn("App Check initialization failed.", e);
     showWarningNotification("Inicializácia App Check zlyhala. Niektoré funkcie môžu byť obmedzené.");
 }
-*/
 const auth = getAuth(app);
 
 let db;
