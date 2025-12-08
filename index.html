@@ -10,7 +10,8 @@
       https://www.gstatic.com/firebasejs/ 
       https://www.google.com/recaptcha/ 
       https://www.gstatic.com/recaptcha/
-      https://cdn.jsdelivr.net;
+      https://cdn.jsdelivr.net
+      'unsafe-inline';
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com data:;
     img-src 'self' data: blob: https:;
@@ -47,12 +48,68 @@
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
 
-  <!-- DOMPurify z CDN (security critical - auto-update) -->
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"
-          integrity="sha384-qhKvg6YK+MnZEY0ZWGVV8LWRrzPrZgLe2HwAaOLRnfGr7YQzkYx6C5kxpLLiVYLZ"
-          crossorigin="anonymous"></script>
+  <!-- DOMPurify - 3-layer hybrid security approach -->
+  <script>
+    (function() {
+      console.log('🔐 Loading DOMPurify with 3-layer security...');
+      
+      // VRSTVA 1: CDN s integrity check (najlepšie)
+      const cdnWithIntegrity = document.createElement('script');
+      cdnWithIntegrity.src = 'https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js';
+      cdnWithIntegrity.integrity = 'sha384-qhKvg6YK+MnZEY0ZWGVV8LWRrzPrZgLe2HwAaOLRnfGr7YQzkYx6C5kxpLLiVYLZ';
+      cdnWithIntegrity.crossOrigin = 'anonymous';
+      
+      let fallbackTriggered = false;
+      
+      cdnWithIntegrity.onload = function() {
+        console.log('✅ DOMPurify loaded from CDN with integrity check');
+      };
+      
+      cdnWithIntegrity.onerror = function() {
+        if (fallbackTriggered) return;
+        fallbackTriggered = true;
+        
+        console.warn('⚠️ Layer 1 failed: CDN with integrity check failed');
+        console.log('🔓 Trying Layer 2: CDN without integrity (auto-update)...');
+        
+        // VRSTVA 2: CDN bez integrity (auto-update)
+        const cdnNoIntegrity = document.createElement('script');
+        cdnNoIntegrity.src = 'https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js';
+        cdnNoIntegrity.crossOrigin = 'anonymous';
+        
+        cdnNoIntegrity.onload = function() {
+          console.log('✅ DOMPurify loaded from CDN without integrity (auto-update)');
+        };
+        
+        cdnNoIntegrity.onerror = function() {
+          console.warn('⚠️ Layer 2 failed: CDN completely unavailable');
+          console.log('💾 Trying Layer 3: Local fallback...');
+          
+          // VRSTVA 3: Local self-hosted (offline support)
+          const localScript = document.createElement('script');
+          localScript.src = './libs/dompurify.min.js';
+          
+          localScript.onload = function() {
+            console.log('✅ DOMPurify loaded from local fallback');
+            console.warn('⚠️ Using local version - may be outdated');
+          };
+          
+          localScript.onerror = function() {
+            console.error('❌ CRITICAL: All DOMPurify layers failed!');
+            console.error('❌ XSS protection is DISABLED!');
+          };
+          
+          document.head.appendChild(localScript);
+        };
+        
+        document.head.appendChild(cdnNoIntegrity);
+      };
+      
+      document.head.appendChild(cdnWithIntegrity);
+    })();
+  </script>
 
-  <!-- jsPDF a xlsx.js self-hosted (veľké súbory, nie security critical) -->
+  <!-- jsPDF a xlsx.js self-hosted (veľké súbory) -->
   <script src="./libs/jspdf.umd.min.js" defer></script>
   <script src="./libs/jspdf-autotable.min.js" defer></script>
   <script src="./libs/xlsx.full.min.js" defer></script>
