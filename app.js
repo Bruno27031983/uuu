@@ -216,7 +216,8 @@ function updateSettingsUIInputs() {
     uiRefs.taxRateInput.value = (tax * 100).toFixed(1);
 }
 
-function initializeUI() { loadAppSettingsFromLocalStorage();
+function initializeUI() {
+    loadAppSettingsFromLocalStorage();
     ThemeManager.init();
     MONTH_NAMES.forEach((name, index) => { const option = document.createElement('option'); option.value = index; option.textContent = name; uiRefs.monthSelect.appendChild(option); });
     const startYear = 2020, endYear = currentDate.getFullYear() + 5;
@@ -544,9 +545,9 @@ function createTable() {
         if (btnEnd) btnEnd.addEventListener('click', () => setCurrentTime(`end-${dayStr}`, i));
         if (btnReset) btnReset.addEventListener('click', () => resetRow(dayStr));
     }
+
+    uiRefs.workDaysTbody.appendChild(fragment);
 }
-uiRefs.workDaysTbody.appendChild(fragment);
-    }
 
 window.setCurrentTime = function (inputId, day) {
     const now = new Date(); const hours = now.getHours().toString().padStart(2, '0'); const minutes = now.getMinutes().toString().padStart(2, '0');
@@ -913,7 +914,8 @@ window.addEventListener('online', () => { handleOnlineStatusChange(true); if (cu
 window.addEventListener('offline', () => { handleOnlineStatusChange(false); });
 function handleOnlineStatusChange(online) { const message = online ? 'Ste op├Ą┼ą online. Synchroniz├ícia d├ít m├┤┼że prebieha┼ą.' : 'Ste offline. Zmeny sa bud├║ uklada┼ą lok├ílne a synchronizuj├║ sa po pripojen├ş.'; showNotification(online ? 'saveNotification' : 'warningNotification', message, online ? 3000 : 4000); }
 
-onAuthStateChanged(auth, async (user) => { currentUser = user; updateUIForAuthStateChange();
+onAuthStateChanged(auth, async (user) => {
+    currentUser = user; updateUIForAuthStateChange();
     const authContainerElement = document.getElementById('auth-container');
     if (authContainerElement) { authContainerElement.style.display = 'block'; }
     if (user) {
