@@ -20,6 +20,7 @@
       https://*.firebaseio.com 
       https://*.googleapis.com 
       https://*.gstatic.com
+      https://cdn.jsdelivr.net
       https://*.cloudfunctions.net
       https://identitytoolkit.googleapis.com
       https://*.firebaseapp.com 
@@ -48,68 +49,10 @@
   <meta http-equiv="X-XSS-Protection" content="1; mode=block">
   <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
 
-  <!-- DOMPurify - 3-layer hybrid security approach -->
-  <script>
-    (function() {
-      console.log('🔐 Loading DOMPurify with 3-layer security...');
-      
-      // VRSTVA 1: CDN s integrity check (najlepšie)
-      const cdnWithIntegrity = document.createElement('script');
-      cdnWithIntegrity.src = 'https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js';
-      cdnWithIntegrity.integrity = 'sha384-qhKvg6YK+MnZEY0ZWGVV8LWRrzPrZgLe2HwAaOLRnfGr7YQzkYx6C5kxpLLiVYLZ';
-      cdnWithIntegrity.crossOrigin = 'anonymous';
-      
-      let fallbackTriggered = false;
-      
-      cdnWithIntegrity.onload = function() {
-        console.log('✅ DOMPurify loaded from CDN with integrity check');
-      };
-      
-      cdnWithIntegrity.onerror = function() {
-        if (fallbackTriggered) return;
-        fallbackTriggered = true;
-        
-        console.warn('⚠️ Layer 1 failed: CDN with integrity check failed');
-        console.log('🔓 Trying Layer 2: CDN without integrity (auto-update)...');
-        
-        // VRSTVA 2: CDN bez integrity (auto-update)
-        const cdnNoIntegrity = document.createElement('script');
-        cdnNoIntegrity.src = 'https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js';
-        cdnNoIntegrity.crossOrigin = 'anonymous';
-        
-        cdnNoIntegrity.onload = function() {
-          console.log('✅ DOMPurify loaded from CDN without integrity (auto-update)');
-        };
-        
-        cdnNoIntegrity.onerror = function() {
-          console.warn('⚠️ Layer 2 failed: CDN completely unavailable');
-          console.log('💾 Trying Layer 3: Local fallback...');
-          
-          // VRSTVA 3: Local self-hosted (offline support)
-          const localScript = document.createElement('script');
-          localScript.src = './libs/dompurify.min.js';
-          
-          localScript.onload = function() {
-            console.log('✅ DOMPurify loaded from local fallback');
-            console.warn('⚠️ Using local version - may be outdated');
-          };
-          
-          localScript.onerror = function() {
-            console.error('❌ CRITICAL: All DOMPurify layers failed!');
-            console.error('❌ XSS protection is DISABLED!');
-          };
-          
-          document.head.appendChild(localScript);
-        };
-        
-        document.head.appendChild(cdnNoIntegrity);
-      };
-      
-      document.head.appendChild(cdnWithIntegrity);
-    })();
-  </script>
+  <!-- DOMPurify z CDN (auto-update) -->
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js" crossorigin="anonymous"></script>
 
-  <!-- jsPDF a xlsx.js self-hosted (veľké súbory) -->
+  <!-- jsPDF a xlsx.js self-hosted -->
   <script src="./libs/jspdf.umd.min.js" defer></script>
   <script src="./libs/jspdf-autotable.min.js" defer></script>
   <script src="./libs/xlsx.full.min.js" defer></script>
@@ -547,14 +490,64 @@
       text-decoration: underline;
     }
     
+    /* MOBILE OPTIMIZATION - Väčšie inputy a tlačidlá */
     @media (max-width: 768px) {
       body { padding: 8px; }
       .container { padding: 12px; }
       h1 { font-size: 1.5rem; }
+      
+      /* Väčšie inputy na mobile */
+      input[type="tel"], 
+      input[type="number"], 
+      input[type="text"], 
+      input[type="email"], 
+      input[type="password"], 
+      select,
+      textarea {
+        padding: 12px 14px;
+        font-size: 1rem;
+        min-height: 44px;
+      }
+      
+      /* Väčšie tlačidlá kamier */
+      .time-btn {
+        padding: 8px 12px;
+        font-size: 1.3em;
+        min-width: 44px;
+        min-height: 44px;
+      }
+      
+      /* Tlačidlá na spodku */
       .btn-container { flex-direction: column; }
-      .btn { width: 100%; }
-      table { font-size: 0.75rem; }
-      th, td { padding: 6px 8px; }
+      .btn { 
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 1rem;
+      }
+      
+      /* Tabuľka */
+      table { 
+        font-size: 0.8rem;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      th, td { 
+        padding: 8px 6px;
+        min-width: 60px;
+      }
+      
+      /* Špeciálne pre Príchod/Odchod/Prestávka stĺpce */
+      th:nth-child(2), th:nth-child(3), th:nth-child(4),
+      td:nth-child(2), td:nth-child(3), td:nth-child(4) {
+        min-width: 90px;
+      }
+      
+      /* Poznámka a projekt širšie */
+      th:nth-child(6), th:nth-child(7),
+      td:nth-child(6), td:nth-child(7) {
+        min-width: 120px;
+      }
     }
   </style>
 </head>
