@@ -1,0 +1,1012 @@
+:root {
+    --font-family: 'Inter', sans-serif;
+    --primary-bg-color: #f0f2f5;
+    --secondary-bg-color: #ffffff;
+    --primary-text-color: #1f2937;
+    --secondary-text-color: #4b5563;
+    --input-bg-color: #fefcbf;
+    /* Žltá pre lepšiu viditeľnosť vstupov */
+    --input-note-bg-color: #e0f2fe;
+    /* Svetlo modrá pre poznámky */
+    --input-project-bg-color: #e0fef2;
+    /* Svetlo zelená pre projekty */
+    --table-header-bg-color: #f9fafb;
+    --table-border-color: #e5e7eb;
+    --current-day-bg-color: #7c3aed;
+    --current-day-text-color: #ffffff;
+    --btn-primary-bg: #2563eb;
+    --btn-primary-hover-bg: #1d4ed8;
+    --btn-secondary-bg: #7c3aed;
+    /* Fialová pre sekundárne akcie */
+    --btn-secondary-hover-bg: #6d28d9;
+    --btn-danger-bg: #dc2626;
+    --btn-danger-hover-bg: #b91c1c;
+    --btn-warning-bg: #f59e0b;
+    --btn-warning-hover-bg: #d97706;
+    --btn-highlight-bg: #f59e0b;
+    /* Oranžová pre upozornenia */
+    --btn-text-color: #ffffff;
+    --total-salary-bg: #eff6ff;
+    --link-color: #2563eb;
+    --link-hover-color: #1d4ed8;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --base-font-size: 16px;
+    --focus-outline-color: var(--btn-primary-bg);
+    --transition-speed: 0.2s;
+    --theme-color-meta: #7c3aed;
+    /* Default theme color for meta tag */
+}
+
+html[data-theme='dark'] {
+    --primary-bg-color: #111827;
+    /* Tmavošedá skoro čierna */
+    --secondary-bg-color: #1f2937;
+    /* Tmavošedá */
+    --primary-text-color: #f3f4f6;
+    /* Veľmi svetlo šedá */
+    --secondary-text-color: #9ca3af;
+    /* Svetlo šedá */
+    --input-bg-color: #374151;
+    /* Tmavšia šedá pre vstupy */
+    --input-note-bg-color: #2c3a4b;
+    /* Tmavšia modrošedá pre poznámky */
+    --input-project-bg-color: #2c4b3a;
+    /* Tmavšia zelenošedá pre projekty */
+    --table-header-bg-color: #374151;
+    --table-border-color: #4b5563;
+    --current-day-bg-color: #8b5cf6;
+    /* Svetlejšia fialová pre kontrast */
+    --current-day-text-color: #ffffff;
+    --btn-primary-bg: #3b82f6;
+    /* Svetlejšia modrá */
+    --btn-primary-hover-bg: #2563eb;
+    --btn-secondary-bg: #8b5cf6;
+    /* Svetlejšia fialová */
+    --btn-secondary-hover-bg: #7c3aed;
+    --btn-danger-bg: #ef4444;
+    /* Svetlejšia červená */
+    --btn-danger-hover-bg: #dc2626;
+    --btn-warning-bg: #f97316;
+    /* Svetlejšia oranžová */
+    --btn-warning-hover-bg: #ea580c;
+    --btn-highlight-bg: #f97316;
+    --total-salary-bg: #374151;
+    --link-color: #60a5fa;
+    /* Svetlejšia modrá pre odkazy */
+    --link-hover-color: #3b82f6;
+    --focus-outline-color: var(--btn-primary-bg);
+    --theme-color-meta: #1f2937;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+html {
+    font-size: var(--base-font-size);
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    margin: 0;
+    padding: 12px;
+    background-color: var(--primary-bg-color);
+    color: var(--primary-text-color);
+    font-size: 0.92rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+#app-loader {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.2em;
+    color: var(--secondary-text-color);
+    text-align: center;
+    flex-direction: column;
+    background-color: var(--primary-bg-color);
+}
+
+#app-loader p {
+    margin: 5px 0;
+}
+
+#app-loader .loader-emoji {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.container {
+    max-width: 1600px;
+    margin: 20px auto;
+    background: var(--secondary-bg-color);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-lg);
+    position: relative;
+    transition: background-color var(--transition-speed);
+}
+
+.container-hidden {
+    display: none;
+}
+
+.loader-small-text {
+    font-size: 0.8em;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2rem;
+    color: var(--primary-text-color);
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+h1#mainTitle {
+    background: linear-gradient(45deg, #7c3aed, #db2777, #f59e0b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    padding-bottom: 3px;
+}
+
+h2 {
+    text-align: center;
+    color: var(--secondary-text-color);
+    margin-top: -5px;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+fieldset {
+    border: 1px solid var(--table-border-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+legend {
+    font-weight: 600;
+    color: var(--primary-text-color);
+    padding: 0 8px;
+    font-size: 0.95rem;
+}
+
+*:focus-visible {
+    outline: 3px solid var(--focus-outline-color);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.2);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+    outline: 2px solid var(--focus-outline-color);
+    outline-offset: 1px;
+}
+
+.header-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#themeToggleBtn {
+    font-size: 1.3rem;
+    padding: 6px 10px;
+    line-height: 1;
+    background-color: var(--secondary-bg-color);
+    color: var(--primary-text-color);
+    border: 1px solid var(--table-border-color);
+}
+
+#themeToggleBtn:hover {
+    background-color: var(--primary-bg-color);
+}
+
+.theme-toggle-btn {
+    margin-left: auto;
+    background-color: var(--btn-secondary-bg);
+    padding: 8px 12px;
+}
+
+.settings {
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.settings>div,
+.settings>button#toggleSettingsBtn {
+    margin: 0;
+}
+
+.settings>div {
+    flex: 1 1 220px;
+}
+
+.settings>button#toggleSettingsBtn {
+    flex-basis: 100%;
+    margin-bottom: 10px;
+    background-color: var(--secondary-bg-color);
+    color: var(--primary-text-color);
+    border: 1px solid var(--table-border-color);
+    text-align: left;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.settings>button#toggleSettingsBtn:hover {
+    background-color: var(--primary-bg-color);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.settings label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--secondary-text-color);
+}
+
+#settings-collapsible-content {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out, margin-top 0.4s ease-in-out;
+    gap: 10px 12px;
+}
+
+#settings-collapsible-content.visible {
+    max-height: 800px;
+    opacity: 1;
+    margin-top: 10px;
+}
+
+#settings-collapsible-content>fieldset {
+    display: contents;
+}
+
+#settings-collapsible-content>fieldset>div {
+    flex: 1 1 220px;
+    margin: 0;
+}
+
+.settings-section-hidden {
+    display: none;
+    margin-top: 15px;
+}
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 20px;
+    border: 1px solid var(--table-border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 10px 12px;
+    border: 1px solid var(--table-border-color);
+    text-align: left;
+    font-size: 0.875rem;
+    vertical-align: middle;
+    transition: background-color var(--transition-speed);
+}
+
+thead tr {
+    border-bottom: 2px solid #d1d5db;
+}
+
+th {
+    background-color: var(--table-header-bg-color);
+    font-weight: 600;
+    color: var(--primary-text-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+tr.weekend-day td:first-child {
+    background-color: #f3f4f6;
+    font-style: normal;
+    color: var(--secondary-text-color);
+}
+
+html[data-theme='dark'] tr.weekend-day td:first-child {
+    background-color: #374151;
+    color: var(--secondary-text-color);
+}
+
+td .time-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+td .time-input-wrapper input[type="tel"] {
+    flex-grow: 1;
+    min-width: 65px;
+    padding: 8px 6px;
+    font-size: 0.875rem;
+}
+
+td .time-input-wrapper .time-btn {
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 5px;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+    line-height: 1;
+    background: none;
+    color: var(--secondary-text-color);
+    user-select: none;
+    transition: background-color var(--transition-speed), border-color var(--transition-speed), color var(--transition-speed);
+}
+
+td .time-input-wrapper .time-btn:hover {
+    background-color: #e5e7eb;
+    border-color: #d1d5db;
+    color: var(--primary-text-color);
+}
+
+html[data-theme='dark'] td .time-input-wrapper .time-btn:hover {
+    background-color: #4b5563;
+    border-color: #6b7280;
+    color: var(--primary-text-color);
+}
+
+/* Úprava šírok stĺpcov pre nový stĺpec "Projekt" */
+th:nth-child(1),
+td:nth-child(1) {
+    width: 95px;
+}
+
+/* Deň */
+th:nth-child(2),
+td:nth-child(2) {
+    width: 105px;
+}
+
+/* Príchod */
+th:nth-child(3),
+td:nth-child(3) {
+    width: 105px;
+}
+
+/* Odchod */
+th:nth-child(4),
+td:nth-child(4) {
+    width: 85px;
+}
+
+/* Prestávka */
+th:nth-child(5),
+td:nth-child(5) {
+    width: 110px;
+}
+
+/* Odpracované */
+th:nth-child(6),
+td:nth-child(6) {
+    min-width: 150px;
+    width: auto;
+}
+
+/* Projekt - nový stĺpec */
+th:nth-child(7),
+td:nth-child(7) {
+    min-width: 200px;
+    width: auto;
+}
+
+/* Poznámka */
+th:nth-child(8),
+td:nth-child(8) {
+    width: 90px;
+}
+
+/* Hrubá Mzda */
+th:nth-child(9),
+td:nth-child(9) {
+    width: 90px;
+}
+
+/* Čistá Mzda */
+th:nth-child(10),
+td:nth-child(10) {
+    width: 45px;
+    text-align: center;
+}
+
+/* Akcie */
+
+input[type="tel"],
+input[type="number"],
+input[type="text"],
+select,
+textarea {
+    width: 100%;
+    padding: 9px 12px;
+    box-sizing: border-box;
+    background-color: var(--input-bg-color);
+    font-size: 0.9rem;
+    border: 1px solid var(--table-border-color);
+    border-radius: var(--border-radius);
+    vertical-align: middle;
+    font-family: var(--font-family);
+    transition: border-color var(--transition-speed), box-shadow var(--transition-speed), background-color var(--transition-speed);
+    color: var(--primary-text-color);
+}
+
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--focus-outline-color);
+    box-shadow: 0 0 0 1px var(--focus-outline-color);
+}
+
+input[type="tel"].invalid-time,
+input[type="number"].invalid-value,
+input[type="text"].invalid-value {
+    border-color: var(--btn-danger-bg) !important;
+    box-shadow: 0 0 0 1px var(--btn-danger-bg) !important;
+}
+
+td input[type="number"] {
+    min-width: 60px;
+}
+
+td input[type="text"].project-input {
+    background-color: var(--input-project-bg-color);
+}
+
+/* Špecifické pozadie pre projekt */
+td input[type="number"][readonly] {
+    background-color: var(--table-header-bg-color) !important;
+    /* Dôležité pre tmavý režim */
+    border: none;
+    padding-left: 2px;
+    padding-right: 2px;
+    color: var(--secondary-text-color);
+    font-weight: 500;
+}
+
+textarea[id^="note-"] {
+    background-color: var(--input-note-bg-color);
+    resize: vertical;
+    min-height: 38px;
+    line-height: 1.5;
+    overflow-y: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.month-nav {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius);
+    margin: 15px 0;
+    box-shadow: var(--box-shadow);
+}
+
+.month-nav label {
+    font-weight: 500;
+    margin: 0;
+}
+
+.month-nav select {
+    padding: 6px 10px;
+}
+
+.month-nav-label {
+    font-weight: 500;
+    margin: 0;
+}
+
+.month-nav-select {
+    padding: 6px 10px;
+}
+
+.btn-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 25px;
+    gap: 12px;
+}
+
+.btn {
+    flex: 0 1 auto;
+    padding: 10px 20px;
+    color: var(--btn-text-color);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.92rem;
+    font-weight: 500;
+    margin: 0;
+    transition: background-color var(--transition-speed) ease, transform 0.1s ease, box-shadow var(--transition-speed) ease;
+    text-align: center;
+    box-shadow: var(--box-shadow);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 10px -3px rgba(0, 0, 0, 0.1), 0 4px 5px -2px rgba(0, 0, 0, 0.06);
+}
+
+.btn:active {
+    transform: translateY(0px);
+    box-shadow: var(--box-shadow);
+}
+
+.btn.is-loading {
+    pointer-events: none;
+    position: relative;
+}
+
+.btn.is-loading::before {
+    content: "";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+html[data-theme='dark'] .btn.is-loading::before {
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: var(--primary-text-color);
+}
+
+@keyframes spin {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}
+
+.reset-btn {
+    background-color: var(--btn-danger-bg);
+}
+
+.reset-btn:hover {
+    background-color: var(--btn-danger-hover-bg);
+}
+
+.btn.warning-btn {
+    background-color: var(--btn-warning-bg);
+    color: var(--primary-text-color);
+}
+
+html[data-theme='dark'] .btn.warning-btn {
+    color: var(--primary-bg-color);
+}
+
+/* Lepší kontrast pre warning v tmavom režime */
+.btn.warning-btn:hover {
+    background-color: var(--btn-warning-hover-bg);
+}
+
+.export-btn {
+    background-color: var(--btn-primary-bg);
+}
+
+.export-btn:hover {
+    background-color: var(--btn-primary-hover-bg);
+}
+
+.backup-btn {
+    background-color: var(--btn-secondary-bg);
+}
+
+.backup-btn:hover {
+    background-color: var(--btn-secondary-hover-bg);
+}
+
+.reset-btn-inline {
+    padding: 8px 15px;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.reset-btn-small {
+    padding: 4px 6px;
+    font-size: 0.8rem;
+}
+
+#user-info-flex {
+    display: none;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+    flex-grow: 1;
+}
+
+#user-email-bold {
+    font-weight: 500;
+}
+
+#totalSalary {
+    font-size: 1rem;
+    font-weight: 500;
+    text-align: center;
+    margin-top: 25px;
+    padding: 15px;
+    background-color: var(--total-salary-bg);
+    border-radius: var(--border-radius);
+    line-height: 1.8;
+    color: var(--primary-text-color);
+    box-shadow: var(--box-shadow);
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+
+#localStorageIndicator {
+    font-size: 0.8rem;
+    text-align: right;
+    margin-top: 8px;
+    color: #9ca3af;
+}
+
+html[data-theme='dark'] #localStorageIndicator {
+    color: var(--secondary-text-color);
+}
+
+.current-day {
+    background-color: var(--current-day-bg-color) !important;
+    color: var(--current-day-text-color);
+}
+
+.current-day td,
+.current-day th {
+    background-color: var(--current-day-bg-color) !important;
+    color: var(--current-day-text-color) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.current-day input,
+.current-day select,
+.current-day textarea,
+.current-day input.project-input {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: var(--current-day-text-color) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.current-day input::placeholder,
+.current-day textarea::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.current-day textarea[id^="note-"] {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.current-day input[id^="project-"] {
+    background-color: rgba(200, 255, 200, 0.2) !important;
+}
+
+/* Svetlejšia zelená pre projekt v current-day */
+.current-day .time-btn {
+    color: var(--current-day-text-color) !important;
+}
+
+.current-day .time-btn:hover {
+    background-color: rgba(255, 255, 255, 0.25) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+#auth-container {
+    margin-bottom: 20px;
+}
+
+#auth-container fieldset {
+    width: 100%;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#login-form input[type="email"],
+#login-form input[type="password"] {
+    width: 100%;
+    margin: 8px 0;
+    display: block;
+    padding: 10px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+#login-form .btn {
+    width: 100%;
+    margin: 8px 0 0 0;
+    padding: 10px 15px;
+    font-size: 0.95rem;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    min-width: auto;
+    max-width: none;
+}
+
+#login-form .btn+.btn {
+    margin-top: 10px;
+}
+
+#login-form a {
+    margin-top: 15px;
+    display: block;
+    font-size: 0.9rem;
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+#login-form a:hover {
+    text-decoration: underline;
+    color: var(--link-hover-color);
+}
+
+#user-info {
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+
+    .container {
+        padding: 15px;
+        margin: 10px auto;
+    }
+
+    .header-controls {
+        justify-content: center;
+    }
+
+    #themeToggleBtn {
+        order: -1;
+        /* Posunie tlačidlo na začiatok v mobilnom zobrazení */
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    h2 {
+        font-size: 0.95rem;
+    }
+
+    .settings {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .settings>div {
+        flex-basis: auto;
+        width: 100%;
+    }
+
+    #settings-collapsible-content.visible {
+        max-height: 950px;
+    }
+
+    /* Zvýšená pre mobil */
+    th,
+    td {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+
+    textarea[id^="note-"] {
+        min-height: 40px;
+    }
+
+    .btn-container .btn {
+        font-size: 0.9rem;
+        padding: 12px 18px;
+        margin: 5px 0;
+        min-width: 180px;
+        max-width: 300px;
+    }
+
+    .btn-container .btn[title*="Vymazať mesiac"] {
+        max-width: 240px;
+    }
+
+    #login-form input[type="email"],
+    #login-form input[type="password"] {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+
+    #login-form .btn {
+        font-size: 0.92rem !important;
+        padding-top: 11px !important;
+        padding-bottom: 11px !important;
+    }
+
+    #login-form a {
+        margin-top: 18px !important;
+        font-size: 0.88rem;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 6px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+    }
+
+    h2 {
+        font-size: 0.9rem;
+    }
+
+    th,
+    td {
+        padding: 7px;
+        font-size: 0.82rem;
+    }
+
+    textarea[id^="note-"] {
+        min-height: 42px;
+    }
+
+    #settings-collapsible-content.visible {
+        max-height: 1100px;
+    }
+
+    /* Zvýšená pre mobil */
+    .btn-container .btn {
+        font-size: 0.88rem;
+        padding: 11px 16px;
+        min-width: 100%;
+        max-width: 280px;
+    }
+
+    #login-form input[type="email"],
+    #login-form input[type="password"],
+    #login-form .btn {
+        font-size: 0.88rem !important;
+    }
+}
+
+#saveNotification,
+#errorNotification,
+#warningNotification {
+    display: none;
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    padding: 15px 22px;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+    box-shadow: var(--box-shadow-lg);
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+    transform: translateY(30px);
+    font-weight: 500;
+}
+
+#saveNotification.show,
+#errorNotification.show,
+#warningNotification.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#saveNotification {
+    background-color: var(--btn-primary-bg);
+    color: white;
+}
+
+#errorNotification {
+    background-color: var(--btn-danger-bg);
+    color: white;
+}
+
+#warningNotification {
+    background-color: var(--btn-highlight-bg);
+    color: var(--primary-text-color);
+}
+
+html[data-theme='dark'] #warningNotification {
+    color: var(--primary-bg-color);
+}
+
+@media print {
+
+    /* Print styles exist, no major changes needed for new features unless specifically requested */
+    /* Project column will be printed as a normal text column */
+    /* Dark mode styles should not affect print */
+    html[data-theme='dark'] body {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+
+    html[data-theme='dark'] th,
+    html[data-theme='dark'] td {
+        background-color: #fff !important;
+        color: #000 !important;
+        border-color: #ccc !important;
+    }
+
+    /* Hide theme toggle button in print */
+    #themeToggleBtn {
+        display: none !important;
+    }
+
+    /* Ensure project input is visible */
+    td input[type="text"].project-input {
+        background-color: transparent !important;
+        border: none !important;
+        color: #000 !important;
+        padding: 0 !important;
+        text-align: left;
+        width: auto !important;
+        font-size: 9pt !important;
+    }
+}

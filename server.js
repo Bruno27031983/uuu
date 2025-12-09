@@ -15,8 +15,19 @@ const MIME_TYPES = {
 };
 
 http.createServer((req, res) => {
-    let filePath = '.' + req.url;
-    if (filePath === './') filePath = './index.html';
+    // Zabezpečenie proti Path Traversal
+    let requestedPath = req.url;
+    if (requestedPath === '/') requestedPath = '/index.html';
+
+    // Vytvor absolútnu cestu a normalizuj ju
+    const filePath = path.normalize(path.join(__dirname, requestedPath));
+
+    // KRITICKÉ: Over, že výsledná cesta je stále v rámci aktuálneho adresára
+    if (!filePath.startsWith(__dirname)) {
+        res.writeHead(403);
+        res.end('403 Forbidden');
+        return;
+    }
 
     const extname = String(path.extname(filePath)).toLowerCase();
     const contentType = MIME_TYPES[extname] || 'application/octet-stream';
@@ -28,7 +39,7 @@ http.createServer((req, res) => {
                 res.end('404 Not Found');
             } else {
                 res.writeHead(500);
-                res.end('Sorry, check with the site admin for error: ' + error.code + ' ..\n');
+                res.end('500 Internal Server Error');
             }
         } else {
             res.writeHead(200, { 'Content-Type': contentType });
