@@ -515,7 +515,7 @@ function createTable() {
                 <td><input type="text" inputmode="decimal" id="break-${dayStr}" placeholder="hod." aria-label="Prestávka v hodinách dňa ${dayStr}"></td>
                 <td id="total-${dayStr}">0h 0m (${(0).toFixed(appSettings.decimalPlaces)} h)</td>
                 <td><input type="text" id="project-${dayStr}" class="project-input" placeholder="Projekt/Úloha" aria-label="Projekt alebo úloha pre deň ${dayStr}"></td>
-                <td><textarea id="note-${dayStr}" placeholder="Poznámka..." aria-label="Poznámka ku dňu ${dayStr}"></textarea></td>
+                <td><textarea id="note-${dayStr}" rows="2" placeholder="Poznámka..." aria-label="Poznámka ku dňu ${dayStr}"></textarea></td>
                 <td><input type="number" id="gross-${dayStr}" readonly aria-label="Hrubá mzda dňa ${dayStr}" step="0.01"></td>
                 <td><input type="number" id="net-${dayStr}" readonly aria-label="Čistá mzda dňa ${dayStr}" step="0.01"></td>
                 <td class="actions-cell"><button class="btn reset-btn reset-btn-small-inline" id="btn-reset-${dayStr}" aria-label="Resetovať údaje pre deň ${dayStr}">X</button></td>`;
@@ -594,10 +594,12 @@ window.validateBreakInputOnBlur = function (day) {
 }
 window.handleNoteInput = function (textarea) { autoResizeTextarea(textarea); }
 function autoResizeTextarea(textarea) {
-    const lineHeight = 20;
-    const minHeight = 38;
-    const contentHeight = textarea.scrollHeight;
-    const rows = Math.max(2, Math.ceil(contentHeight / lineHeight));
+    if (!textarea.value || textarea.value.trim() === '') {
+        textarea.setAttribute('rows', '2');
+        return;
+    }
+    const lineCount = (textarea.value.match(/\n/g) || []).length + 1;
+    const rows = Math.min(6, Math.max(2, lineCount));
     textarea.setAttribute('rows', rows);
 }
 
