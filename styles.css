@@ -143,6 +143,10 @@ body {
     display: none;
 }
 
+.loader-small-text {
+    font-size: 0.8em;
+}
+
 h1 {
     text-align: center;
     font-size: 2rem;
@@ -532,6 +536,15 @@ textarea[id^="note-"] {
 }
 
 .month-nav select {
+    padding: 6px 10px;
+}
+
+.month-nav-label {
+    font-weight: 500;
+    margin: 0;
+}
+
+.month-nav-select {
     padding: 6px 10px;
 }
 
