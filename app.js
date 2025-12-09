@@ -348,15 +348,27 @@ window.logoutUser = async function () {
 window.resetUserPassword = async function () {
     if (!navigator.onLine) { showErrorNotification('Ste offline. Obnova hesla je možná iba v online režime.'); return; }
     const emailInput = document.getElementById('email'); const email = emailInput.value;
-    if (!email) { emailInput.style.border = '1px solid red'; showErrorNotification('Prosím, zadajte Vašu emailovú adresu pre obnovu hesla.'); setTimeout(() => { emailInput.style.border = ''; }, 3000); return; }
-    emailInput.style.border = '';
+    if (!email) { emailInput.classList.add('input-error'); showErrorNotification('Prosím, zadajte Vašu emailovú adresu pre obnovu hesla.'); setTimeout(() => { emailInput.classList.remove('input-error'); }, 3000); return; }
+    emailInput.classList.remove('input-error');
     try { await sendPasswordResetEmail(auth, email); showSaveNotification(`Email na obnovu hesla bol odoslaný na adresu ${email}. Skontrolujte si doručenú poštu.`); }
     catch (error) { showErrorNotification('Chyba pri odosielaní emailu na obnovu hesla: ' + mapFirebaseAuthError(error.code)); }
 };
 function updateUIForAuthStateChange() {
     const isLoggedIn = !!currentUser;
-    if (uiRefs.loginFieldset) uiRefs.loginFieldset.style.display = isLoggedIn ? 'none' : 'block';
-    uiRefs.userInfo.style.display = isLoggedIn ? 'flex' : 'none';
+    if (uiRefs.loginFieldset) {
+        if (isLoggedIn) {
+            uiRefs.loginFieldset.classList.add('hidden');
+        } else {
+            uiRefs.loginFieldset.classList.remove('hidden');
+        }
+    }
+    if (isLoggedIn) {
+        uiRefs.userInfo.classList.remove('hidden');
+        uiRefs.userInfo.classList.add('visible-flex');
+    } else {
+        uiRefs.userInfo.classList.add('hidden');
+        uiRefs.userInfo.classList.remove('visible-flex');
+    }
     if (isLoggedIn && uiRefs.userEmailSpan) uiRefs.userEmailSpan.textContent = `Prihlásený: ${currentUser.email}`;
     const logoutBtn = uiRefs.userInfo.querySelector('.reset-btn');
     if (logoutBtn && logoutBtn.classList.contains('is-loading')) { setLoadingState(logoutBtn, false, "Odhlásiť sa"); }
@@ -491,7 +503,7 @@ function createTable() {
         if (isCurrDay) row.classList.add('current-day');
         if (isWeekend(currentYear, currentMonth, i)) row.classList.add('weekend-day');
         row.innerHTML = `
-                <td>${i}. ${getDayName(currentYear, currentMonth, i)} ${isCurrDay ? '<span aria-hidden="true" style="font-style: normal; filter: grayscale(0.1) brightness(1.3);"> ⭐</span>' : ''}</td>
+                <td>${i}. ${getDayName(currentYear, currentMonth, i)} ${isCurrDay ? '<span aria-hidden="true" class="star-icon"> ⭐</span>' : ''}</td>
                 <td><div class="time-input-wrapper">
                     <input type="tel" id="start-${dayStr}" maxlength="5" pattern="[0-9:]*" inputmode="numeric" placeholder="HH:MM" aria-label="Príchod dňa ${dayStr}">
                     <button class="time-btn" id="btn-start-${dayStr}" title="Zadať aktuálny čas" aria-label="Zadať aktuálny čas pre príchod dňa ${dayStr}">🕒</button>
@@ -506,7 +518,7 @@ function createTable() {
                 <td><textarea id="note-${dayStr}" placeholder="Poznámka..." aria-label="Poznámka ku dňu ${dayStr}"></textarea></td>
                 <td><input type="number" id="gross-${dayStr}" readonly aria-label="Hrubá mzda dňa ${dayStr}" step="0.01"></td>
                 <td><input type="number" id="net-${dayStr}" readonly aria-label="Čistá mzda dňa ${dayStr}" step="0.01"></td>
-                <td style="text-align:center;"><button class="btn reset-btn" id="btn-reset-${dayStr}" style="padding:4px 6px; font-size:0.8rem;" aria-label="Resetovať údaje pre deň ${dayStr}">X</button></td>`;
+                <td class="actions-cell"><button class="btn reset-btn reset-btn-small-inline" id="btn-reset-${dayStr}" aria-label="Resetovať údaje pre deň ${dayStr}">X</button></td>`;
         fragment.appendChild(row);
 
         const startInput = row.querySelector(`#start-${dayStr}`);
@@ -581,7 +593,13 @@ window.validateBreakInputOnBlur = function (day) {
     calculateRow(day);
 }
 window.handleNoteInput = function (textarea) { autoResizeTextarea(textarea); }
-function autoResizeTextarea(textarea) { textarea.style.height = 'auto'; textarea.style.height = Math.max(38, textarea.scrollHeight) + 'px'; }
+function autoResizeTextarea(textarea) {
+    const lineHeight = 20;
+    const minHeight = 38;
+    const contentHeight = textarea.scrollHeight;
+    const rows = Math.max(2, Math.ceil(contentHeight / lineHeight));
+    textarea.setAttribute('rows', rows);
+}
 
 function calculateRow(day) {
     const startInput = document.getElementById(`start-${day}`); const endTimeInput = document.getElementById(`end-${day}`);
@@ -904,8 +922,12 @@ window.changeYear = function () { currentYear = parseInt(uiRefs.yearSelect.value
 
 uiRefs.toggleSettingsBtn.addEventListener('click', () => {
     const settingsSection = document.getElementById('settings-section');
-    const isVisible = settingsSection.style.display !== 'none';
-    settingsSection.style.display = isVisible ? 'none' : 'block';
+    const isVisible = !settingsSection.classList.contains('hidden');
+    if (isVisible) {
+        settingsSection.classList.add('hidden');
+    } else {
+        settingsSection.classList.remove('hidden');
+    }
     uiRefs.toggleSettingsBtn.textContent = isVisible ? 'Zobraziť nastavenia aplikácie ▼' : 'Skryť nastavenia aplikácie ▲';
     uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', !isVisible);
 });
@@ -916,7 +938,7 @@ function handleOnlineStatusChange(online) { const message = online ? 'Ste opäť
 onAuthStateChanged(auth, async (user) => {
     currentUser = user; updateUIForAuthStateChange();
     const authContainerElement = document.getElementById('auth-container');
-    if (authContainerElement) { authContainerElement.style.display = 'block'; }
+    if (authContainerElement) { authContainerElement.classList.remove('hidden'); }
     if (user) {
         const settingsLoadedFromFS = await loadUserAppSettingsFromFirestore();
         if (!settingsLoadedFromFS) {
@@ -932,8 +954,13 @@ onAuthStateChanged(auth, async (user) => {
         localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY); updateAppBadge(0);
     }
     createTable(); setupFirestoreWorkDataListener(); updatePageTitleAndGreeting();
-    if (uiRefs.appLoader) uiRefs.appLoader.style.display = 'none';
-    if (uiRefs.mainContainer) uiRefs.mainContainer.style.display = 'block';
+    if (uiRefs.appLoader) {
+        uiRefs.appLoader.classList.add('hidden');
+    }
+    if (uiRefs.mainContainer) {
+        uiRefs.mainContainer.classList.remove('container-hidden');
+        uiRefs.mainContainer.classList.add('visible-block');
+    }
 });
 
 initializeUI();
