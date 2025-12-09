@@ -7,7 +7,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app-check.js';
 
-// POZNÁMKA: TOTO SÚ PLACEHOLDER K─ŻÚČE. Nahra─Ćte vašimi skutočnými kľúčmi pre produkciu.
+// POZNÁMKA: TOTO SÚ PLACEHOLDER KĽÚČE. Nahraďte vašimi skutočnými kľúčmi pre produkciu.
 const firebaseConfig = {
     apiKey: "AIzaSyBdLtJlduT3iKiGLDJ0UfAakpf6wcresnk",
     authDomain: "uuuuu-f7ef9.firebaseapp.com",
@@ -16,7 +16,7 @@ const firebaseConfig = {
     messagingSenderId: "456105865458",
     appId: "1:456105865458:web:101f0a4dcb455f174b606b",
 };
-// POZNÁMKA: TOTO JE PLACEHOLDER K─ŻÚČ. Nahra─Ćte vašim skutočným kľúčom pre produkciu.
+// POZNÁMKA: TOTO JE PLACEHOLDER KĽÚČ. Nahraďte vašim skutočným kľúčom pre produkciu.
 const RECAPTCHA_V3_SITE_KEY = "6LczmP0qAAAAAACGalBT9zZekkUr3hLgA2e8o99v";
 
 
@@ -104,7 +104,6 @@ const ThemeManager = {
             const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
             appSettings.theme = prefersDark ? 'dark' : 'light';
         }
-        ThemeManager.applyTheme(appSettings.theme);
         ThemeManager.applyTheme(appSettings.theme);
         if (uiRefs.themeToggleBtn) uiRefs.themeToggleBtn.addEventListener('click', ThemeManager.toggleTheme);
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
