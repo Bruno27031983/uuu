@@ -924,14 +924,16 @@ window.changeYear = function () { currentYear = parseInt(uiRefs.yearSelect.value
 
 uiRefs.toggleSettingsBtn.addEventListener('click', () => {
     const settingsSection = document.getElementById('settings-section');
-    const isVisible = !settingsSection.classList.contains('hidden');
-    if (isVisible) {
-        settingsSection.classList.add('hidden');
+    const isHidden = settingsSection.classList.contains('settings-section-hidden');
+    if (isHidden) {
+        settingsSection.classList.remove('settings-section-hidden');
+        uiRefs.toggleSettingsBtn.textContent = 'Skryť nastavenia aplikácie ▲';
+        uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', 'true');
     } else {
-        settingsSection.classList.remove('hidden');
+        settingsSection.classList.add('settings-section-hidden');
+        uiRefs.toggleSettingsBtn.textContent = 'Zobraziť nastavenia aplikácie ▼';
+        uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', 'false');
     }
-    uiRefs.toggleSettingsBtn.textContent = isVisible ? 'Zobraziť nastavenia aplikácie ▼' : 'Skryť nastavenia aplikácie ▲';
-    uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', !isVisible);
 });
 window.addEventListener('online', () => { handleOnlineStatusChange(true); if (currentUser) { syncPendingWorkData(); debouncedSaveAppSettingsToFirestore(); } });
 window.addEventListener('offline', () => { handleOnlineStatusChange(false); });
