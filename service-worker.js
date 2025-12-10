@@ -1,15 +1,17 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-pro-v2.0'; // <-- NASTAVTE NOVÚ VERZIU!
+const CACHE_NAME = 'bruno-calculator-pro-v2.1'; // Aktualizované pre nové súbory
 const ASSETS_TO_CACHE = [
   './', // Alias pre index.html
   './index.html',
+  './app.js',
+  './styles.css',
   './manifest.json',
+  './sw-register.js',
   './icons/icon-192x192.webp', // Optimalizované WebP ikony
   './icons/icon-512x512.webp', // Optimalizované WebP ikony
   // Font (ak ho chcete cachovať explicitne)
   'https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2'
-  // Pridajte sem ďalšie kľúčové lokálne assety, ak nejaké máte (napr. hlavný CSS súbor, ak nie je inline)
 ];
 
 // Zoznam CDN, ktorých obsah chceme tiež cachovať (stratégia Cache, then Network s aktualizáciou)
