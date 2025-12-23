@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-pro-v2.1'; // Aktualizované po security update
+const CACHE_NAME = 'bruno-calculator-pro-v2.2'; // Aktualizované po security update
 const ASSETS_TO_CACHE = [
   './', // Alias pre index.html
   './index.html',
@@ -165,4 +165,5 @@ self.addEventListener('online', () => {
 self.addEventListener('offline', () => {
   console.log('[ServiceWorker] Detected offline status.');
 });
+
 
