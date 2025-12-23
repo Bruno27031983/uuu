@@ -459,16 +459,43 @@ function setupFirestoreWorkDataListener() {
     currentListenerUnsubscribe = onSnapshot(docRef, (docSnap) => {
         const localKey = getLocalStorageKeyForWorkData(docId);
         if (docSnap.exists()) {
-            const firestoreData = docSnap.data(); const firestoreDataString = JSON.stringify(firestoreData);
-            if (!docSnap.metadata.hasPendingWrites || firestoreDataString !== localStorage.getItem(localKey)) {
+            const firestoreData = docSnap.data();
+            const firestoreDataString = JSON.stringify(firestoreData);
+
+            const localDataString = localStorage.getItem(localKey);
+            let shouldUpdateLocalData = true;
+
+            if (localDataString && !docSnap.metadata.hasPendingWrites) {
+                try {
+                    const localData = JSON.parse(localDataString);
+                    const localTimestamp = localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
+                    const firestoreTimestamp = firestoreData.lastUpdated ? new Date(firestoreData.lastUpdated).getTime() : 0;
+
+                    if (localTimestamp > firestoreTimestamp) {
+                        shouldUpdateLocalData = false;
+                    }
+                } catch (error) {
+                    secureLog('error', 'Error parsing local data for timestamp comparison');
+                }
+            }
+
+            if (shouldUpdateLocalData && (!docSnap.metadata.hasPendingWrites || firestoreDataString !== localDataString)) {
                 localStorage.setItem(localKey, firestoreDataString);
-                if (!docSnap.metadata.hasPendingWrites) { removeMonthFromPendingList(docId); const pendingKey = getPendingSyncKeyForMonth(docId); if (pendingKey) localStorage.removeItem(pendingKey); }
+                if (!docSnap.metadata.hasPendingWrites) {
+                    removeMonthFromPendingList(docId);
+                    const pendingKey = getPendingSyncKeyForMonth(docId);
+                    if (pendingKey) localStorage.removeItem(pendingKey);
+                }
                 parseAndApplyWorkData(firestoreDataString);
-            } else { calculateTotal(); }
+            } else {
+                calculateTotal();
+            }
         } else {
             if (localStorage.getItem(localKey)) localStorage.removeItem(localKey);
-            const pendingKey = getPendingSyncKeyForMonth(docId); if (pendingKey) localStorage.removeItem(pendingKey);
-            removeMonthFromPendingList(docId); parseAndApplyWorkData(null);
+            const pendingKey = getPendingSyncKeyForMonth(docId);
+            if (pendingKey) localStorage.removeItem(pendingKey);
+            removeMonthFromPendingList(docId);
+            parseAndApplyWorkData(null);
         }
     }, (error) => { secureLog('error', 'Firestore listener error'); showErrorNotification('Chyba synchronizácie dát s cloudom. Zobrazujem lokálne uložené dáta.'); loadWorkDataFromLocalStorage(); });
     syncPendingWorkData();
@@ -477,20 +504,43 @@ function getFirestoreDocId(year, month) { return `${year}-${String(month + 1).pa
 function getLocalStorageKeyForWorkData(docId) { return currentUser ? `workData-${currentUser.uid}-${docId}` : `workData-guest-${docId}`; }
 function getPendingSyncKeyForMonth(docId) { return currentUser ? `pendingSync-workData-${currentUser.uid}-${docId}` : null; }
 
-const _debouncedSaveWorkDataAndSync = debounce(async () => {
-    const dataToSave = collectWorkDataForStorage(); const docId = getFirestoreDocId(currentYear, currentMonth);
-    const localKey = getLocalStorageKeyForWorkData(docId); const dataToSaveString = JSON.stringify(dataToSave);
-    localStorage.setItem(localKey, dataToSaveString); updateLocalStorageSizeIndicator();
+function saveToLocalImmediate() {
+    const dataToSave = collectWorkDataForStorage();
+    const docId = getFirestoreDocId(currentYear, currentMonth);
+    const localKey = getLocalStorageKeyForWorkData(docId);
+    const dataToSaveString = JSON.stringify(dataToSave);
+    localStorage.setItem(localKey, dataToSaveString);
+    updateLocalStorageSizeIndicator();
+    calculateTotal();
+}
+
+const _syncToCloudDebounced = debounce(async () => {
+    const docId = getFirestoreDocId(currentYear, currentMonth);
+    const localKey = getLocalStorageKeyForWorkData(docId);
+    const localDataString = localStorage.getItem(localKey);
+
+    if (!localDataString) return;
+
+    const dataToSync = JSON.parse(localDataString);
+
     if (currentUser) {
         const pendingKey = getPendingSyncKeyForMonth(docId);
         if (navigator.onLine) {
-            try { await saveWorkDataToFirestore(dataToSave, docId); removeMonthFromPendingList(docId); if (pendingKey) localStorage.removeItem(pendingKey); }
-            catch (error) { addMonthToPendingList(docId); if (pendingKey) localStorage.setItem(pendingKey, dataToSaveString); }
-        } else { addMonthToPendingList(docId); if (pendingKey) localStorage.setItem(pendingKey, dataToSaveString); }
+            try {
+                await saveWorkDataToFirestore(dataToSync, docId);
+                removeMonthFromPendingList(docId);
+                if (pendingKey) localStorage.removeItem(pendingKey);
+            } catch (error) {
+                addMonthToPendingList(docId);
+                if (pendingKey) localStorage.setItem(pendingKey, localDataString);
+            }
+        } else {
+            addMonthToPendingList(docId);
+            if (pendingKey) localStorage.setItem(pendingKey, localDataString);
+        }
     }
-    calculateTotal();
-}, 1200);
-const debouncedSaveWorkDataAndSync = _debouncedSaveWorkDataAndSync;
+}, 2000);
+const syncToCloudDebounced = _syncToCloudDebounced;
 
 function collectWorkDataForStorage() {
     const saveData = { data: [] }; const days = getDaysInMonth(currentMonth, currentYear);
@@ -744,7 +794,8 @@ function createTable() {
         startInput.addEventListener('blur', () => {
             activelyEditingFields.delete(startInput.id);
             validateAndFormatTimeBlur(startInput, i);
-            debouncedSaveWorkDataAndSync();
+            saveToLocalImmediate();
+            syncToCloudDebounced();
         });
 
         endInput.addEventListener('focus', () => activelyEditingFields.add(endInput.id));
@@ -752,7 +803,8 @@ function createTable() {
         endInput.addEventListener('blur', () => {
             activelyEditingFields.delete(endInput.id);
             validateAndFormatTimeBlur(endInput, i);
-            debouncedSaveWorkDataAndSync();
+            saveToLocalImmediate();
+            syncToCloudDebounced();
         });
 
         breakInput.addEventListener('focus', () => activelyEditingFields.add(breakInput.id));
@@ -760,21 +812,27 @@ function createTable() {
         breakInput.addEventListener('blur', () => {
             activelyEditingFields.delete(breakInput.id);
             validateBreakInputOnBlur(i);
-            debouncedSaveWorkDataAndSync();
+            saveToLocalImmediate();
+            syncToCloudDebounced();
         });
 
         projectInput.addEventListener('focus', () => activelyEditingFields.add(projectInput.id));
-        projectInput.addEventListener('input', debouncedSaveWorkDataAndSync);
+        projectInput.addEventListener('input', () => {
+            saveToLocalImmediate();
+            syncToCloudDebounced();
+        });
         projectInput.addEventListener('blur', () => {
             activelyEditingFields.delete(projectInput.id);
-            debouncedSaveWorkDataAndSync();
+            saveToLocalImmediate();
+            syncToCloudDebounced();
         });
 
         noteInput.addEventListener('focus', () => activelyEditingFields.add(noteInput.id));
         noteInput.addEventListener('input', () => handleNoteInput(noteInput));
         noteInput.addEventListener('blur', () => {
             activelyEditingFields.delete(noteInput.id);
-            debouncedSaveWorkDataAndSync();
+            saveToLocalImmediate();
+            syncToCloudDebounced();
         });
 
         // Event listeners pre tlačidlá
@@ -898,7 +956,7 @@ function resetRow(day) {
     const breakEl = document.getElementById(`break-${dayStr}`); if (breakEl) breakEl.value = '';
     const projectEl = document.getElementById(`project-${dayStr}`); if (projectEl) projectEl.value = '';
     const noteEl = document.getElementById(`note-${dayStr}`); if (noteEl) { noteEl.value = ''; autoResizeTextarea(noteEl); }
-    calculateRow(day); debouncedSaveWorkDataAndSync(); showSaveNotification(`Záznam pre ${day}. deň bol úspešne vymazaný.`);
+    calculateRow(day); saveToLocalImmediate(); syncToCloudDebounced(); showSaveNotification(`Záznam pre ${day}. deň bol úspešne vymazaný.`);
 }
 async function clearMonthData() {
     const btn = document.getElementById('btnClearMonth');
