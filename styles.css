@@ -729,6 +729,190 @@ html[data-theme='dark'] #localStorageIndicator {
     color: var(--secondary-text-color);
 }
 
+/* Sync Status Indicator */
+.sync-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-top: 10px;
+    transition: all var(--transition-speed);
+}
+
+.sync-status .sync-icon {
+    font-size: 1rem;
+}
+
+.sync-status-synced {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.sync-status-saving {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.sync-status-offline {
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+.sync-status-pending {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+html[data-theme='dark'] .sync-status-synced {
+    background-color: #064e3b;
+    color: #a7f3d0;
+}
+
+html[data-theme='dark'] .sync-status-saving {
+    background-color: #78350f;
+    color: #fde68a;
+}
+
+html[data-theme='dark'] .sync-status-offline {
+    background-color: #7f1d1d;
+    color: #fecaca;
+}
+
+html[data-theme='dark'] .sync-status-pending {
+    background-color: #1e3a8a;
+    color: #bfdbfe;
+}
+
+@keyframes pulse-saving {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.sync-status-saving .sync-icon {
+    animation: pulse-saving 1s ease-in-out infinite;
+}
+
+/* Monthly Goal Progress Bar */
+.goal-progress-container {
+    margin-top: 15px;
+    padding: 12px;
+    background-color: var(--table-header-bg-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--table-border-color);
+}
+
+.goal-progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.goal-progress-header .goal-label {
+    font-weight: 500;
+    color: var(--primary-text-color);
+}
+
+.goal-progress-header .goal-amount {
+    font-weight: 600;
+    color: var(--btn-primary-bg);
+}
+
+.goal-progress-bar {
+    height: 20px;
+    background-color: var(--primary-bg-color);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.goal-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--btn-primary-bg), var(--btn-secondary-bg));
+    border-radius: 10px;
+    transition: width 0.5s ease-out;
+    min-width: 0%;
+}
+
+.goal-progress-fill.goal-exceeded {
+    background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.goal-progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.goal-remaining {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    text-align: center;
+    color: var(--secondary-text-color);
+}
+
+.goal-remaining.goal-achieved {
+    color: #10b981;
+    font-weight: 600;
+}
+
+/* Conflict Dialog */
+.conflict-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+}
+
+.conflict-dialog {
+    background-color: var(--secondary-bg-color);
+    border-radius: var(--border-radius);
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: var(--box-shadow-lg);
+}
+
+.conflict-dialog h3 {
+    margin: 0 0 16px 0;
+    color: var(--primary-text-color);
+    font-size: 1.2rem;
+}
+
+.conflict-dialog p {
+    margin: 0 0 20px 0;
+    color: var(--secondary-text-color);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.conflict-dialog-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.conflict-dialog-buttons .btn {
+    flex: 1;
+    min-width: 120px;
+}
+
 .current-day {
     background-color: var(--current-day-bg-color) !important;
     color: var(--current-day-text-color);

@@ -57,9 +57,11 @@ const uiRefs = {
     yearSelect: document.getElementById('yearSelect'),
     decimalPlacesSelect: document.getElementById('decimalPlacesSelect'),
     employeeNameInput: document.getElementById('employeeNameInput'),
+    monthlyGoalInput: document.getElementById('monthlyGoalInput'),
     toggleSettingsBtn: document.getElementById('toggleSettingsBtn'),
     settingsCollapsibleContent: document.getElementById('settings-collapsible-content'),
     localStorageIndicator: document.getElementById('localStorageIndicator'),
+    syncStatusIndicator: document.getElementById('syncStatusIndicator'),
     loginForm: document.getElementById('login-form'),
     loginFieldset: document.getElementById('login-fieldset'),
     userInfo: document.getElementById('user-info'),
@@ -78,6 +80,45 @@ const uiRefs = {
     btnCreateBackup: document.getElementById('btnCreateBackup'),
     btnRestoreBackup: document.getElementById('btnRestoreBackup'),
     btnClearMonth: document.getElementById('btnClearMonth')
+};
+
+// --- Sync Status Manager ---
+const SyncStatusManager = {
+    STATUS: {
+        SYNCED: 'synced',
+        SAVING: 'saving',
+        OFFLINE: 'offline',
+        PENDING: 'pending'
+    },
+    currentStatus: 'synced',
+
+    update(status) {
+        if (!uiRefs.syncStatusIndicator) return;
+        this.currentStatus = status;
+
+        const statusConfig = {
+            synced: { icon: '✓', text: 'Synchronizované', class: 'sync-status-synced' },
+            saving: { icon: '↻', text: 'Ukladám...', class: 'sync-status-saving' },
+            offline: { icon: '⚡', text: 'Offline - zmeny v poradí', class: 'sync-status-offline' },
+            pending: { icon: '⏳', text: 'Čaká na synchronizáciu', class: 'sync-status-pending' }
+        };
+
+        const config = statusConfig[status] || statusConfig.synced;
+
+        uiRefs.syncStatusIndicator.className = `sync-status ${config.class}`;
+        uiRefs.syncStatusIndicator.querySelector('.sync-icon').textContent = config.icon;
+        uiRefs.syncStatusIndicator.querySelector('.sync-text').textContent = config.text;
+    },
+
+    checkAndUpdate() {
+        if (!navigator.onLine) {
+            this.update(this.STATUS.OFFLINE);
+        } else if (getPendingSyncCount() > 0) {
+            this.update(this.STATUS.PENDING);
+        } else {
+            this.update(this.STATUS.SYNCED);
+        }
+    }
 };
 
 const currentDate = new Date();
@@ -241,7 +282,87 @@ function loadAppSettingsFromLocalStorage() {
 }
 function saveAppSettingToLocalStorage(key, value) { localStorage.setItem(key, value); appSettings[key] = value; }
 async function saveAppSettingsToFirestore() { if (!currentUser || !navigator.onLine) return; const userDocRef = doc(db, 'users', currentUser.uid); try { await setDoc(userDocRef, { appSettings: appSettings }, { merge: true }); } catch (error) { secureLog('error', 'Error saving app settings to Firestore'); showErrorNotification("Nepodarilo sa uložiť nastavenia aplikácie do cloudu."); } }
-const debouncedSaveAppSettingsToFirestore = debounce(saveAppSettingsToFirestore, 1800);
+const debouncedSaveAppSettingsToFirestore = debounce(saveAppSettingsToFirestore, 1500);
+
+// --- Conflict Detection Dialog ---
+const ConflictResolver = {
+    showConflictDialog(localData, serverData, onResolve) {
+        const localTime = new Date(localData.lastUpdated).toLocaleString('sk-SK');
+        const serverTime = new Date(serverData.lastUpdated).toLocaleString('sk-SK');
+
+        const overlay = document.createElement('div');
+        overlay.className = 'conflict-dialog-overlay';
+
+        const dialog = document.createElement('div');
+        dialog.className = 'conflict-dialog';
+
+        const title = document.createElement('h3');
+        title.textContent = 'Zistený konflikt dát';
+
+        const message = document.createElement('p');
+        message.textContent = `Počas vašej offline práce sa dáta zmenili aj na serveri. Vyberte, ktorú verziu chcete zachovať:`;
+
+        const localInfo = document.createElement('p');
+        localInfo.innerHTML = `<strong>Lokálna verzia:</strong> ${localTime}`;
+
+        const serverInfo = document.createElement('p');
+        serverInfo.innerHTML = `<strong>Serverová verzia:</strong> ${serverTime}`;
+
+        const buttons = document.createElement('div');
+        buttons.className = 'conflict-dialog-buttons';
+
+        const useLocalBtn = document.createElement('button');
+        useLocalBtn.className = 'btn export-btn';
+        useLocalBtn.textContent = 'Použiť lokálne dáta';
+        useLocalBtn.addEventListener('click', () => {
+            overlay.remove();
+            onResolve('local');
+        });
+
+        const useServerBtn = document.createElement('button');
+        useServerBtn.className = 'btn backup-btn';
+        useServerBtn.textContent = 'Použiť serverové dáta';
+        useServerBtn.addEventListener('click', () => {
+            overlay.remove();
+            onResolve('server');
+        });
+
+        buttons.appendChild(useLocalBtn);
+        buttons.appendChild(useServerBtn);
+        dialog.appendChild(title);
+        dialog.appendChild(message);
+        dialog.appendChild(localInfo);
+        dialog.appendChild(serverInfo);
+        dialog.appendChild(buttons);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+    },
+
+    calculateDataHash(data) {
+        const str = JSON.stringify(data.data || []);
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash;
+    },
+
+    hasSignificantDifference(localData, serverData) {
+        const localHash = this.calculateDataHash(localData);
+        const serverHash = this.calculateDataHash(serverData);
+
+        if (localHash === serverHash) return false;
+
+        const localTime = new Date(localData.lastUpdated).getTime();
+        const serverTime = new Date(serverData.lastUpdated).getTime();
+        const timeDiff = Math.abs(localTime - serverTime);
+
+        // Ak je rozdiel viac ako 5 minút a hash je iný, je to významný konflikt
+        return timeDiff > 5 * 60 * 1000;
+    }
+};
 
 async function loadUserAppSettingsFromFirestore() {
     if (!currentUser || !navigator.onLine) return Promise.resolve(false);
@@ -275,6 +396,10 @@ function updateSettingsUIInputs() {
     uiRefs.hourlyWageInput.value = wage.toFixed(appSettings.decimalPlaces > 0 ? appSettings.decimalPlaces : 1);
     const tax = typeof appSettings.taxRate === 'number' ? appSettings.taxRate : parseFloat(appSettings.taxRate) || 0;
     uiRefs.taxRateInput.value = (tax * 100).toFixed(1);
+    // Mesačný cieľ
+    if (uiRefs.monthlyGoalInput) {
+        uiRefs.monthlyGoalInput.value = appSettings.monthlyEarningsGoal ? appSettings.monthlyEarningsGoal.toFixed(0) : '';
+    }
 }
 
 function initializeUI() {
@@ -318,6 +443,10 @@ function attachGlobalEventListeners() {
         uiRefs.taxRateInput.addEventListener('input', () => handleNumericInput(uiRefs.taxRateInput));
         uiRefs.taxRateInput.addEventListener('blur', () => handleWageOrTaxOrGoalBlur(uiRefs.taxRateInput));
     }
+    if (uiRefs.monthlyGoalInput) {
+        uiRefs.monthlyGoalInput.addEventListener('input', () => handleNumericInput(uiRefs.monthlyGoalInput));
+        uiRefs.monthlyGoalInput.addEventListener('blur', () => handleWageOrTaxOrGoalBlur(uiRefs.monthlyGoalInput));
+    }
     if (uiRefs.decimalPlacesSelect) uiRefs.decimalPlacesSelect.addEventListener('change', changeDecimalPlaces);
 }
 
@@ -335,6 +464,21 @@ const handleWageOrTaxOrGoalBlur = function (inputElement) {
             appSettings.taxRate = value / 100; inputElement.value = value.toFixed(1);
             saveAppSettingToLocalStorage('taxRate', appSettings.taxRate);
         } else { inputElement.value = ((appSettings.taxRate || 0) * 100).toFixed(1); showErrorNotification("Neplatné daňové percento."); inputElement.classList.add('invalid-value'); validChange = false; }
+    } else if (id === 'monthlyGoalInput') {
+        if (valueString === '' || valueString.trim() === '') {
+            appSettings.monthlyEarningsGoal = null;
+            inputElement.value = '';
+            saveAppSettingToLocalStorage('monthlyEarningsGoal', '');
+        } else if (!isNaN(value) && value >= 0) {
+            appSettings.monthlyEarningsGoal = value;
+            inputElement.value = value.toFixed(0);
+            saveAppSettingToLocalStorage('monthlyEarningsGoal', appSettings.monthlyEarningsGoal);
+        } else {
+            inputElement.value = appSettings.monthlyEarningsGoal ? appSettings.monthlyEarningsGoal.toFixed(0) : '';
+            showErrorNotification("Neplatná hodnota mesačného cieľa.");
+            inputElement.classList.add('invalid-value');
+            validChange = false;
+        }
     }
     if (validChange) { recalculateAllRowsAndUpdateTotal(); debouncedSaveAppSettingsToFirestore(); }
 }
@@ -452,8 +596,13 @@ function updateUIForAuthStateChange() {
 
 function setupFirestoreWorkDataListener() {
     if (currentListenerUnsubscribe) currentListenerUnsubscribe();
-    if (!currentUser) { loadWorkDataFromLocalStorage(); return; }
-    if (!navigator.onLine) { loadWorkDataFromLocalStorage(); showWarningNotification("Ste offline. Zobrazujem lokálne dáta. Synchronizácia prebehne po pripojení."); return; }
+    if (!currentUser) { loadWorkDataFromLocalStorage(); SyncStatusManager.checkAndUpdate(); return; }
+    if (!navigator.onLine) {
+        loadWorkDataFromLocalStorage();
+        SyncStatusManager.update(SyncStatusManager.STATUS.OFFLINE);
+        showWarningNotification("Ste offline. Zobrazujem lokálne dáta. Synchronizácia prebehne po pripojení.");
+        return;
+    }
     const docId = getFirestoreDocId(currentYear, currentMonth);
     const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
     currentListenerUnsubscribe = onSnapshot(docRef, (docSnap) => {
@@ -471,8 +620,23 @@ function setupFirestoreWorkDataListener() {
                     const localTimestamp = localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
                     const firestoreTimestamp = firestoreData.lastUpdated ? new Date(firestoreData.lastUpdated).getTime() : 0;
 
+                    // Detekcia konfliktu - ak lokálne dáta sú novšie a sú významne odlišné
                     if (localTimestamp > firestoreTimestamp) {
                         shouldUpdateLocalData = false;
+                    } else if (ConflictResolver.hasSignificantDifference(localData, firestoreData)) {
+                        // Významný konflikt - zobraz dialóg
+                        ConflictResolver.showConflictDialog(localData, firestoreData, (choice) => {
+                            if (choice === 'local') {
+                                // Zachovaj lokálne dáta a nahraj ich na server
+                                syncToCloudDebounced();
+                            } else {
+                                // Použij serverové dáta
+                                localStorage.setItem(localKey, firestoreDataString);
+                                parseAndApplyWorkData(firestoreDataString);
+                                SyncStatusManager.update(SyncStatusManager.STATUS.SYNCED);
+                            }
+                        });
+                        return; // Nepokračuj, kým používateľ nevyberie
                     }
                 } catch (error) {
                     secureLog('error', 'Error parsing local data for timestamp comparison');
@@ -485,6 +649,7 @@ function setupFirestoreWorkDataListener() {
                     removeMonthFromPendingList(docId);
                     const pendingKey = getPendingSyncKeyForMonth(docId);
                     if (pendingKey) localStorage.removeItem(pendingKey);
+                    SyncStatusManager.update(SyncStatusManager.STATUS.SYNCED);
                 }
                 parseAndApplyWorkData(firestoreDataString);
             } else {
@@ -496,8 +661,14 @@ function setupFirestoreWorkDataListener() {
             if (pendingKey) localStorage.removeItem(pendingKey);
             removeMonthFromPendingList(docId);
             parseAndApplyWorkData(null);
+            SyncStatusManager.checkAndUpdate();
         }
-    }, (error) => { secureLog('error', 'Firestore listener error'); showErrorNotification('Chyba synchronizácie dát s cloudom. Zobrazujem lokálne uložené dáta.'); loadWorkDataFromLocalStorage(); });
+    }, (error) => {
+        secureLog('error', 'Firestore listener error');
+        showErrorNotification('Chyba synchronizácie dát s cloudom. Zobrazujem lokálne uložené dáta.');
+        loadWorkDataFromLocalStorage();
+        SyncStatusManager.update(SyncStatusManager.STATUS.OFFLINE);
+    });
     syncPendingWorkData();
 }
 function getFirestoreDocId(year, month) { return `${year}-${String(month + 1).padStart(2, '0')}`; }
@@ -526,20 +697,24 @@ const _syncToCloudDebounced = debounce(async () => {
     if (currentUser) {
         const pendingKey = getPendingSyncKeyForMonth(docId);
         if (navigator.onLine) {
+            SyncStatusManager.update(SyncStatusManager.STATUS.SAVING);
             try {
                 await saveWorkDataToFirestore(dataToSync, docId);
                 removeMonthFromPendingList(docId);
                 if (pendingKey) localStorage.removeItem(pendingKey);
+                SyncStatusManager.update(SyncStatusManager.STATUS.SYNCED);
             } catch (error) {
                 addMonthToPendingList(docId);
                 if (pendingKey) localStorage.setItem(pendingKey, localDataString);
+                SyncStatusManager.update(SyncStatusManager.STATUS.PENDING);
             }
         } else {
             addMonthToPendingList(docId);
             if (pendingKey) localStorage.setItem(pendingKey, localDataString);
+            SyncStatusManager.update(SyncStatusManager.STATUS.OFFLINE);
         }
     }
-}, 2000);
+}, 1500);
 const syncToCloudDebounced = _syncToCloudDebounced;
 
 function collectWorkDataForStorage() {
@@ -787,61 +962,99 @@ function createTable() {
         row.appendChild(actionsTd);
 
         fragment.appendChild(row);
-
-        // Event listeners pre inputy
-        startInput.addEventListener('focus', () => activelyEditingFields.add(startInput.id));
-        startInput.addEventListener('input', (e) => handleTimeInput(e.target, `end-${dayStr}`, i));
-        startInput.addEventListener('blur', () => {
-            activelyEditingFields.delete(startInput.id);
-            validateAndFormatTimeBlur(startInput, i);
-            saveToLocalImmediate();
-            syncToCloudDebounced();
-        });
-
-        endInput.addEventListener('focus', () => activelyEditingFields.add(endInput.id));
-        endInput.addEventListener('input', (e) => handleTimeInput(e.target, `break-${dayStr}`, i));
-        endInput.addEventListener('blur', () => {
-            activelyEditingFields.delete(endInput.id);
-            validateAndFormatTimeBlur(endInput, i);
-            saveToLocalImmediate();
-            syncToCloudDebounced();
-        });
-
-        breakInput.addEventListener('focus', () => activelyEditingFields.add(breakInput.id));
-        breakInput.addEventListener('input', () => { handleNumericInput(breakInput); handleBreakLiveInput(breakInput, i); });
-        breakInput.addEventListener('blur', () => {
-            activelyEditingFields.delete(breakInput.id);
-            validateBreakInputOnBlur(i);
-            saveToLocalImmediate();
-            syncToCloudDebounced();
-        });
-
-        projectInput.addEventListener('focus', () => activelyEditingFields.add(projectInput.id));
-        projectInput.addEventListener('input', () => {
-            saveToLocalImmediate();
-            syncToCloudDebounced();
-        });
-        projectInput.addEventListener('blur', () => {
-            activelyEditingFields.delete(projectInput.id);
-            saveToLocalImmediate();
-            syncToCloudDebounced();
-        });
-
-        noteInput.addEventListener('focus', () => activelyEditingFields.add(noteInput.id));
-        noteInput.addEventListener('input', () => handleNoteInput(noteInput));
-        noteInput.addEventListener('blur', () => {
-            activelyEditingFields.delete(noteInput.id);
-            saveToLocalImmediate();
-            syncToCloudDebounced();
-        });
-
-        // Event listeners pre tlačidlá
-        btnStart.addEventListener('click', () => setCurrentTime(`start-${dayStr}`, i));
-        btnEnd.addEventListener('click', () => setCurrentTime(`end-${dayStr}`, i));
-        btnReset.addEventListener('click', () => resetRow(dayStr));
     }
 
     uiRefs.workDaysTbody.appendChild(fragment);
+
+    // Event delegation - jeden listener pre všetky eventy v tabuľke
+    setupTableEventDelegation();
+}
+
+// Helper funkcia na extrakciu čísla dňa z ID elementu
+function extractDayFromId(id) {
+    if (!id) return null;
+    const match = id.match(/-(\d+)$/);
+    return match ? parseInt(match[1], 10) : null;
+}
+
+// Event delegation pre tabuľku
+function setupTableEventDelegation() {
+    // Odstráň existujúce listenery ak existujú
+    if (uiRefs.workDaysTbody._delegationSetup) return;
+    uiRefs.workDaysTbody._delegationSetup = true;
+
+    // Focus event (capture phase pre delegáciu focus)
+    uiRefs.workDaysTbody.addEventListener('focusin', (e) => {
+        const target = e.target;
+        if (target.id && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+            activelyEditingFields.add(target.id);
+        }
+    });
+
+    // Input event
+    uiRefs.workDaysTbody.addEventListener('input', (e) => {
+        const target = e.target;
+        const id = target.id;
+        if (!id) return;
+
+        const day = extractDayFromId(id);
+        if (!day) return;
+
+        if (id.startsWith('start-')) {
+            handleTimeInput(target, `end-${day}`, day);
+        } else if (id.startsWith('end-')) {
+            handleTimeInput(target, `break-${day}`, day);
+        } else if (id.startsWith('break-')) {
+            handleNumericInput(target);
+            handleBreakLiveInput(target, day);
+        } else if (id.startsWith('project-')) {
+            saveToLocalImmediate();
+            syncToCloudDebounced();
+        } else if (id.startsWith('note-')) {
+            handleNoteInput(target);
+        }
+    });
+
+    // Blur event (capture phase pre delegáciu blur)
+    uiRefs.workDaysTbody.addEventListener('focusout', (e) => {
+        const target = e.target;
+        const id = target.id;
+        if (!id) return;
+
+        activelyEditingFields.delete(id);
+        const day = extractDayFromId(id);
+        if (!day) return;
+
+        if (id.startsWith('start-') || id.startsWith('end-')) {
+            validateAndFormatTimeBlur(target, day);
+            saveToLocalImmediate();
+            syncToCloudDebounced();
+        } else if (id.startsWith('break-')) {
+            validateBreakInputOnBlur(day);
+            saveToLocalImmediate();
+            syncToCloudDebounced();
+        } else if (id.startsWith('project-') || id.startsWith('note-')) {
+            saveToLocalImmediate();
+            syncToCloudDebounced();
+        }
+    });
+
+    // Click event pre tlačidlá
+    uiRefs.workDaysTbody.addEventListener('click', (e) => {
+        const target = e.target;
+        const id = target.id;
+        if (!id) return;
+
+        const day = extractDayFromId(id);
+
+        if (id.startsWith('btn-start-') && day) {
+            setCurrentTime(`start-${day}`, day);
+        } else if (id.startsWith('btn-end-') && day) {
+            setCurrentTime(`end-${day}`, day);
+        } else if (id.startsWith('btn-reset-') && day) {
+            resetRow(day);
+        }
+    });
 }
 
 function setCurrentTime(inputId, day) {
@@ -910,9 +1123,46 @@ function formatTimeInputOnly(input) {
 }
 function handleBreakLiveInput(inputElement, day) { calculateRow(day); }
 function validateBreakInputOnBlur(day) {
-    const breakInput = document.getElementById(`break-${day}`); let value = breakInput.value.replace(',', '.'); const numericValue = parseFloat(value); breakInput.classList.remove('invalid-value');
-    if (value === '' || (!isNaN(numericValue) && numericValue >= 0)) { /* valid */ }
-    else { breakInput.value = ''; breakInput.classList.add('invalid-value'); showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}.`); }
+    const breakInput = document.getElementById(`break-${day}`);
+    const startInput = document.getElementById(`start-${day}`);
+    const endInput = document.getElementById(`end-${day}`);
+
+    let value = breakInput.value.replace(',', '.');
+    const numericValue = parseFloat(value);
+    breakInput.classList.remove('invalid-value');
+
+    if (value === '' || value.trim() === '') {
+        calculateRow(day);
+        return;
+    }
+
+    if (isNaN(numericValue) || numericValue < 0) {
+        breakInput.value = '';
+        breakInput.classList.add('invalid-value');
+        showWarningNotification(`Neplatná hodnota pre prestávku dňa ${day}. Prestávka nesmie byť záporná.`);
+        calculateRow(day);
+        return;
+    }
+
+    // Validácia: prestávka nesmie byť dlhšia ako celková zmena
+    const startTime = startInput?.value;
+    const endTime = endInput?.value;
+
+    if (isValidTimeFormat(startTime) && isValidTimeFormat(endTime)) {
+        const [sH, sM] = startTime.split(':').map(Number);
+        const [eH, eM] = endTime.split(':').map(Number);
+        let startDate = new Date(2000, 0, 1, sH, sM, 0);
+        let endDate = new Date(2000, 0, 1, eH, eM, 0);
+        if (endDate < startDate) { endDate.setDate(endDate.getDate() + 1); }
+
+        const totalShiftHours = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+
+        if (numericValue > totalShiftHours) {
+            breakInput.classList.add('invalid-value');
+            showWarningNotification(`Prestávka (${numericValue.toFixed(1)}h) nesmie byť dlhšia ako celková zmena (${totalShiftHours.toFixed(1)}h) pre deň ${day}.`);
+        }
+    }
+
     calculateRow(day);
 }
 function handleNoteInput(textarea) { autoResizeTextarea(textarea); }
@@ -1081,9 +1331,91 @@ function calculateTotal() {
         { text: `${avgHoursPart}h ${avgMinutesPart}m`, bold: true },
         { text: ` (${avgDecimalHours.toFixed(appSettings.decimalPlaces)} h)` }
     ]));
+
+    // Mesačný cieľ - progress bar
+    if (appSettings.monthlyEarningsGoal && appSettings.monthlyEarningsGoal > 0) {
+        const goal = appSettings.monthlyEarningsGoal;
+        const current = totalNetSalaryCalculated;
+        const percentage = Math.min(100, (current / goal) * 100);
+        const remaining = goal - current;
+        const exceeded = current >= goal;
+
+        const container = document.createElement('div');
+        container.className = 'goal-progress-container';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'goal-progress-header';
+
+        const label = document.createElement('span');
+        label.className = 'goal-label';
+        label.textContent = 'Mesačný cieľ:';
+
+        const amount = document.createElement('span');
+        amount.className = 'goal-amount';
+        amount.textContent = `${current.toFixed(appSettings.decimalPlaces)} / ${goal.toFixed(0)} €`;
+
+        header.appendChild(label);
+        header.appendChild(amount);
+
+        // Progress bar
+        const progressBar = document.createElement('div');
+        progressBar.className = 'goal-progress-bar';
+
+        const progressFill = document.createElement('div');
+        progressFill.className = 'goal-progress-fill' + (exceeded ? ' goal-exceeded' : '');
+        progressFill.style.width = `${percentage}%`;
+
+        const progressText = document.createElement('span');
+        progressText.className = 'goal-progress-text';
+        progressText.textContent = `${percentage.toFixed(1)}%`;
+
+        progressBar.appendChild(progressFill);
+        progressBar.appendChild(progressText);
+
+        // Remaining text
+        const remainingDiv = document.createElement('div');
+        remainingDiv.className = 'goal-remaining' + (exceeded ? ' goal-achieved' : '');
+        if (exceeded) {
+            remainingDiv.textContent = `Cieľ splnený! Prekročené o ${Math.abs(remaining).toFixed(appSettings.decimalPlaces)} €`;
+        } else {
+            remainingDiv.textContent = `Do cieľa ešte chýba: ${remaining.toFixed(appSettings.decimalPlaces)} €`;
+        }
+
+        container.appendChild(header);
+        container.appendChild(progressBar);
+        container.appendChild(remainingDiv);
+
+        uiRefs.totalSalaryDiv.appendChild(container);
+    }
 }
 // KONIEC UPRAVENEJ FUNKCIE calculateTotal()
 
+
+// Helper funkcia pre načítanie fontu Roboto pre PDF
+async function loadRobotoFont(doc) {
+    try {
+        // Načítanie Roboto fontu pre korektné slovenské znaky
+        const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
+        const response = await fetch(fontUrl);
+        if (!response.ok) throw new Error('Font fetch failed');
+
+        const arrayBuffer = await response.arrayBuffer();
+        const base64Font = btoa(
+            new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
+
+        // Registrácia fontu cez VFS
+        doc.addFileToVFS('Roboto-Regular.ttf', base64Font);
+        doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+        doc.setFont('Roboto');
+        return true;
+    } catch (e) {
+        console.warn('Roboto font loading failed, using helvetica:', e);
+        doc.setFont('helvetica');
+        return false;
+    }
+}
 
 async function exportToPDF() {
     const btn = document.getElementById('btnExportPdf');
@@ -1091,8 +1423,7 @@ async function exportToPDF() {
     setLoadingState(btn, true, "Exportujem PDF..."); calculateTotal();
     const { jsPDF } = window.jspdf; const doc = new jsPDF();
     try {
-        try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
-        catch (e) { console.warn("Roboto font not loaded for PDF, using helvetica."); doc.setFont('helvetica'); }
+        await loadRobotoFont(doc);
         doc.setFontSize(16); doc.text(`Výkaz práce - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
         doc.setFontSize(12); doc.text(`Pracovník: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
         const currentHourlyWage = typeof appSettings.hourlyWage === 'number' ? appSettings.hourlyWage : 0;
@@ -1137,8 +1468,7 @@ async function sendPDF() {
     setLoadingState(btn, true, "Pripravujem PDF na odoslanie..."); calculateTotal();
     const { jsPDF } = window.jspdf; const doc = new jsPDF();
     try {
-        try { doc.addFont('https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf', 'Roboto', 'normal'); doc.setFont('Roboto'); }
-        catch (e) { console.warn("Roboto font not loaded for PDF, using helvetica."); doc.setFont('helvetica'); }
+        await loadRobotoFont(doc);
         doc.setFontSize(16); doc.text(`Prehľad dochádzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
         doc.setFontSize(12); doc.text(`Pracovník: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
         const workedDaysMatch = (uiRefs.totalSalaryDiv.textContent || "").match(/Započítaných dní s aktivitou:\s*(\d+)/i);
@@ -1314,8 +1644,15 @@ uiRefs.toggleSettingsBtn.addEventListener('click', () => {
         uiRefs.toggleSettingsBtn.setAttribute('aria-expanded', 'false');
     }
 });
-window.addEventListener('online', () => { handleOnlineStatusChange(true); if (currentUser) { syncPendingWorkData(); debouncedSaveAppSettingsToFirestore(); } });
-window.addEventListener('offline', () => { handleOnlineStatusChange(false); });
+window.addEventListener('online', () => {
+    handleOnlineStatusChange(true);
+    if (currentUser) { syncPendingWorkData(); debouncedSaveAppSettingsToFirestore(); }
+    SyncStatusManager.checkAndUpdate();
+});
+window.addEventListener('offline', () => {
+    handleOnlineStatusChange(false);
+    SyncStatusManager.update(SyncStatusManager.STATUS.OFFLINE);
+});
 function handleOnlineStatusChange(online) { const message = online ? 'Ste opäť online. Synchronizácia dát môže prebiehať.' : 'Ste offline. Zmeny sa budú ukladať lokálne a synchronizujú sa po pripojení.'; showNotification(online ? 'saveNotification' : 'warningNotification', message, online ? 3000 : 4000); }
 
 onAuthStateChanged(auth, async (user) => {
@@ -1337,6 +1674,7 @@ onAuthStateChanged(auth, async (user) => {
         localStorage.removeItem(PENDING_SYNC_MONTHS_LS_KEY); updateAppBadge(0);
     }
     createTable(); setupFirestoreWorkDataListener(); updatePageTitleAndGreeting();
+    SyncStatusManager.checkAndUpdate();
     if (uiRefs.appLoader) {
         uiRefs.appLoader.classList.add('hidden');
     }

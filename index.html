@@ -27,9 +27,9 @@
     object-src 'none';
   " />
     <meta name="referrer" content="strict-origin-when-cross-origin">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" defer></script>
-        defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" defer></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -102,6 +102,10 @@
 
         <div id="totalSalary" aria-live="polite">Výpočet celkovej mzdy...</div>
         <div id="localStorageIndicator"></div>
+        <div id="syncStatusIndicator" class="sync-status sync-status-synced">
+            <span class="sync-icon">✓</span>
+            <span class="sync-text">Synchronizované</span>
+        </div>
 
         <div class="btn-container">
             <button class="btn export-btn" id="btnExportPdf">Exportovať do PDF</button>
@@ -137,6 +141,10 @@
                             <option value="2" selected>2</option>
                             <option value="3">3</option>
                         </select>
+                    </div>
+                    <div>
+                        <label for="monthlyGoalInput">Mesačný cieľ zárobku (€):</label>
+                        <input type="text" inputmode="decimal" id="monthlyGoalInput" placeholder="Napr. 1500">
                     </div>
                 </fieldset>
             </div>
