@@ -1,22 +1,24 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-pro-v2.0'; // <-- NASTAVTE NOVÚ VERZIU!
+const CACHE_NAME = 'bruno-calculator-pro-v2.1'; // Aktualizované po security update
 const ASSETS_TO_CACHE = [
   './', // Alias pre index.html
   './index.html',
+  './styles.css',
+  './app.js',
   './manifest.json',
-  './icons/icon-192x192.webp', // Optimalizované WebP ikony
-  './icons/icon-512x512.webp', // Optimalizované WebP ikony
-  // Font (ak ho chcete cachovať explicitne)
+  './icons/icon-192x192.webp',
+  './icons/icon-512x512.webp',
+  // Font
   'https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2'
-  // Pridajte sem ďalšie kľúčové lokálne assety, ak nejaké máte (napr. hlavný CSS súbor, ak nie je inline)
 ];
 
 // Zoznam CDN, ktorých obsah chceme tiež cachovať (stratégia Cache, then Network s aktualizáciou)
 const CDN_ORIGINS_TO_CACHE_REFRESH = [
-  'https://cdnjs.cloudflare.com', // Pre jspdf, xlsx
-  'https://www.gstatic.com',      // Pre Firebase (aj keď väčšinu si rieši sám)
-  'https://fonts.gstatic.com'     // Pre Google Fonts (ak by ste mali viac fontov)
+  'https://cdnjs.cloudflare.com', // Pre jspdf, jspdf-autotable
+  'https://cdn.sheetjs.com',      // Pre xlsx (SheetJS)
+  'https://www.gstatic.com',      // Pre Firebase
+  'https://fonts.gstatic.com'     // Pre Google Fonts
 ];
 
 self.addEventListener('install', event => {
