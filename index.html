@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sk" data-theme="light"> <!-- Pridaný data-theme atribút -->
+<html lang="sk" data-theme="light">
 
 <head>
     <meta charset="UTF-8" />
@@ -10,7 +10,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧮</text></svg>">
     <link rel="apple-touch-icon" href="./icons/icon-192x192.webp">
-    <meta name="theme-color" content="#7c3aed" /> <!-- Bude dynamicky menené JS pre tmavý režim -->
+    <meta name="theme-color" content="#7c3aed" />
 
     <!-- Content Security Policy - Bezpečnostná politika -->
     <meta http-equiv="Content-Security-Policy" content="
@@ -28,9 +28,15 @@
   " />
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js" defer></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+            integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk"
+            crossorigin="anonymous" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"
+            integrity="sha384-vuyrTV5nkscLp1knFvt+FIHfKKzmROBq5reruhMRslauj54mW+l2B8b6szMN6lCL"
+            crossorigin="anonymous" defer></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+            integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT"
+            crossorigin="anonymous" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,11 +48,11 @@
 <body>
     <div id="app-loader">
         <p class="loader-emoji">🧮</p>
-        <p>Bruno's Calculator Pro+</p> <!-- Malá zmena názvu -->
+        <p>Bruno's Calculator Pro+</p>
         <p class="loader-small-text">Načítavam aplikáciu...</p>
     </div>
 
-    <div class="container container-hidden">
+    <main class="container container-hidden">
         <div id="auth-container">
             <fieldset id="login-fieldset">
                 <legend>Prihlásenie / Registrácia</legend>
@@ -84,16 +90,16 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Deň</th>
-                        <th>Príchod</th>
-                        <th>Odchod</th>
-                        <th>Prestávka</th>
-                        <th>Odpracované</th>
-                        <th>Projekt/Úloha</th> <!-- NOVÝ STĹPEC -->
-                        <th>Poznámka</th>
-                        <th>Hrubá Mzda (€)</th>
-                        <th>Čistá Mzda (€)</th>
-                        <th>Akcie</th>
+                        <th scope="col">Deň</th>
+                        <th scope="col">Príchod</th>
+                        <th scope="col">Odchod</th>
+                        <th scope="col">Prestávka</th>
+                        <th scope="col">Odpracované</th>
+                        <th scope="col">Projekt/Úloha</th>
+                        <th scope="col">Poznámka</th>
+                        <th scope="col">Hrubá Mzda (€)</th>
+                        <th scope="col">Čistá Mzda (€)</th>
+                        <th scope="col">Akcie</th>
                     </tr>
                 </thead>
                 <tbody id="workDays"></tbody>
@@ -149,7 +155,7 @@
                 </fieldset>
             </div>
         </div>
-    </div>
+    </main>
 
     <div id="saveNotification" role="status" aria-live="polite">Dáta boli úspešne uložené.</div>
     <div id="errorNotification" role="alert" aria-live="assertive">Nastala chyba.</div>

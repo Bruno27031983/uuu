@@ -1,15 +1,13 @@
 :root {
-    --font-family: 'Inter', sans-serif;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --base-font-size: 16px;
     --primary-bg-color: #f0f2f5;
     --secondary-bg-color: #ffffff;
     --primary-text-color: #1f2937;
     --secondary-text-color: #4b5563;
     --input-bg-color: #fefcbf;
-    /* Žltá pre lepšiu viditeľnosť vstupov */
     --input-note-bg-color: #e0f2fe;
-    /* Svetlo modrá pre poznámky */
     --input-project-bg-color: #e0fef2;
-    /* Svetlo zelená pre projekty */
     --table-header-bg-color: #f9fafb;
     --table-border-color: #e5e7eb;
     --current-day-bg-color: #7c3aed;
@@ -17,14 +15,12 @@
     --btn-primary-bg: #2563eb;
     --btn-primary-hover-bg: #1d4ed8;
     --btn-secondary-bg: #7c3aed;
-    /* Fialová pre sekundárne akcie */
     --btn-secondary-hover-bg: #6d28d9;
     --btn-danger-bg: #dc2626;
     --btn-danger-hover-bg: #b91c1c;
     --btn-warning-bg: #f59e0b;
     --btn-warning-hover-bg: #d97706;
     --btn-highlight-bg: #f59e0b;
-    /* Oranžová pre upozornenia */
     --btn-text-color: #ffffff;
     --total-salary-bg: #eff6ff;
     --link-color: #2563eb;
@@ -32,50 +28,34 @@
     --border-radius: 8px;
     --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    --base-font-size: 16px;
     --focus-outline-color: var(--btn-primary-bg);
     --transition-speed: 0.2s;
     --theme-color-meta: #7c3aed;
-    /* Default theme color for meta tag */
 }
 
 html[data-theme='dark'] {
     --primary-bg-color: #111827;
-    /* Tmavošedá skoro čierna */
     --secondary-bg-color: #1f2937;
-    /* Tmavošedá */
     --primary-text-color: #f3f4f6;
-    /* Veľmi svetlo šedá */
     --secondary-text-color: #9ca3af;
-    /* Svetlo šedá */
     --input-bg-color: #374151;
-    /* Tmavšia šedá pre vstupy */
     --input-note-bg-color: #2c3a4b;
-    /* Tmavšia modrošedá pre poznámky */
     --input-project-bg-color: #2c4b3a;
-    /* Tmavšia zelenošedá pre projekty */
     --table-header-bg-color: #374151;
     --table-border-color: #4b5563;
     --current-day-bg-color: #8b5cf6;
-    /* Svetlejšia fialová pre kontrast */
     --current-day-text-color: #ffffff;
     --btn-primary-bg: #3b82f6;
-    /* Svetlejšia modrá */
     --btn-primary-hover-bg: #2563eb;
     --btn-secondary-bg: #8b5cf6;
-    /* Svetlejšia fialová */
     --btn-secondary-hover-bg: #7c3aed;
     --btn-danger-bg: #ef4444;
-    /* Svetlejšia červená */
     --btn-danger-hover-bg: #dc2626;
     --btn-warning-bg: #f97316;
-    /* Svetlejšia oranžová */
     --btn-warning-hover-bg: #ea580c;
     --btn-highlight-bg: #f97316;
     --total-salary-bg: #374151;
     --link-color: #60a5fa;
-    /* Svetlejšia modrá pre odkazy */
     --link-hover-color: #3b82f6;
     --focus-outline-color: var(--btn-primary-bg);
     --theme-color-meta: #1f2937;
@@ -527,10 +507,8 @@ td input[type="text"].project-input {
     background-color: var(--input-project-bg-color);
 }
 
-/* Špecifické pozadie pre projekt */
 td input[type="number"][readonly] {
     background-color: var(--table-header-bg-color) !important;
-    /* Dôležité pre tmavý režim */
     border: none;
     padding-left: 2px;
     padding-right: 2px;
@@ -658,7 +636,6 @@ html[data-theme='dark'] .btn.warning-btn {
     color: var(--primary-bg-color);
 }
 
-/* Lepší kontrast pre warning v tmavom režime */
 .btn.warning-btn:hover {
     background-color: var(--btn-warning-hover-bg);
 }
@@ -947,7 +924,6 @@ html[data-theme='dark'] .sync-status-pending {
     background-color: rgba(200, 255, 200, 0.2) !important;
 }
 
-/* Svetlejšia zelená pre projekt v current-day */
 .current-day .time-btn {
     color: var(--current-day-text-color) !important;
 }
@@ -1059,7 +1035,6 @@ html[data-theme='dark'] .sync-status-pending {
         max-height: 950px;
     }
 
-    /* Zvýšená pre mobil */
     th,
     td {
         padding: 8px;
@@ -1131,7 +1106,6 @@ html[data-theme='dark'] .sync-status-pending {
         max-height: 1100px;
     }
 
-    /* Zvýšená pre mobil */
     .btn-container .btn {
         font-size: 0.88rem;
         padding: 11px 16px;

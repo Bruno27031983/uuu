@@ -303,10 +303,16 @@ const ConflictResolver = {
         message.textContent = `Počas vašej offline práce sa dáta zmenili aj na serveri. Vyberte, ktorú verziu chcete zachovať:`;
 
         const localInfo = document.createElement('p');
-        localInfo.innerHTML = `<strong>Lokálna verzia:</strong> ${localTime}`;
+        const localLabel = document.createElement('strong');
+        localLabel.textContent = 'Lokálna verzia: ';
+        localInfo.appendChild(localLabel);
+        localInfo.appendChild(document.createTextNode(localTime));
 
         const serverInfo = document.createElement('p');
-        serverInfo.innerHTML = `<strong>Serverová verzia:</strong> ${serverTime}`;
+        const serverLabel = document.createElement('strong');
+        serverLabel.textContent = 'Serverová verzia: ';
+        serverInfo.appendChild(serverLabel);
+        serverInfo.appendChild(document.createTextNode(serverTime));
 
         const buttons = document.createElement('div');
         buttons.className = 'conflict-dialog-buttons';
@@ -1087,9 +1093,27 @@ function formatTimeInputOnly(input) {
     const hadColon = rawValue.includes(':');
 
     if (digits.length >= 2) {
+        // Validácia hodín (00-23)
+        let hours = parseInt(digits.substring(0, 2), 10);
+        if (hours > 23) {
+            hours = 23;
+            digits = hours.toString().padStart(2, '0') + digits.substring(2);
+        }
+
         formattedValue = `${digits.substring(0, 2)}:`;
+
         if (digits.length > 2) {
-            formattedValue += digits.substring(2, 4);
+            // Validácia minút (00-59)
+            let minuteDigits = digits.substring(2, 4);
+
+            // Validuj len keď máme kompletné 2 cifry minút
+            if (minuteDigits.length === 2) {
+                let minutes = parseInt(minuteDigits, 10);
+                if (minutes > 59) {
+                    minuteDigits = "59";
+                }
+            }
+            formattedValue += minuteDigits;
         } else if (rawValue.endsWith(':') && digits.length === 2) {
             // keep "12:"
         } else if (rawValue.length === 2 && digits.length === 2) {
@@ -1529,6 +1553,83 @@ function createBackup() {
     } catch (error) { secureLog('error', 'Error creating backup'); showErrorNotification('Nastala chyba pri vytváraní zálohy.'); }
     finally { setLoadingState(btn, false, "Vytvoriť zálohu (XLSX)"); }
 };
+// Konštanty pre validáciu XLSX
+const XLSX_VALIDATION = {
+    MAX_FILE_SIZE: 5 * 1024 * 1024, // 5 MB
+    // Správny MIME typ pre .xlsx je application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    // Niektoré prehliadače môžu hlásiť aj iné typy
+    VALID_MIME_TYPES: [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/zip', // xlsx je technicky ZIP archív
+        'application/x-zip-compressed' // alternatívny ZIP MIME typ
+    ],
+    REQUIRED_SHEETS: ['nastaveniaaplikacie', 'vykaz'],
+    EXPECTED_COLUMNS: ['deň', 'príchod', 'odchod', 'prestávka']
+};
+
+function validateXLSXFile(file) {
+    const errors = [];
+
+    // Kontrola veľkosti súboru
+    if (file.size > XLSX_VALIDATION.MAX_FILE_SIZE) {
+        errors.push(`Súbor je príliš veľký (${(file.size / 1024 / 1024).toFixed(2)} MB). Maximum je 5 MB.`);
+    }
+
+    // Kontrola prípony
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (extension !== 'xlsx') {
+        errors.push(`Neplatná prípona súboru (.${extension}). Očakáva sa .xlsx`);
+    }
+
+    // Kontrola MIME typu (ak je dostupný)
+    if (file.type && !XLSX_VALIDATION.VALID_MIME_TYPES.includes(file.type) && file.type !== '') {
+        errors.push(`Neplatný typ súboru (${file.type}).`);
+    }
+
+    return errors;
+}
+
+function validateXLSXStructure(workbook) {
+    const errors = [];
+    const warnings = [];
+
+    // Kontrola či existujú požadované listy
+    const sheetNames = workbook.SheetNames.map(name => name.toLowerCase());
+
+    const hasSettingsSheet = sheetNames.some(name => name.includes('nastaveniaaplikacie'));
+    const hasWorkSheet = sheetNames.some(name => name.startsWith('vykaz'));
+
+    if (!hasSettingsSheet && !hasWorkSheet) {
+        errors.push('Súbor neobsahuje žiadne rozpoznateľné listy (NastaveniaAplikacie alebo Vykaz).');
+    } else {
+        if (!hasSettingsSheet) {
+            warnings.push('List "NastaveniaAplikacie" nebol nájdený.');
+        }
+        if (!hasWorkSheet) {
+            warnings.push('List "Vykaz" nebol nájdený.');
+        }
+    }
+
+    // Kontrola štruktúry listu Vykaz
+    const workSheetName = workbook.SheetNames.find(name => name.toLowerCase().startsWith('vykaz'));
+    if (workSheetName) {
+        const ws = workbook.Sheets[workSheetName];
+        const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+
+        if (jsonData.length === 0) {
+            errors.push('List "Vykaz" je prázdny.');
+        } else {
+            // Kontrola hlavičky
+            const headerRow = jsonData.find(row => row && row[0] && row[0].toString().toLowerCase().includes('deň'));
+            if (!headerRow) {
+                errors.push('Nepodarilo sa nájsť hlavičku tabuľky (stĺpec "Deň").');
+            }
+        }
+    }
+
+    return { errors, warnings };
+}
+
 function restoreBackup() {
     const btn = document.getElementById('btnRestoreBackup');
     if (!btn || isRateLimited('btnRestoreBackup', 2000)) return;
@@ -1536,10 +1637,36 @@ function restoreBackup() {
     input.onchange = async (event) => {
         setLoadingState(btn, true, "Spracúvam súbor zálohy..."); const file = event.target.files[0];
         if (!file) { setLoadingState(btn, false, "Obnoviť zálohu (XLSX)"); return; }
+
+        // Validácia súboru pred spracovaním
+        const fileErrors = validateXLSXFile(file);
+        if (fileErrors.length > 0) {
+            showErrorNotification(fileErrors.join(' '));
+            setLoadingState(btn, false, "Obnoviť zálohu (XLSX)");
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = async (e) => {
             try {
-                const fileData = new Uint8Array(e.target.result); const workbook = XLSX.read(fileData, { type: 'array' });
+                const fileData = new Uint8Array(e.target.result);
+                let workbook;
+                try {
+                    workbook = XLSX.read(fileData, { type: 'array' });
+                } catch (parseError) {
+                    showErrorNotification('Súbor nie je platný XLSX súbor alebo je poškodený.');
+                    setLoadingState(btn, false, "Obnoviť zálohu (XLSX)");
+                    return;
+                }
+
+                // Validácia štruktúry
+                const { errors: structureErrors, warnings } = validateXLSXStructure(workbook);
+                if (structureErrors.length > 0) {
+                    showErrorNotification(structureErrors.join(' '));
+                    setLoadingState(btn, false, "Obnoviť zálohu (XLSX)");
+                    return;
+                }
+                warnings.forEach(w => showWarningNotification(w));
                 let restoredAppSettings = {}, restoredWorkDataArray = [], backupMonth = currentMonth, backupYear = currentYear;
 
                 const settingsSheetName = workbook.SheetNames.find(name => name.toLowerCase().includes("nastaveniaaplikacie"));
