@@ -15,11 +15,11 @@
     <!-- Content Security Policy - Bezpečnostná politika -->
     <meta http-equiv="Content-Security-Policy" content="
     default-src 'self';
-    script-src 'self' https://www.gstatic.com https://www.google.com https://cdnjs.cloudflare.com;
+    script-src 'self' https://www.gstatic.com https://www.google.com https://cdnjs.cloudflare.com https://cdn.sheetjs.com;
     style-src 'self' https://fonts.googleapis.com;
     font-src 'self' https://fonts.gstatic.com;
     img-src 'self' data: https:;
-    connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.firebaseapp.com https://*.cloudfunctions.net https://identitytoolkit.googleapis.com https://firestore.googleapis.com https://cdnjs.cloudflare.com;
+    connect-src 'self' https://www.gstatic.com https://*.googleapis.com https://*.firebaseapp.com https://*.cloudfunctions.net https://identitytoolkit.googleapis.com https://firestore.googleapis.com https://cdnjs.cloudflare.com https://cdn.sheetjs.com;
     frame-src https://www.google.com;
     manifest-src 'self';
     worker-src 'self';
@@ -28,10 +28,10 @@
   " />
     <meta name="referrer" content="strict-origin-when-cross-origin">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.15/jspdf.plugin.autotable.min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/3.0.4/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.2/jspdf.plugin.autotable.min.js"
         defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js" defer></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" defer></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
