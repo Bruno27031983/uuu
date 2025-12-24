@@ -137,8 +137,8 @@ const PENDING_SYNC_MONTHS_LS_KEY = 'pendingSyncMonthsList';
 
 // Bezpečnostné limity pre dĺžku textov
 const TEXT_LIMITS = {
-    projectTag: 100,
-    note: 500,
+    projectTag: 200,
+    note: 2000,
     employeeName: 50,
     time: 5,
     breakTime: 10
@@ -206,6 +206,25 @@ function isValidTimeFormat(timeString) { return typeof timeString === 'string' &
 function sanitizeText(text, maxLength) {
     if (typeof text !== 'string') return '';
     return text.trim().substring(0, maxLength);
+}
+
+// Konverzia rôznych formátov na Date (Firestore Timestamp, ISO string, Date)
+function toValidDate(value) {
+    if (!value) return null;
+    // Firestore Timestamp má metódu toDate()
+    if (typeof value.toDate === 'function') {
+        return value.toDate();
+    }
+    // Už je Date objekt
+    if (value instanceof Date) {
+        return isNaN(value.getTime()) ? null : value;
+    }
+    // ISO string alebo iný string
+    if (typeof value === 'string' || typeof value === 'number') {
+        const date = new Date(value);
+        return isNaN(date.getTime()) ? null : date;
+    }
+    return null;
 }
 
 // Bezpečný JSON.parse s try-catch
@@ -307,8 +326,10 @@ const debouncedSaveAppSettingsToFirestore = debounce(saveAppSettingsToFirestore,
 // --- Conflict Detection Dialog ---
 const ConflictResolver = {
     showConflictDialog(localData, serverData, onResolve) {
-        const localTime = new Date(localData.lastUpdated).toLocaleString('sk-SK');
-        const serverTime = new Date(serverData.lastUpdated).toLocaleString('sk-SK');
+        const localDate = toValidDate(localData.lastUpdated);
+        const serverDate = toValidDate(serverData.lastUpdated);
+        const localTime = localDate ? localDate.toLocaleString('sk-SK') : 'Neznámy čas';
+        const serverTime = serverDate ? serverDate.toLocaleString('sk-SK') : 'Neznámy čas';
 
         const overlay = document.createElement('div');
         overlay.className = 'conflict-dialog-overlay';
@@ -381,8 +402,10 @@ const ConflictResolver = {
 
         if (localHash === serverHash) return false;
 
-        const localTime = new Date(localData.lastUpdated).getTime();
-        const serverTime = new Date(serverData.lastUpdated).getTime();
+        const localDate = toValidDate(localData.lastUpdated);
+        const serverDate = toValidDate(serverData.lastUpdated);
+        const localTime = localDate ? localDate.getTime() : 0;
+        const serverTime = serverDate ? serverDate.getTime() : 0;
         const timeDiff = Math.abs(localTime - serverTime);
 
         // Ak je rozdiel viac ako 5 minút a hash je iný, je to významný konflikt
@@ -654,8 +677,10 @@ function setupFirestoreWorkDataListener() {
             if (localDataString && !docSnap.metadata.hasPendingWrites) {
                 try {
                     const localData = JSON.parse(localDataString);
-                    const localTimestamp = localData.lastUpdated ? new Date(localData.lastUpdated).getTime() : 0;
-                    const firestoreTimestamp = firestoreData.lastUpdated ? new Date(firestoreData.lastUpdated).getTime() : 0;
+                    const localDate = toValidDate(localData.lastUpdated);
+                    const firestoreDate = toValidDate(firestoreData.lastUpdated);
+                    const localTimestamp = localDate ? localDate.getTime() : 0;
+                    const firestoreTimestamp = firestoreDate ? firestoreDate.getTime() : 0;
 
                     // Detekcia konfliktu - ak lokálne dáta sú novšie a sú významne odlišné
                     if (localTimestamp > firestoreTimestamp) {
@@ -775,10 +800,10 @@ async function saveWorkDataToFirestore(dataToSave, docId) {
 
     // Sanitize work data to match Firestore rules validation
     const sanitizedData = dataToSave.data.map(day => {
-        const start = String(day.start || '').slice(0, 5);
-        const end = String(day.end || '').slice(0, 5);
-        const projectTag = String(day.projectTag || '').slice(0, 200);
-        const note = String(day.note || '').slice(0, 2000);
+        const start = String(day.start || '').slice(0, TEXT_LIMITS.time);
+        const end = String(day.end || '').slice(0, TEXT_LIMITS.time);
+        const projectTag = String(day.projectTag || '').slice(0, TEXT_LIMITS.projectTag);
+        const note = String(day.note || '').slice(0, TEXT_LIMITS.note);
         let breakTime = null;
         if (day.breakTime !== '' && day.breakTime != null) {
             const parsed = parseFloat(String(day.breakTime).replace(',', '.'));
@@ -982,6 +1007,7 @@ function createTable() {
         projectInput.type = 'text';
         projectInput.id = `project-${dayStr}`;
         projectInput.className = 'project-input';
+        projectInput.maxLength = TEXT_LIMITS.projectTag;
         projectInput.placeholder = 'Projekt/Úloha';
         projectInput.setAttribute('aria-label', `Projekt alebo úloha pre deň ${dayStr}`);
         projectTd.appendChild(projectInput);
@@ -992,6 +1018,7 @@ function createTable() {
         const noteInput = document.createElement('textarea');
         noteInput.id = `note-${dayStr}`;
         noteInput.rows = 2;
+        noteInput.maxLength = TEXT_LIMITS.note;
         noteInput.placeholder = 'Poznámka...';
         noteInput.setAttribute('aria-label', `Poznámka ku dňu ${dayStr}`);
         noteTd.appendChild(noteInput);
@@ -1542,7 +1569,7 @@ async function exportToPDF() {
             didParseCell: (data) => { if ((data.column.index === 5 || data.column.index === 6) && data.cell.section === 'body') data.cell.styles.cellWidth = 'wrap'; }
         });
         const totalY = doc.lastAutoTable.finalY + 8; doc.setFontSize(9);
-        const totalTextContent = uiRefs.totalSalaryDiv.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<div class="goal-progress.*?>.*?<\/div>/gi, '').replace(/<\/?strong>/gi, '').replace(/&nbsp;/g, ' ').replace(/€/g, 'EUR');
+        const totalTextContent = (uiRefs.totalSalaryDiv.innerText || '').replace(/€/g, 'EUR');
         doc.text(totalTextContent, 14, totalY);
         const safeName = (appSettings.employeeName || 'Pracovnik').replace(/[^a-zA-Z0-9]/g, '_');
         doc.save(`Vykaz_Prace_${safeName}_${MONTH_NAMES[currentMonth]}_${currentYear}.pdf`); showSaveNotification('PDF súbor bol úspešne vygenerovaný.');
@@ -1558,7 +1585,7 @@ async function sendPDF() {
         await loadRobotoFont(doc);
         doc.setFontSize(16); doc.text(`Prehľad dochádzky - ${MONTH_NAMES[currentMonth]} ${currentYear}`, 14, 22);
         doc.setFontSize(12); doc.text(`Pracovník: ${appSettings.employeeName || 'Nezadané'}`, 14, 30);
-        const workedDaysMatch = (uiRefs.totalSalaryDiv.textContent || "").match(/Započítaných dní s aktivitou:\s*(\d+)/i);
+        const workedDaysMatch = (uiRefs.totalSalaryDiv.innerText || "").match(/Započítaných dní s aktivitou:\s*(\d+)/i);
         const workedDaysCount = workedDaysMatch && workedDaysMatch[1] ? parseInt(workedDaysMatch[1]) : 0;
         doc.setFontSize(10); doc.text(`Celkový počet dní s aktivitou: ${workedDaysCount}`, 14, 36);
         const tableData = []; const days = getDaysInMonth(currentMonth, currentYear);

@@ -61,13 +61,6 @@ html[data-theme='dark'] {
     --theme-color-meta: #1f2937;
 }
 
-@font-face {
-    font-family: 'Inter';
-    src: url('https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2') format('woff2');
-    font-weight: 400 700;
-    font-style: normal;
-    font-display: swap;
-}
 
 html {
     font-size: var(--base-font-size);
@@ -339,7 +332,7 @@ td {
 }
 
 thead tr {
-    border-bottom: 2px solid #d1d5db;
+    border-bottom: 2px solid var(--table-border-color);
 }
 
 th {
@@ -667,7 +660,7 @@ html[data-theme='dark'] .btn.warning-btn {
     font-size: 0.8rem;
 }
 
-#user-info-flex {
+.user-info-flex {
     display: none;
     justify-content: flex-start;
     align-items: center;
