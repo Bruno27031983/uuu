@@ -325,7 +325,14 @@ const debouncedSaveAppSettingsToFirestore = debounce(saveAppSettingsToFirestore,
 
 // --- Conflict Detection Dialog ---
 const ConflictResolver = {
+    // Sledovanie vyriešených konfliktov a otvorených dialógov
+    resolvedConflicts: new Set(),
+    isDialogOpen: false,
+
     showConflictDialog(localData, serverData, onResolve) {
+        // Ak je dialóg už otvorený, ignoruj
+        if (this.isDialogOpen) return;
+        this.isDialogOpen = true;
         const localDate = toValidDate(localData.lastUpdated);
         const serverDate = toValidDate(serverData.lastUpdated);
         const localTime = localDate ? localDate.toLocaleString('sk-SK') : 'Neznámy čas';
@@ -363,6 +370,11 @@ const ConflictResolver = {
         useLocalBtn.textContent = 'Použiť lokálne dáta';
         useLocalBtn.addEventListener('click', () => {
             overlay.remove();
+            this.isDialogOpen = false;
+            // Označ konflikt ako vyriešený na 60 sekúnd
+            const conflictKey = `${localData.month}_${localData.year}`;
+            this.resolvedConflicts.add(conflictKey);
+            setTimeout(() => this.resolvedConflicts.delete(conflictKey), 60000);
             onResolve('local');
         });
 
@@ -371,6 +383,11 @@ const ConflictResolver = {
         useServerBtn.textContent = 'Použiť serverové dáta';
         useServerBtn.addEventListener('click', () => {
             overlay.remove();
+            this.isDialogOpen = false;
+            // Označ konflikt ako vyriešený na 60 sekúnd
+            const conflictKey = `${serverData.month}_${serverData.year}`;
+            this.resolvedConflicts.add(conflictKey);
+            setTimeout(() => this.resolvedConflicts.delete(conflictKey), 60000);
             onResolve('server');
         });
 
@@ -397,6 +414,12 @@ const ConflictResolver = {
     },
 
     hasSignificantDifference(localData, serverData) {
+        // Skontroluj či konflikt už bol vyriešený
+        const conflictKey = `${localData.month || serverData.month}_${localData.year || serverData.year}`;
+        if (this.resolvedConflicts.has(conflictKey)) {
+            return false;
+        }
+
         const localHash = this.calculateDataHash(localData);
         const serverHash = this.calculateDataHash(serverData);
 

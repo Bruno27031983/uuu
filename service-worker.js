@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-pro-v2.4'; // Fix: timestamps, limits, PDF export
+const CACHE_NAME = 'bruno-calculator-pro-v2.5'; // Fix: conflict dialog loop prevention
 const ASSETS_TO_CACHE = [
   './', // Alias pre index.html
   './index.html',
