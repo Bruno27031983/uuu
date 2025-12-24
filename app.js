@@ -3,7 +3,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.7.0/firebas
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js';
 import {
     initializeFirestore, persistentLocalCache, CACHE_SIZE_UNLIMITED,
-    collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch
+    collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, writeBatch, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-app-check.js';
 
@@ -281,7 +281,27 @@ function loadAppSettingsFromLocalStorage() {
     appSettings.monthlyEarningsGoal = localStorage.getItem('monthlyEarningsGoal') ? parseFloat(localStorage.getItem('monthlyEarningsGoal')) : null;
 }
 function saveAppSettingToLocalStorage(key, value) { localStorage.setItem(key, value); appSettings[key] = value; }
-async function saveAppSettingsToFirestore() { if (!currentUser || !navigator.onLine) return; const userDocRef = doc(db, 'users', currentUser.uid); try { await setDoc(userDocRef, { appSettings: appSettings }, { merge: true }); } catch (error) { secureLog('error', 'Error saving app settings to Firestore'); showErrorNotification("Nepodarilo sa uložiť nastavenia aplikácie do cloudu."); } }
+async function saveAppSettingsToFirestore() {
+    if (!currentUser || !navigator.onLine) return;
+    const userDocRef = doc(db, 'users', currentUser.uid);
+
+    // Sanitize appSettings to match Firestore rules validation
+    const sanitizedSettings = {
+        decimalPlaces: Number.isFinite(appSettings.decimalPlaces) ? Math.floor(appSettings.decimalPlaces) : 2,
+        employeeName: String(appSettings.employeeName || ''),
+        hourlyWage: Number.isFinite(appSettings.hourlyWage) ? appSettings.hourlyWage : 0,
+        taxRate: Number.isFinite(appSettings.taxRate) ? appSettings.taxRate : 0,
+        theme: appSettings.theme === 'dark' ? 'dark' : 'light',
+        monthlyEarningsGoal: Number.isFinite(appSettings.monthlyEarningsGoal) ? appSettings.monthlyEarningsGoal : null
+    };
+
+    try {
+        await setDoc(userDocRef, { appSettings: sanitizedSettings }, { merge: true });
+    } catch (error) {
+        secureLog('error', 'Error saving app settings to Firestore');
+        showErrorNotification("Nepodarilo sa uložiť nastavenia aplikácie do cloudu.");
+    }
+}
 const debouncedSaveAppSettingsToFirestore = debounce(saveAppSettingsToFirestore, 1500);
 
 // --- Conflict Detection Dialog ---
@@ -551,9 +571,20 @@ async function createUserCollectionAndSettings() {
         const userDocRef = doc(db, 'users', auth.currentUser.uid);
         const initialMonthDocId = getFirestoreDocId(currentYear, currentMonth);
         const initialMonthDocRef = doc(db, 'users', auth.currentUser.uid, 'workData', initialMonthDocId);
+
+        // Sanitize appSettings to match Firestore rules validation
+        const sanitizedSettings = {
+            decimalPlaces: Number.isFinite(appSettings.decimalPlaces) ? Math.floor(appSettings.decimalPlaces) : 2,
+            employeeName: String(appSettings.employeeName || ''),
+            hourlyWage: Number.isFinite(appSettings.hourlyWage) ? appSettings.hourlyWage : 0,
+            taxRate: Number.isFinite(appSettings.taxRate) ? appSettings.taxRate : 0,
+            theme: appSettings.theme === 'dark' ? 'dark' : 'light',
+            monthlyEarningsGoal: Number.isFinite(appSettings.monthlyEarningsGoal) ? appSettings.monthlyEarningsGoal : null
+        };
+
         const batch = writeBatch(db);
-        batch.set(userDocRef, { email: auth.currentUser.email, createdAt: new Date().toISOString(), appSettings: appSettings }, { merge: true });
-        batch.set(initialMonthDocRef, { data: [], lastUpdated: new Date().toISOString() }, { merge: true });
+        batch.set(userDocRef, { email: auth.currentUser.email, createdAt: serverTimestamp(), appSettings: sanitizedSettings }, { merge: true });
+        batch.set(initialMonthDocRef, { data: [], lastUpdated: serverTimestamp() }, { merge: true });
         try { await batch.commit(); }
         catch (error) { secureLog('error', 'Error creating user collection/settings'); showErrorNotification('Nepodarilo sa inicializovať používateľské dáta v cloude.'); }
     }
@@ -741,7 +772,33 @@ async function saveWorkDataToFirestore(dataToSave, docId) {
     if (!currentUser) return Promise.reject(new Error("User not logged in."));
     if (!navigator.onLine) return Promise.reject(new Error("Cannot save to Firestore: App is offline."));
     const docRef = doc(db, 'users', currentUser.uid, 'workData', docId);
-    try { await setDoc(docRef, dataToSave, { merge: true }); }
+
+    // Sanitize work data to match Firestore rules validation
+    const sanitizedData = dataToSave.data.map(day => {
+        const start = String(day.start || '').slice(0, 5);
+        const end = String(day.end || '').slice(0, 5);
+        const projectTag = String(day.projectTag || '').slice(0, 200);
+        const note = String(day.note || '').slice(0, 2000);
+        let breakTime = null;
+        if (day.breakTime !== '' && day.breakTime != null) {
+            const parsed = parseFloat(String(day.breakTime).replace(',', '.'));
+            if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 24) {
+                breakTime = parsed;
+            } else if (Number.isFinite(parsed) && parsed > 24) {
+                breakTime = 24;
+            } else {
+                breakTime = null;
+            }
+        }
+        return { start, end, breakTime, projectTag, note };
+    });
+
+    const firestoreData = {
+        data: sanitizedData,
+        lastUpdated: serverTimestamp()
+    };
+
+    try { await setDoc(docRef, firestoreData, { merge: true }); }
     catch (error) { secureLog('error', 'Error saving work data to Firestore'); throw error; }
 }
 
@@ -754,7 +811,13 @@ async function syncPendingWorkData() {
         const pendingKey = getPendingSyncKeyForMonth(monthId); if (!pendingKey) continue;
         const pendingDataString = localStorage.getItem(pendingKey);
         if (pendingDataString) {
-            try { const dataToSync = JSON.parse(pendingDataString); dataToSync.lastUpdated = new Date().toISOString(); await saveWorkDataToFirestore(dataToSync, monthId); localStorage.removeItem(pendingKey); successfullySyncedMonths.push(monthId); }
+            try {
+                const dataToSync = JSON.parse(pendingDataString);
+                // serverTimestamp() will be added by saveWorkDataToFirestore
+                await saveWorkDataToFirestore(dataToSync, monthId);
+                localStorage.removeItem(pendingKey);
+                successfullySyncedMonths.push(monthId);
+            }
             catch (error) { secureLog('error', 'Chyba synchronizácie dát pre mesiac'); failedMonths.push(monthId); }
         } else { successfullySyncedMonths.push(monthId); }
     }
