@@ -16,6 +16,11 @@ yarn-error.log*
 .firebaserc
 firebase-debug.log
 firestore-debug.log
+firestore.rules
+storage.rules
+firebase.json
+firestore.indexes.json
+FIREBASE_RULES.md
 
 # IDEs and editors
 .vscode/
