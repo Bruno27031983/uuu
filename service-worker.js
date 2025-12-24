@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'bruno-calculator-pro-v2.2'; // Aktualizované po security update
+const CACHE_NAME = 'bruno-calculator-pro-v2.3'; // Vendor libraries local + CSP improvements
 const ASSETS_TO_CACHE = [
   './', // Alias pre index.html
   './index.html',
@@ -9,14 +9,15 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './icons/icon-192x192.webp',
   './icons/icon-512x512.webp',
+  './vendor/jspdf.umd.min.js',
+  './vendor/jspdf.plugin.autotable.min.js',
+  './vendor/xlsx.full.min.js',
   // Font
   'https://fonts.gstatic.com/s/inter/v12/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2'
 ];
 
 // Zoznam CDN, ktorých obsah chceme tiež cachovať (stratégia Cache, then Network s aktualizáciou)
 const CDN_ORIGINS_TO_CACHE_REFRESH = [
-  'https://cdnjs.cloudflare.com', // Pre jspdf, jspdf-autotable
-  'https://cdn.sheetjs.com',      // Pre xlsx (SheetJS)
   'https://www.gstatic.com',      // Pre Firebase
   'https://fonts.gstatic.com'     // Pre Google Fonts
 ];
