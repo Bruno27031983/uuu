@@ -202,10 +202,17 @@ function isWeekend(year, month, day) { const d = new Date(year, month, day).getD
 const debounce = (func, wait) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; };
 function isValidTimeFormat(timeString) { return typeof timeString === 'string' && /^([01]\d|2[0-3]):([0-5]\d)$/.test(timeString); }
 
-// Bezpečnostná sanitizácia textu pred uložením do databázy
+// Bezpečnostná sanitizácia textu pred uložením do databázy a zobrazením
 function sanitizeText(text, maxLength) {
     if (typeof text !== 'string') return '';
-    return text.trim().substring(0, maxLength);
+    const trimmed = text.trim().substring(0, maxLength);
+    // Základné escapovanie HTML znakov pre prevenciu XSS
+    return trimmed
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 // Konverzia rôznych formátov na Date (Firestore Timestamp, ISO string, Date)
@@ -1869,7 +1876,13 @@ function restoreBackup() {
                                 if (isNaN(backupYear) || backupYear < 2000) backupYear = currentYear;
                                 continue;
                             }
-                            restoredWorkDataArray.push({ start: row[colMap.start] || "", end: row[colMap.end] || "", breakTime: row[colMap.break] ? row[colMap.break].toString().replace(',', '.') : "", projectTag: row[colMap.project] || "", note: row[colMap.note] || "" });
+                            restoredWorkDataArray.push({
+                                start: row[colMap.start] || "",
+                                end: row[colMap.end] || "",
+                                breakTime: row[colMap.break] ? row[colMap.break].toString().replace(',', '.') : "",
+                                projectTag: row[colMap.project] || "",
+                                note: row[colMap.note] || ""
+                            });
                         }
                     } else showWarningNotification(`List '${workSheetName}' nemá správnu hlavičku. Dáta mesiaca nebudú obnovené.`);
                 } else showWarningNotification("List s dátami mesiaca ('Vykaz...') nebol nájdený. Dáta nebudú obnovené.");
