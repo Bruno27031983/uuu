@@ -212,6 +212,10 @@ button:focus-visible {
     gap: 10px;
 }
 
+#user-email {
+    font-weight: 500;
+}
+
 #themeToggleBtn {
     font-size: 1.3rem;
     padding: 6px 10px;
@@ -239,8 +243,7 @@ button:focus-visible {
     gap: 10px;
 }
 
-.settings>div,
-.settings>button#toggleSettingsBtn {
+.settings>div {
     margin: 0;
 }
 
@@ -248,7 +251,7 @@ button:focus-visible {
     flex: 1 1 220px;
 }
 
-.settings>button#toggleSettingsBtn {
+#toggleSettingsBtn {
     flex-basis: 100%;
     margin-bottom: 10px;
     background-color: var(--secondary-bg-color);
@@ -261,9 +264,10 @@ button:focus-visible {
     cursor: pointer;
     border-radius: var(--border-radius);
     transition: background-color var(--transition-speed), box-shadow var(--transition-speed);
+    margin: 0;
 }
 
-.settings>button#toggleSettingsBtn:hover {
+#toggleSettingsBtn:hover {
     background-color: var(--primary-bg-color);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
@@ -393,70 +397,47 @@ html[data-theme='dark'] td .time-input-wrapper .time-btn:hover {
     color: var(--primary-text-color);
 }
 
-/* Úprava šírok stĺpcov pre nový stĺpec "Projekt" */
-th:nth-child(1),
-td:nth-child(1) {
+/* Šírky stĺpcov tabuľky - pomocou colgroup */
+.col-den {
     width: 95px;
 }
 
-/* Deň */
-th:nth-child(2),
-td:nth-child(2) {
+.col-prichod {
     width: 105px;
 }
 
-/* Príchod */
-th:nth-child(3),
-td:nth-child(3) {
+.col-odchod {
     width: 105px;
 }
 
-/* Odchod */
-th:nth-child(4),
-td:nth-child(4) {
+.col-prestavka {
     width: 85px;
 }
 
-/* Prestávka */
-th:nth-child(5),
-td:nth-child(5) {
+.col-odpracovane {
     width: 110px;
 }
 
-/* Odpracované */
-th:nth-child(6),
-td:nth-child(6) {
+.col-projekt {
     min-width: 150px;
-    width: auto;
 }
 
-/* Projekt - nový stĺpec */
-th:nth-child(7),
-td:nth-child(7) {
+.col-poznamka {
     min-width: 200px;
-    width: auto;
 }
 
-/* Poznámka */
-th:nth-child(8),
-td:nth-child(8) {
+.col-hruba {
     width: 90px;
 }
 
-/* Hrubá Mzda */
-th:nth-child(9),
-td:nth-child(9) {
+.col-cista {
     width: 90px;
 }
 
-/* Čistá Mzda */
-th:nth-child(10),
-td:nth-child(10) {
+.col-akcie {
     width: 45px;
-    text-align: center;
 }
 
-/* Akcie */
 
 input[type="tel"],
 input[type="number"],
@@ -758,8 +739,15 @@ html[data-theme='dark'] .sync-status-pending {
 }
 
 @keyframes pulse-saving {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .sync-status-saving .sync-icon {
@@ -821,7 +809,7 @@ html[data-theme='dark'] .sync-status-pending {
     font-size: 0.75rem;
     font-weight: 600;
     color: #fff;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .goal-remaining {
