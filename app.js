@@ -328,11 +328,21 @@ const ConflictResolver = {
     // Sledovanie vyriešených konfliktov a otvorených dialógov
     resolvedConflicts: new Set(),
     isDialogOpen: false,
+    currentConflictDocId: null,
 
-    showConflictDialog(localData, serverData, onResolve) {
-        // Ak je dialóg už otvorený, ignoruj
-        if (this.isDialogOpen) return;
+    showConflictDialog(localData, serverData, docId, onResolve) {
+        // Ak je dialóg už otvorený pre rovnaký mesiac, ignoruj
+        if (this.isDialogOpen && this.currentConflictDocId === docId) return;
+
+        // Ak je otvorený pre iný mesiac, zatvor ho
+        if (this.isDialogOpen) {
+            const existingOverlay = document.querySelector('.conflict-dialog-overlay');
+            if (existingOverlay) existingOverlay.remove();
+        }
+
         this.isDialogOpen = true;
+        this.currentConflictDocId = docId;
+
         const localDate = toValidDate(localData.lastUpdated);
         const serverDate = toValidDate(serverData.lastUpdated);
         const localTime = localDate ? localDate.toLocaleString('sk-SK') : 'Neznámy čas';
@@ -371,10 +381,10 @@ const ConflictResolver = {
         useLocalBtn.addEventListener('click', () => {
             overlay.remove();
             this.isDialogOpen = false;
-            // Označ konflikt ako vyriešený na 60 sekúnd
-            const conflictKey = `${localData.month}_${localData.year}`;
-            this.resolvedConflicts.add(conflictKey);
-            setTimeout(() => this.resolvedConflicts.delete(conflictKey), 60000);
+            this.currentConflictDocId = null;
+            // Označ konflikt ako vyriešený na 5 minút
+            this.resolvedConflicts.add(docId);
+            setTimeout(() => this.resolvedConflicts.delete(docId), 300000);
             onResolve('local');
         });
 
@@ -384,10 +394,10 @@ const ConflictResolver = {
         useServerBtn.addEventListener('click', () => {
             overlay.remove();
             this.isDialogOpen = false;
-            // Označ konflikt ako vyriešený na 60 sekúnd
-            const conflictKey = `${serverData.month}_${serverData.year}`;
-            this.resolvedConflicts.add(conflictKey);
-            setTimeout(() => this.resolvedConflicts.delete(conflictKey), 60000);
+            this.currentConflictDocId = null;
+            // Označ konflikt ako vyriešený na 5 minút
+            this.resolvedConflicts.add(docId);
+            setTimeout(() => this.resolvedConflicts.delete(docId), 300000);
             onResolve('server');
         });
 
@@ -413,10 +423,9 @@ const ConflictResolver = {
         return hash;
     },
 
-    hasSignificantDifference(localData, serverData) {
+    hasSignificantDifference(localData, serverData, docId) {
         // Skontroluj či konflikt už bol vyriešený
-        const conflictKey = `${localData.month || serverData.month}_${localData.year || serverData.year}`;
-        if (this.resolvedConflicts.has(conflictKey)) {
+        if (this.resolvedConflicts.has(docId)) {
             return false;
         }
 
@@ -431,8 +440,8 @@ const ConflictResolver = {
         const serverTime = serverDate ? serverDate.getTime() : 0;
         const timeDiff = Math.abs(localTime - serverTime);
 
-        // Ak je rozdiel viac ako 5 minút a hash je iný, je to významný konflikt
-        return timeDiff > 5 * 60 * 1000;
+        // Ak je rozdiel viac ako 2 minúty a hash je iný, je to významný konflikt
+        return timeDiff > 2 * 60 * 1000;
     }
 };
 
@@ -708,9 +717,9 @@ function setupFirestoreWorkDataListener() {
                     // Detekcia konfliktu - ak lokálne dáta sú novšie a sú významne odlišné
                     if (localTimestamp > firestoreTimestamp) {
                         shouldUpdateLocalData = false;
-                    } else if (ConflictResolver.hasSignificantDifference(localData, firestoreData)) {
+                    } else if (ConflictResolver.hasSignificantDifference(localData, firestoreData, docId)) {
                         // Významný konflikt - zobraz dialóg
-                        ConflictResolver.showConflictDialog(localData, firestoreData, (choice) => {
+                        ConflictResolver.showConflictDialog(localData, firestoreData, docId, (choice) => {
                             if (choice === 'local') {
                                 // Zachovaj lokálne dáta a nahraj ich na server
                                 syncToCloudDebounced();
@@ -728,18 +737,19 @@ function setupFirestoreWorkDataListener() {
                 }
             }
 
-            if (shouldUpdateLocalData && (!docSnap.metadata.hasPendingWrites || firestoreDataString !== localDataString)) {
+            // KRITICKÁ OPRAVA: Neprepíš lokálne dáta ak práve prebieha zápis (hasPendingWrites)
+            if (shouldUpdateLocalData && !docSnap.metadata.hasPendingWrites) {
                 localStorage.setItem(localKey, firestoreDataString);
-                if (!docSnap.metadata.hasPendingWrites) {
-                    removeMonthFromPendingList(docId);
-                    const pendingKey = getPendingSyncKeyForMonth(docId);
-                    if (pendingKey) localStorage.removeItem(pendingKey);
-                    SyncStatusManager.update(SyncStatusManager.STATUS.SYNCED);
-                }
+                removeMonthFromPendingList(docId);
+                const pendingKey = getPendingSyncKeyForMonth(docId);
+                if (pendingKey) localStorage.removeItem(pendingKey);
+                SyncStatusManager.update(SyncStatusManager.STATUS.SYNCED);
                 parseAndApplyWorkData(firestoreDataString);
-            } else {
+            } else if (!shouldUpdateLocalData) {
+                // Lokálne dáta sú novšie, len prepočítaj
                 calculateTotal();
             }
+            // Ak hasPendingWrites = true, nič nerobíme - čakáme na potvrdenie
         } else {
             if (localStorage.getItem(localKey)) localStorage.removeItem(localKey);
             const pendingKey = getPendingSyncKeyForMonth(docId);
@@ -777,7 +787,18 @@ const _syncToCloudDebounced = debounce(async () => {
 
     if (!localDataString) return;
 
-    const dataToSync = JSON.parse(localDataString);
+    let dataToSync;
+    try {
+        dataToSync = JSON.parse(localDataString);
+        // Validácia štruktúry dát
+        if (!dataToSync || !Array.isArray(dataToSync.data)) {
+            secureLog('error', 'Invalid data structure in localStorage');
+            return;
+        }
+    } catch (parseError) {
+        secureLog('error', 'JSON parse error in syncToCloudDebounced');
+        return;
+    }
 
     if (currentUser) {
         const pendingKey = getPendingSyncKeyForMonth(docId);
@@ -1349,16 +1370,47 @@ async function clearMonthData() {
     const btn = document.getElementById('btnClearMonth');
     if (!btn || isRateLimited('btnClearMonth', 3000)) return;
     if (!confirm(`Naozaj chcete vymazať VŠETKY dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear}? Táto akcia je nezvratná!`)) return;
-    setLoadingState(btn, true, "Mazanie dát..."); resetTableInputsOnly();
+    setLoadingState(btn, true, "Mazanie dát...");
+
     const emptyMonthData = { data: [], lastUpdated: new Date().toISOString() };
-    const docId = getFirestoreDocId(currentYear, currentMonth); const localKey = getLocalStorageKeyForWorkData(docId);
-    const emptyDataString = JSON.stringify(emptyMonthData); localStorage.setItem(localKey, emptyDataString); updateLocalStorageSizeIndicator();
+    const docId = getFirestoreDocId(currentYear, currentMonth);
+    const localKey = getLocalStorageKeyForWorkData(docId);
     const pendingKey = getPendingSyncKeyForMonth(docId);
-    if (currentUser) {
-        if (navigator.onLine) { try { await saveWorkDataToFirestore(emptyMonthData, docId); removeMonthFromPendingList(docId); if (pendingKey) localStorage.removeItem(pendingKey); } catch (error) { showErrorNotification('Chyba pri mazaní dát v cloude: ' + error.message); addMonthToPendingList(docId); if (pendingKey) localStorage.setItem(pendingKey, emptyDataString); } }
-        else { addMonthToPendingList(docId); if (pendingKey) localStorage.setItem(pendingKey, emptyDataString); }
+    const emptyDataString = JSON.stringify(emptyMonthData);
+
+    // Záloha pôvodných dát pre prípad zlyhania
+    const backupData = localStorage.getItem(localKey);
+
+    if (currentUser && navigator.onLine) {
+        // Online: Najprv skús uložiť do Firestore
+        try {
+            await saveWorkDataToFirestore(emptyMonthData, docId);
+            // Firestore úspešný - teraz bezpečne vymaž lokálne
+            localStorage.setItem(localKey, emptyDataString);
+            removeMonthFromPendingList(docId);
+            if (pendingKey) localStorage.removeItem(pendingKey);
+            resetTableInputsOnly();
+            showSaveNotification(`Dáta pre ${MONTH_NAMES[currentMonth]} ${currentYear} boli vymazané.`);
+        } catch (error) {
+            // Firestore zlyhal - ponechaj pôvodné dáta
+            showErrorNotification('Chyba pri mazaní v cloude. Dáta neboli vymazané.');
+            setLoadingState(btn, false, "Vymazať Mesiac");
+            return;
+        }
+    } else {
+        // Offline alebo neprihlásený: Vymaž lokálne, sync neskôr
+        localStorage.setItem(localKey, emptyDataString);
+        resetTableInputsOnly();
+        if (currentUser) {
+            addMonthToPendingList(docId);
+            if (pendingKey) localStorage.setItem(pendingKey, emptyDataString);
+            showWarningNotification(`Dáta vymazané lokálne. Synchronizácia po pripojení.`);
+        } else {
+            showSaveNotification(`Dáta pre ${MONTH_NAMES[currentMonth]} ${currentYear} boli vymazané.`);
+        }
     }
-    showSaveNotification(`Všetky dáta pre mesiac ${MONTH_NAMES[currentMonth]} ${currentYear} boli úspešne vymazané.`);
+
+    updateLocalStorageSizeIndicator();
     setLoadingState(btn, false, "Vymazať Mesiac");
 }
 
